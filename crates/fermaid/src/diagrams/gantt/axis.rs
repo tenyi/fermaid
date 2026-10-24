@@ -171,7 +171,7 @@ impl Calendar {
                 while i < n && d.valid() {
                     loop {
                         self.base_offset(d, 1.0);
-                        if !(d.valid() && !self.test(*d)) {
+                        if !d.valid() || self.test(*d) {
                             break;
                         }
                     }

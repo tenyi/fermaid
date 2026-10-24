@@ -178,7 +178,7 @@ fn letters(src: &[u16], p: usize, word: &str) -> bool {
 pub(crate) fn tokenize(src: &[u16], kanban: bool) -> Tokens {
     let n = src.len();
     let keyword = if kanban { "kanban" } else { "mindmap" };
-    let id_char = |c: u32| !matches!(c, 40 | 91 | 10 | 41 | 123 | 125) && !(kanban && c == 64);
+    let id_char = |c: u32| !(matches!(c, 40 | 91 | 10 | 41 | 123 | 125) || (kanban && c == 64));
     let mut lx = Lexer {
         src,
         p: 0,

@@ -804,7 +804,7 @@ fn loose(input: &str, template: &str, now: Date) -> Option<Date> {
         now.year()
     };
     let mut month = 0.0;
-    if !(truthy(f.year) && !truthy(f.month)) {
+    if !truthy(f.year) || truthy(f.month) {
         month = match f.month {
             Some(m) if m > 0.0 => m - 1.0,
             _ => now.month(),
