@@ -4,7 +4,9 @@
 
 use super::model::{PieModel, build_pie};
 use super::parser::{PieAst, parse_pie};
+use crate::diagrams::common::golden::{dump, q, skipped};
 use crate::error::Error;
+use crate::util::js_number;
 
 struct Case {
     #[allow(
@@ -164,19 +166,9 @@ fn check(name: &str, src: &str) -> bool {
     true
 }
 
-/// The test names `SKIPPED.md` lists, as `` - `name`: reason `` lines under "Skipped tests".
-fn skipped() -> Vec<&'static str> {
-    SKIPPED
-        .lines()
-        .skip_while(|line| *line != "## Skipped tests")
-        .take_while(|line| !line.starts_with("## Spec files"))
-        .filter_map(|line| line.strip_prefix("- `")?.split_once('`').map(|(n, _)| n))
-        .collect()
-}
-
 #[test]
 fn passes_mermaid_specs() {
-    let skipped = skipped();
+    let skipped = skipped(SKIPPED);
     let mut unknown = Vec::new();
     for case in CASES {
         let listed = skipped.contains(&case.name);
@@ -205,10 +197,36 @@ fn passes_mermaid_specs() {
 
 #[test]
 fn skips_only_known_cases() {
-    for name in skipped() {
+    for name in skipped(SKIPPED) {
         assert!(
             CASES.iter().any(|c| c.name == name),
             "SKIPPED.md lists {name}, which is not a case"
         );
     }
+}
+
+/// The fields of the tree, as `pieSummary` in `tools/oracle/lib.mjs` writes those of
+/// Mermaid's.
+fn summary(ast: &PieAst) -> String {
+    let mut out = vec![format!(
+        "show:{}|t:{}|at:{}|ad:{}",
+        ast.show_data,
+        q(ast.title.as_deref()),
+        q(ast.acc_title.as_deref()),
+        q(ast.acc_descr.as_deref())
+    )];
+    for (label, value) in &ast.sections {
+        out.push(format!("section:{}|{}", q(Some(label)), js_number(*value)));
+    }
+    out.join("\n")
+}
+
+/// Writes fermaid's tree of the inputs of a differential run; see `tools/oracle/diff.mjs`.
+#[test]
+#[ignore = "run by tools/oracle/diff.mjs"]
+fn oracle_dump() {
+    dump("pie", |src| match parse_pie(src) {
+        Ok(ast) => summary(&ast),
+        Err(_) => "error".to_string(),
+    });
 }

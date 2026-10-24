@@ -6,7 +6,7 @@
 
 use super::db::{FlowDb, LabelType};
 use super::parser::parse_flowchart;
-use crate::diagrams::common::golden::{error_code, json, q, skipped};
+use crate::diagrams::common::golden::{dump, error_code, json, q, skipped};
 
 struct Case {
     #[allow(
@@ -172,4 +172,11 @@ fn skips_only_known_cases() {
             "SKIPPED.md lists {name}, which is not a case"
         );
     }
+}
+
+/// Writes fermaid's model of the inputs of a differential run; see `tools/oracle/diff.mjs`.
+#[test]
+#[ignore = "run by tools/oracle/diff.mjs"]
+fn oracle_dump() {
+    dump("flowchart", outcome);
 }

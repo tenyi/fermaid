@@ -8,7 +8,7 @@ use std::fmt::Write;
 
 use super::db::{MessageText, SeqDb};
 use super::parser::parse_sequence;
-use crate::diagrams::common::golden::{error_code, json, q, skipped};
+use crate::diagrams::common::golden::{dump, error_code, json, q, skipped};
 use crate::preprocess::Value;
 use crate::text::entities::encode_entities;
 use crate::util::js_number;
@@ -218,4 +218,11 @@ fn skips_only_known_cases() {
             "SKIPPED.md lists {name}, which is not a case"
         );
     }
+}
+
+/// Writes fermaid's model of the inputs of a differential run; see `tools/oracle/diff.mjs`.
+#[test]
+#[ignore = "run by tools/oracle/diff.mjs"]
+fn oracle_dump() {
+    dump("sequence", outcome);
 }

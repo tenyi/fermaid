@@ -70,6 +70,7 @@ cargo fmt --all
 cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence` ターゲットもあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
 node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
+node tools/oracle/diff.mjs ../pele   # Mermaid 自身のパーサーとの差分ファジング
 ```
 
 サポートする最小の Rust バージョンは 1.85 です。

@@ -5,8 +5,8 @@ algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
 **v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
 
-Milestones M0–M3 are planned to task level. M4 onward is scoped only and will be
-refined when M3 ends.
+Milestones M0–M4 are planned to task level. M5 onward is scoped only and will be
+refined when M4 ends.
 
 ## Decisions
 
@@ -153,14 +153,14 @@ Notes:
 - A 5,000-edge stress test finishes in under 1 s in a release build
   (provisional target; adjust once a baseline exists).
 
-## M3 — Sequence + differential fuzzing
+## M3 — Sequence + differential fuzzing (done)
 
 1. [x] Sequence diagrams: participants, actors, messages, activations,
    `loop`/`alt`/`opt`/`par`, notes, `autonumber`.
-2. `tools/oracle/`: dev-only Node harness that loads Mermaid's jison and Langium
+2. [x] `tools/oracle/`: dev-only Node harness that loads Mermaid's jison and Langium
    parsers and runs differential fuzzing (about 3,000 mutated inputs, fixed seed)
    for pie, flowchart and sequence.
-3. Refine the M4 plan.
+3. [x] Refine the M4 plan.
 
 Notes:
 - Sequence diagrams cover everything pele draws: every participant kind (including
@@ -175,6 +175,18 @@ Notes:
 - On pele's sequence corpus (200 inputs), with and without `max_width` and a non-default
   `sequence` config, and on 3,000 mutated inputs, the output is byte for byte pele's, errors
   included.
+- 7 minutes of fuzzing the `sequence` target (680,000 runs, seeded with pele's sequence corpus)
+  found no panic.
+- `tools/oracle/diff.mjs` parses each type's corpus and 3,000 mutated inputs with Mermaid's own
+  parsers (`@mermaid-js/parser` for pie; the parsers jison generates from Mermaid's flowchart
+  and sequence grammars, driving pele's port of Mermaid's model) and with fermaid's, and
+  compares the results. With seeds 1, 7, 42 and 1234 (5,000 inputs each), the three types
+  agree on every input. A fourth check, `url`, compares the link sanitizer with
+  `@braintree/sanitize-url`; it found that fermaid's imitation of `new URL()` let through
+  hosts that `new URL()` refuses, and missed percent-encoding and dot segments, which are now
+  fixed. The differences that remain are in `tools/oracle/KNOWN.md`: one comes from Node's
+  URL parser departing from the WHATWG standard, the other from IDNA tables fermaid does not
+  carry. The workflow `.github/workflows/oracle.yml` runs it nightly and on demand.
 
 **Done when**
 - Differential fuzzing reports no unexplained differences for the three types;
@@ -182,8 +194,32 @@ Notes:
 - Regular CI does not need Node; the oracle runs only in a nightly or
   manually triggered workflow.
 
+## M4 — State, class, ER, requirement
+
+Each type is ported from pele as flowchart and sequence were: parser, model, render, and a
+check against pele's output on its corpus and on mutated inputs.
+
+1. State diagrams: states, composite states with their own direction, start and end, choice,
+   fork and join, notes, concurrency regions, `classDef` and `class`, `direction`. Reuses
+   the compound layout.
+2. Class diagrams: classes with members and generics, relations with cardinality, namespaces,
+   annotations, notes, `classDef`, `style`, `cssClass`, links and tooltips (sanitized as in
+   flowcharts). Reuses the layered layout.
+3. ER diagrams: entities with attributes and keys, relationships with cardinality and
+   identification, aliases, `classDef` and `style`.
+4. Requirement diagrams: requirements, elements and relationships, `classDef` and `style`.
+5. For each: compat cases from pele's `tests/compat/<type>` with `SKIPPED.md` (golden where the
+   specs test a model), snapshot, security and speed tests, a fuzz target, and a place in
+   `tools/oracle/diff.mjs` (state, class and ER have jison grammars in pele; requirement too).
+6. Port pele's `components` layout only if one of these needs it.
+
+**Done when**
+- Compat tests pass, and each type's output matches pele's on its corpus and on mutated
+  inputs, apart from recorded differences.
+- The differential run reports no unexplained differences for the new types.
+- 10 minutes of fuzzing each new target produces no panic.
+
 ## Later milestones (scope only)
 
-- **M4** — state, class, er, requirement (reuse the layered layout).
 - **M5** — gantt, timeline, journey, kanban, mindmap.
 - **M6** — remaining types by usage; niche types (agentflow, wardley, …) last.

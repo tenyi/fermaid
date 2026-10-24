@@ -40,6 +40,7 @@ pub(crate) fn skipped(text: &'static str) -> Vec<&'static str> {
 }
 
 /// The name of an error code, as pele's errors carry it.
+#[cfg(any(feature = "flowchart", feature = "sequence"))]
 pub(crate) fn error_code(code: crate::error::ErrorCode) -> &'static str {
     use crate::error::ErrorCode;
     match code {
@@ -48,4 +49,33 @@ pub(crate) fn error_code(code: crate::error::ErrorCode) -> &'static str {
         ErrorCode::Limit => "limit",
         ErrorCode::Unsupported => "unsupported-diagram",
     }
+}
+
+/// Feeds the inputs `tools/oracle/diff.mjs` wrote to `$FERMAID_ORACLE/<name>.json` (an array
+/// of strings) through `outcome`, and writes the results to `<name>.out.json` next to it. Does
+/// nothing when the variable is not set or the run has no inputs of this kind.
+pub(crate) fn dump(name: &str, outcome: impl Fn(&str) -> String) {
+    use crate::preprocess::{Value, parse_json};
+    let Some(dir) = std::env::var_os("FERMAID_ORACLE") else {
+        return;
+    };
+    let dir = std::path::PathBuf::from(dir);
+    let Ok(text) = std::fs::read_to_string(dir.join(format!("{name}.json"))) else {
+        return;
+    };
+    let Some(Value::Seq(inputs)) = parse_json(&text) else {
+        panic!("{name}.json is not an array");
+    };
+    let results: Vec<String> = inputs
+        .iter()
+        .map(|input| match input {
+            Value::String(src) => json(&outcome(src)),
+            _ => panic!("{name}.json holds a value that is not a string"),
+        })
+        .collect();
+    std::fs::write(
+        dir.join(format!("{name}.out.json")),
+        format!("[{}]", results.join(",\n")),
+    )
+    .expect("results");
 }

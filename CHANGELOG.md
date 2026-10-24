@@ -9,6 +9,9 @@ before 1.0, a minor version may break the API.
   every arrow kind, activations, notes, `loop`, `alt`, `opt`, `par`, `critical`, `break` and
   `rect` blocks, boxes, `autonumber`, created and destroyed participants, and the `sequence`
   config keys. Participant menus are parsed but never drawn as links.
+- Links: `http` and `https` addresses are parsed as `new URL()` parses them, as Mermaid's
+  sanitizer does: an address with a host the URL standard refuses becomes `about:blank` and is
+  left out, and paths, queries and fragments are normalized and percent-encoded.
 
 ## 0.1.0 (unreleased)
 

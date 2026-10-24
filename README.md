@@ -70,6 +70,7 @@ cargo fmt --all
 cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart` and `sequence` are other targets
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
+node tools/oracle/diff.mjs ../pele   # differential fuzzing against Mermaid's own parsers
 ```
 
 The minimum supported Rust version is 1.85.

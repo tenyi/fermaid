@@ -70,6 +70,7 @@ cargo fmt --all
 cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart` 與 `sequence` 目標
 cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新產生 pele 對這些案例的解析結果
+node tools/oracle/diff.mjs ../pele   # 與 Mermaid 自身的解析器做差異模糊測試
 ```
 
 最低支援的 Rust 版本為 1.85。

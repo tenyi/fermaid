@@ -1,0 +1,42 @@
+name: oracle
+
+# Differential fuzzing against Mermaid's own parsers (tools/oracle/diff.mjs). It needs Node and
+# a pele checkout, so it runs nightly and on demand rather than in regular CI.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      count:
+        description: Mutated inputs per diagram type
+        default: "3000"
+      seed:
+        description: Seed of the mutations
+        default: "7"
+
+permissions:
+  contents: read
+
+jobs:
+  diff:
+    name: differential fuzzing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: obsidianmd/pele
+          # pele 1.9.0, which the ports follow.
+          ref: e7f092a4de147cc32210913c20e36eaa5fcd0ef1
+          path: pele
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+        working-directory: pele
+      - run: node tools/oracle/diff.mjs pele --count "${COUNT:-3000}" --seed "${SEED:-7}"
+        env:
+          COUNT: ${{ inputs.count }}
+          SEED: ${{ inputs.seed }}

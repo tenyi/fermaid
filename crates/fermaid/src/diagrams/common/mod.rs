@@ -1,7 +1,7 @@
 //! Parts shared by several diagram types.
 
 pub(crate) mod fit;
-#[cfg(all(test, any(feature = "flowchart", feature = "sequence")))]
+#[cfg(test)]
 pub(crate) mod golden;
 #[cfg(feature = "sequence")]
 pub(crate) mod literal;

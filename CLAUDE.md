@@ -22,7 +22,7 @@ The development plan and all settled design decisions are in `docs/ROADMAP.md`. 
 
 ## Architecture
 
-M0 (foundation), M1 (pie) and M2 (flowchart) are done, and sequence diagrams (M3) are in; every other type returns `ErrorCode::Unsupported`.
+M0 (foundation), M1 (pie), M2 (flowchart) and M3 (sequence, differential fuzzing) are done; every other type returns `ErrorCode::Unsupported`.
 
 - `crates/fermaid` — the library. `render` checks the source limit, runs `preprocess`, detects the type (`detect.rs`), looks it up (`diagram.rs`, an internal `Diagram` trait; one module per type, feature-gated), renders it and checks the output limit.
   - `diagrams/` — one module per type behind its feature (`pie/`: `parser.rs`, `model.rs`, `render.rs`, and `compat.rs`, which checks the generated Mermaid spec cases; `flowchart/`: a jison-style `lexer.rs` over UTF-16 code units, `parser.rs`, `db.rs` (the model), `graph.rs` (what is drawn), `shapes.rs` (shape names), `render.rs`, `compat.rs`; `sequence/`: `lexer.rs` (UTF-16, as flowchart), `parser.rs` (a flat statement list), `db.rs`, `colors.rs` (CSS color names for boxes), `actors.rs` (participant shapes), `render.rs`, `compat.rs`). `common/tokens.rs` is the tokenizer and `Reader` for Langium-defined types (pele's regex token types as hand-written matchers); `common/fit.rs` fits a chart to `RenderOptions::max_width`; `common/literal.rs` breaks long words when a diagram is squeezed; `common/golden.rs` holds helpers of the golden compat tests.
@@ -35,9 +35,9 @@ M0 (foundation), M1 (pie) and M2 (flowchart) are done, and sequence diagrams (M3
   - `tests/` — `pie.rs`, `flowchart.rs` and `sequence.rs` (render, security, limits, speed, insta snapshots in `snapshots/`), `support/mod.rs` (inert-output check, hostile payloads, mutator; shared by the type tests), `compat/<type>/` (generated `cases.rs`, for flowchart and sequence also the generated `expected.rs`, and a hand-written `SKIPPED.md`).
 - `crates/fermaid-cli` — the `fermaid` binary, hand-rolled argument parsing.
 - `xtask/` — `cargo xtask compat <type> --pele <DIR>` converts pele's `tests/compat/<type>` specs into `cases.rs`.
-- `tools/oracle/golden.mjs` — dev-only Node script: what pele makes of each compat case, as `expected.rs`. Needs a pele checkout with `npm ci` done.
+- `tools/oracle/` — dev-only Node scripts; each needs a pele checkout with `npm ci` done. `golden.mjs` writes what pele makes of each compat case, as `expected.rs`. `diff.mjs` is the differential run against Mermaid's own parsers (and `@braintree/sanitize-url` for links); fermaid's side is the ignored `oracle_dump` test of each type, and intended differences are in `KNOWN.md`. `lib.mjs` holds the pele bundle loader and the model summaries both share.
 - `fuzz/` — cargo-fuzz targets (nightly, outside the workspace).
-- `.github/workflows/ci.yml` — fmt, clippy, tests on stable and 1.85; fuzz smoke run.
+- `.github/workflows/ci.yml` — fmt, clippy, tests on stable and 1.85; fuzz smoke run. `oracle.yml` runs `diff.mjs` nightly and on demand.
 
 Update this file as real architecture lands.
 
@@ -50,8 +50,10 @@ cargo test <name_substring>      # single test / filter
 cargo test -- --nocapture        # show println! output
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60   # also: pie
+cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60   # also: pie, flowchart, sequence
 cargo xtask compat pie --pele ../pele   # regenerate spec cases from a pele checkout
+node tools/oracle/golden.mjs ../pele sequence   # regenerate expected.rs (flowchart, sequence)
+node tools/oracle/diff.mjs ../pele              # differential run against Mermaid's parsers
 ```
 
 Rust edition is 2024.
