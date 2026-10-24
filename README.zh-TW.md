@@ -85,4 +85,10 @@ fermaid 的演算法、文字量測資料與限制移植自 Obsidian 團隊 kepa
 
 ## 授權
 
-[MIT](LICENSE)
+可任選以下任一授權協議使用：
+- [MIT](LICENSE-MIT)
+- [Apache-2.0](LICENSE-APACHE)
+- [BSD-3-Clause](LICENSE-BSD3)
+- [0BSD](LICENSE-0BSD)
+
+詳見 [LICENSE](LICENSE) 與 [NOTICE](NOTICE)。

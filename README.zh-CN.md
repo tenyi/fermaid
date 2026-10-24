@@ -85,4 +85,10 @@ fermaid 的算法、文本测量数据与限制移植自 Obsidian 团队 kepano 
 
 ## 许可证
 
-[MIT](LICENSE)
+可任选以下任一许可证使用：
+- [MIT](LICENSE-MIT)
+- [Apache-2.0](LICENSE-APACHE)
+- [BSD-3-Clause](LICENSE-BSD3)
+- [0BSD](LICENSE-0BSD)
+
+详见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。

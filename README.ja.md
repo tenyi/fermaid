@@ -85,4 +85,10 @@ fermaid のアルゴリズム、テキスト計測データ、制限は、Obsidi
 
 ## ライセンス
 
-[MIT](LICENSE)
+以下から選択して利用できます：
+- [MIT](LICENSE-MIT)
+- [Apache-2.0](LICENSE-APACHE)
+- [BSD-3-Clause](LICENSE-BSD3)
+- [0BSD](LICENSE-0BSD)
+
+詳細は [LICENSE](LICENSE) および [NOTICE](NOTICE) を参照してください。

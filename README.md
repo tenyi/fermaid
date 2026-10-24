@@ -85,4 +85,10 @@ fermaid's algorithms, text metrics and limits are ported from [pele](https://git
 
 ## License
 
-[MIT](LICENSE)
+Multi-licensed under your choice of:
+- [MIT](LICENSE-MIT)
+- [Apache-2.0](LICENSE-APACHE)
+- [BSD-3-Clause](LICENSE-BSD3)
+- [0BSD](LICENSE-0BSD)
+
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
