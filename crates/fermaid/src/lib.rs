@@ -173,7 +173,10 @@ mod tests {
         let err = render("gitGraph\n", &RenderOptions::default()).unwrap_err();
         assert_eq!(err.code, ErrorCode::Unsupported);
         assert_eq!(err.kind, Some(DiagramKind::GitGraph));
-        assert_eq!(err.message, "Diagram type \"gitGraph\" is not supported yet.");
+        assert_eq!(
+            err.message,
+            "Diagram type \"gitGraph\" is not supported yet."
+        );
         assert_eq!((err.line, err.column), (1, 1));
     }
 
