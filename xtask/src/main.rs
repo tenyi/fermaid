@@ -56,7 +56,9 @@ fn compat(kind: &str, pele: &Path) -> Result<String, String> {
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .filter(|path| {
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-            name.ends_with(".spec.ts") || name.ends_with(".test.ts")
+            [".spec.ts", ".test.ts", ".spec.js", ".test.js"]
+                .iter()
+                .any(|s| name.ends_with(s))
         })
         .collect();
     files.sort();
