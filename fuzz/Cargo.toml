@@ -83,3 +83,10 @@ path = "fuzz_targets/journey.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "kanban"
+path = "fuzz_targets/kanban.rs"
+test = false
+doc = false
+bench = false

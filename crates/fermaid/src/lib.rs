@@ -42,7 +42,8 @@ mod unicode;
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "kanban"
 ))]
 #[allow(
     dead_code,

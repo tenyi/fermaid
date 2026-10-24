@@ -15,7 +15,8 @@ use crate::{DiagramKind, Link, RenderOptions};
         feature = "state",
         feature = "class",
         feature = "er",
-        feature = "timeline"
+        feature = "timeline",
+        feature = "kanban"
     )),
     allow(
         dead_code,
@@ -77,6 +78,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Timeline => Some(&crate::diagrams::timeline::Timeline),
         #[cfg(feature = "journey")]
         DiagramKind::Journey => Some(&crate::diagrams::journey::Journey),
+        #[cfg(feature = "kanban")]
+        DiagramKind::Kanban => Some(&crate::diagrams::kanban::Kanban),
         _ => None,
     }
 }

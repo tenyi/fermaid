@@ -1,7 +1,7 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'kanban', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -56,10 +56,13 @@ const m = await loadPele(pele, {
   'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
   'src/diagrams/journey/db.ts': ['JourneyDb'],
+  'src/diagrams/kanban/db.ts': ['KanbanDb'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
 });
+
+const quiet = { trace() {}, debug() {}, info() {}, warn() {}, error() {} };
 
 // A Langium tree without its bookkeeping.
 function plain(node) {
@@ -91,6 +94,7 @@ const classParser = m.buildParser(join(pele, 'tests/compat/class/upstream/classD
 const erParser = m.buildParser(join(pele, 'tests/compat/er/upstream/erDiagram.jison'));
 const journeyParser = m.buildParser(join(pele, 'tests/compat/journey/upstream/journey.jison'));
 const timelineParser = m.buildParser(join(pele, 'tests/compat/timeline/upstream/timeline.jison'));
+const kanbanParser = m.buildParser(join(pele, 'tests/compat/kanban/upstream/kanban.jison'));
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 
 const TYPES = {
@@ -185,6 +189,16 @@ const TYPES = {
       journeyParser.yy = asYy(db);
       journeyParser.parse(src);
       return journeySummary(db);
+    },
+  },
+  kanban: {
+    keyword: /(^|\n)\s*kanban/,
+    fragments: ['kanban', '\n', '  ', '    ', 'a', 'id1', '[', ']', '(', ')', '((', '))', '{{', '}}', '"', '`', '@{ ', '}', 'priority: high', 'ticket: X-1', "assigned: 'me'", 'label: L', 'shape: Rect', '\n  ', ':::c', '::icon(fa)', '%%', '<br>', '**', 'é', ' '],
+    async reference(src) {
+      const db = new m.KanbanDb();
+      kanbanParser.yy = asYy(db, { getType: db.getType, getLogger: () => quiet });
+      kanbanParser.parse(src);
+      return kanbanSummary(db);
     },
   },
   url: {

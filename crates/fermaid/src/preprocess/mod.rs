@@ -31,7 +31,7 @@ pub(crate) type Config = BTreeMap<String, Value>;
 
 impl Value {
     /// Whether JavaScript would treat the value as true.
-    fn truthy(&self) -> bool {
+    pub(crate) fn truthy(&self) -> bool {
         match self {
             Value::Null => false,
             Value::Bool(b) => *b,

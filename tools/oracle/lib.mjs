@@ -159,6 +159,19 @@ export function timelineSummary(db) {
   return out.join('\n');
 }
 
+// A kanban board: each column followed by its cards.
+export function kanbanSummary(db) {
+  const node = (kind, n) =>
+    `${kind}:${q(n.id)}|${n.level}|${q(n.label)}|${q(n.icon)}|${q(n.assigned)}|${q(n.ticket)}|${q(n.priority)}|${q(n.cssClasses)}`;
+  const out = [];
+  for (const s of db.sections) {
+    out.push(node('section', s));
+    for (const item of s.items) out.push(node('item', item));
+  }
+  out.push(`title:${q(db.title)}`);
+  return out.join('\n');
+}
+
 export function requirementSummary(db, buildRequirementGraph) {
   const out = [`dir:${q(db.direction)}`];
   for (const [name, r] of db.requirements) {

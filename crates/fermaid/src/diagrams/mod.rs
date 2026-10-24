@@ -11,7 +11,8 @@ pub(crate) mod class;
     feature = "er",
     feature = "requirement",
     feature = "timeline",
-    feature = "journey"
+    feature = "journey",
+    feature = "kanban"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -20,6 +21,8 @@ pub(crate) mod er;
 pub(crate) mod flowchart;
 #[cfg(feature = "journey")]
 pub(crate) mod journey;
+#[cfg(feature = "kanban")]
+pub(crate) mod kanban;
 #[cfg(feature = "pie")]
 pub(crate) mod pie;
 #[cfg(feature = "requirement")]
