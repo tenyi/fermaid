@@ -224,6 +224,16 @@ fn keeps_the_node_an_icon_belongs_to() {
 }
 
 #[test]
+fn an_accessibility_statement_becomes_a_node() {
+    // Mermaid's mindmap grammar has no accessibility statements, so a line that looks like one
+    // is a node. Mermaid does the same, so this is ported as it is.
+    let out = render("mindmap\n  root\n    accTitle: M\n");
+    assert_eq!(count(&out.svg, "fermaid-node "), 2, "{}", out.svg);
+    assert!(out.svg.contains(">accTitle: M<"), "{}", out.svg);
+    assert!(!out.svg.contains("<title id="), "{}", out.svg);
+}
+
+#[test]
 fn snapshots() {
     insta::assert_snapshot!("across", svg(FULL));
     insta::assert_snapshot!("down", narrow(FULL).svg);

@@ -229,6 +229,21 @@ fn stays_fast_on_large_and_hostile_input() {
 }
 
 #[test]
+fn an_accessibility_statement_becomes_a_column() {
+    // Mermaid's kanban grammar has no accessibility statements, so a line that looks like one
+    // is a column. Mermaid does the same, so this is ported as it is.
+    let out = render("kanban\naccTitle: B\naccDescr: D\n Todo\n  card\n");
+    assert!(
+        out.svg.contains("fermaid-cluster fermaid-column"),
+        "{}",
+        out.svg
+    );
+    assert!(out.svg.contains(">accTitle: B<"), "{}", out.svg);
+    assert!(out.svg.contains(">accDescr: D<"), "{}", out.svg);
+    assert!(!out.svg.contains("<title id="), "{}", out.svg);
+}
+
+#[test]
 fn snapshots() {
     let cases = [
         ("full", FULL.to_string()),

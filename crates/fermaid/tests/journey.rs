@@ -194,6 +194,17 @@ fn stays_fast_on_large_and_hostile_input() {
 }
 
 #[test]
+fn an_icon_in_the_task_name_takes_the_place_of_the_people() {
+    // Mermaid's grammar reads the task name up to the first colon and the data as the rest of
+    // the line, so a colon in the name shifts the pieces: the icon becomes the only person and
+    // the score is the piece before it, which is empty and so zero. Mermaid does the same.
+    let out = render("journey\n task: :fa-car: 3: me\n");
+    assert!(out.svg.contains("<title>fa-car</title>"), "{}", out.svg);
+    assert!(!out.svg.contains(">me<"), "{}", out.svg);
+    assert!(out.svg.contains("fermaid-face-sad"), "{}", out.svg);
+}
+
+#[test]
 fn snapshots() {
     let cases = [
         ("full", FULL.to_string()),

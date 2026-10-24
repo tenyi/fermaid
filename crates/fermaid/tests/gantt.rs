@@ -335,6 +335,19 @@ fn draws_a_milestone_as_a_diamond() {
 }
 
 #[test]
+fn a_bare_today_marker_takes_the_next_line_as_its_value() {
+    // Mermaid's lexer lets the value of `todayMarker` sit on the next line, so the task that
+    // follows is read as the marker's value and the chart has no tasks. Mermaid does the same,
+    // so this is ported as it is.
+    let out = render("gantt\ndateFormat YYYY-MM-DD\ntodayMarker\nA :a, 2024-01-01, 3d\n");
+    assert_eq!(
+        tasks(&out.svg),
+        0,
+        "the task was read as the marker's value"
+    );
+}
+
+#[test]
 fn snapshots() {
     let cases = [("full", FULL.to_string()), ("compact", COMPACT.to_string())];
     for (name, src) in cases {
