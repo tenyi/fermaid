@@ -297,7 +297,7 @@ draws differently from Mermaid follows Mermaid, and the difference is recorded i
 
 - [x] Sankey charts, behind the `sankey` feature.
 - [x] XY charts, behind the `xychart` feature.
-- [ ] Quadrant charts, behind the `quadrant` feature.
+- [x] Quadrant charts, behind the `quadrantchart` feature.
 - [ ] Git graphs, behind the `git` feature.
 
 Notes:
@@ -323,9 +323,19 @@ Notes:
   division and print without rounding noise: 0.3, not 0.30000000000000004.
 - The differential run against Mermaid's own grammar reports no difference over 3,070 inputs,
   the 64 Mermaid spec cases pass, and ten minutes of fuzzing (1,774,589 runs) found no panic.
-- The picture is compared with pele's, chart by chart, by `tools/oracle/render-xychart.mjs`:
+- The picture is compared with pele's, chart by chart, by `tools/oracle/render-compare.mjs`:
   eight charts, with lines, bars, a horizontal one, a point-label one and a long one, come out
   the same to the byte once the names of the classes and of the CSS variables are normalized.
+- A quadrant chart is read with Mermaid's own `quadrant.jison` grammar, through a hand-written
+  lexer that walks UTF-16 code units. The layout is pele's own, as it is for every type.
+- The configuration lives under `quadrantChart`, as in Mermaid's schema.
+- The label of a point looks for a place that is free: below the point, above it, right or left
+  of it, or below the title of the quadrant it is in. A chart of more than three hundred points
+  skips the search and puts every label below its point.
+- A stroke color is only drawn when there is a stroke width to draw it with, as in Mermaid.
+- The differential run against Mermaid's own grammar reports no difference over 3,029 inputs,
+  the 29 Mermaid spec cases pass, ten minutes of fuzzing (1,404,030 runs) found no panic, and
+  the picture comes out the same as pele's, chart by chart.
 
 ### M6b — The structural diagrams
 
