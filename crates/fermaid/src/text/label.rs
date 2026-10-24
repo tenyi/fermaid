@@ -703,6 +703,38 @@ mod tests {
         assert_eq!(dedent("  a\n    b\n\n  c"), "a\n  b\n\nc");
     }
 
+    /// Expected values come from pele's `layoutLabel` with `metricsMeasurer` at e7f092a.
+    #[test]
+    fn matches_pele() {
+        let cases: &[(&str, bool, f64, f64, u8, &str)] = &[
+            ("The quick brown fox jumps over the lazy dog", false, 16.0, 100.0, 0, "[The quick]0:69.36 | [brown fox]0:69.36 | [jumps over]0:78.24 | [the lazy dog]0:86.272 w=86.272 h=84 lh=21"),
+            ("Supercalifragilisticexpialidocious", false, 16.0, 80.0, 0, "[Supercalifragilisticexpialidocious]0:229.392 w=229.392 h=24 lh=24"),
+            ("這是一個很長的中文標籤，需要換行顯示。", false, 16.0, 80.0, 0, "[這是一個很]0:80 | [長的中文標]0:80 | [籤，需要換]0:80 | [行顯示。]0:64 w=80 h=84 lh=21"),
+            ("Rust 語言渲染 Mermaid 圖表", false, 16.0, 70.0, 0, "[Rust 語言]0:69.344 | [渲染]0:32 | [Mermaid]0:62.224 | [圖表]0:32 w=69.344 h=84 lh=21"),
+            ("「引號」測試（括號）文字", false, 16.0, 40.0, 0, "[「引]0:32 | [號」]0:32 | [測試]0:32 | [（括]0:32 | [號）]0:32 | [文字]0:32 w=32 h=126 lh=21"),
+            ("inter\u{ad}national\u{ad}ization", false, 16.0, 70.0, 0, "[inter-]0:36.448 | [national-]0:61.36 | [ization]0:46.24 w=61.36 h=63 lh=21"),
+            ("**Bold** text with `code` and _italic_ words", true, 16.0, 120.0, 0, "[Bold]1:35.552 [ text with]0:63.136 | [`code` and ]0:80.928 [italic]2:32 | [words]0:42.672 w=112.928 h=63 lh=21"),
+            ("Line one\nline *two* is longer than the first", true, 14.0, 100.0, 0, "[Line one]0:53.704 | [line ]0:25.676 [two]2:21.784 [ is]0:14 | [longer than the]0:93.394 | [first]0:22.554 w=93.394 h=72 lh=18"),
+            ("<b>bold</b> <i>it</i> <u>u</u> H<sub>2</sub>O x<sup>2</sup>", false, 16.0, 1000.0, 0, "[bold]1:33.776 [ ]0:4.448 [it]2:8 [ ]0:4.448 [u]32:8.896 [ H]0:16 [2]8:7.413333333333334 [O x]0:24.896 [2]16:7.413333333333334 w=115.29066666666668 h=24 lh=24"),
+            ("Header title text", false, 16.0, 60.0, 1, "[Header]1:54.24 | [title]1:28.448 | [text]1:28.448 w=54.24 h=63 lh=21"),
+            ("a   b    c", false, 16.0, 1000.0, 0, "[a   b    c]0:56.928 w=56.928 h=24 lh=24"),
+            ("path/to/some-long-file_name.rs", false, 12.0, 60.0, 0, "[path/to/some-long-file_name.rs]0:165.396 w=165.396 h=18 lh=18"),
+        ];
+        for &(raw, markdown, size, max, base, expected) in cases {
+            let label = layout_label(Some(raw), markdown, &MetricsMeasurer, size, max, Style(base));
+            let lines: Vec<String> = label
+                .lines
+                .iter()
+                .map(|line| {
+                    let spans: Vec<String> = line.iter().map(|s| format!("[{}]{}:{}", s.text, s.style.0, s.width)).collect();
+                    spans.join(" ")
+                })
+                .collect();
+            let got = format!("{} w={} h={} lh={}", lines.join(" | "), label.width, label.height, label.line_height);
+            assert_eq!(got, expected, "{raw:?}");
+        }
+    }
+
     #[test]
     fn empty_label() {
         assert_eq!(layout_label(None, false, &MetricsMeasurer, 16.0, 100.0, Style::NONE), Label::default());
