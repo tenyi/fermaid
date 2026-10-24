@@ -21,8 +21,8 @@ refined when M3 ends.
 | Theming | CSS variables `--fermaid-bg`, `--fermaid-fg`, `--fermaid-line`, `--fermaid-accent`, `--fermaid-series-1..8`, … (same suffixes as pele). |
 | Limits | Same defaults as pele: source 50,000 chars, output 4,000,000 chars, 5,000 edges, plus an explicit nesting depth limit (default 64), because a Rust stack overflow aborts and cannot be caught. Diagram config can never raise limits. |
 | Determinism | Same input + same options ⇒ byte-identical output. Coordinates use at most 2 decimals with trailing zeros trimmed. Ids are `{id_prefix}-{n}`. Output never depends on hash-map iteration order. |
-| Text measurement | `TextMeasurer` trait; the default `MetricsMeasurer` ports pele's Arial ASCII tables (regular/bold) and its non-ASCII rules (CJK/fullwidth 1 em, other non-ASCII 580, mono 600, combining/zero-width 0). Wrapping rules are ported too. |
-| Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as a JSON5 subset. Unknown keys are ignored. |
+| Text measurement | `TextMeasurer` trait; the default `MetricsMeasurer` ports pele's Arial ASCII tables (regular/bold) and its non-ASCII rules (CJK/fullwidth 1 em, other non-ASCII 580, mono 600, combining/zero-width 0). Wrapping rules are ported too. The tables are embedded in pele's packed form and decoded at compile time (`const fn`), so no generator is needed. |
+| Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as strict JSON, like `JSON.parse` in pele (not JSON5). Unknown keys are ignored. |
 | Testing | insta snapshots; Mermaid spec cases ported from pele's `tests/compat/<type>`, each with a `SKIPPED.md`; per-type security tests; cargo-fuzz (no panics, limits hold); differential fuzzing against Mermaid's parsers from M3 (dev-only Node harness, outside regular CI). |
 | CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. |
 | Releases | `0.0.1` after M1 (reserves the name), `0.1.0` after M2. Breaking changes are allowed before 1.0 and recorded in `CHANGELOG.md`. |
@@ -37,21 +37,30 @@ pub struct Rendered {
     pub svg: String,
     pub width: f64,
     pub height: f64,
-    pub links: Vec<String>,
+    pub links: Vec<Link>,
     pub kind: DiagramKind,
+}
+
+pub struct Link {
+    pub id: String,     // element id as written in the diagram
+    pub href: String,
+    pub internal: bool, // points into the page
 }
 
 pub struct Error {
     pub code: ErrorCode, // Unsupported | Syntax | Semantic | Limit
+    pub kind: Option<DiagramKind>, // None when the type was not detected
     pub line: u32,
     pub column: u32,
     pub message: String,
     pub snippet: String, // source line with a caret under the error position
 }
 
-// RenderOptions: Default; fields font_family, font_size, id_prefix, padding,
-// limits { source, output, max_edges, max_depth }, link_schemes,
-// measurer: Option<Box<dyn TextMeasurer>>
+// RenderOptions: Default; fields font_family, font_family_mono,
+// font_size: Option<f64>, id_prefix, padding: Option<f64>, responsive,
+// limits { source, output, max_edges, max_depth },
+// measurer: Option<Box<dyn TextMeasurer>>.
+// link_schemes is added in M2 together with URL sanitizing.
 ```
 
 ## Repository layout
@@ -59,23 +68,23 @@ pub struct Error {
 ```
 crates/fermaid       library (published as `fermaid`)
 crates/fermaid-cli   binary `fermaid`, hand-rolled arg parsing
-xtask/               metrics table generation, compat case conversion
+xtask/               (M1) compat case conversion
 fuzz/                cargo-fuzz targets
 tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 ```
 
-## M0 — Foundation
+## M0 — Foundation (done)
 
-1. Convert to a workspace with the layout above; set `rust-version = "1.85"`.
-2. Core skeleton: `Error`, `ErrorCode`, `RenderOptions`, `Limits`, `Rendered`,
+1. [x] Convert to a workspace with the layout above; set `rust-version = "1.85"`.
+2. [x] Core skeleton: `Error`, `ErrorCode`, `RenderOptions`, `Limits`, `Rendered`,
    `DiagramKind`, `detect_type`, an internal `Diagram` trait, and feature-gated dispatch.
-3. `svg` module: zero-dependency builder with escaping, deterministic number
+3. [x] `svg` module: zero-dependency builder with escaping, deterministic number
    formatting and sequential ids.
-4. `text` module: `TextMeasurer` trait and `MetricsMeasurer`; xtask generates
-   the metrics tables from pele; port the wrapping rules.
-5. `preprocess` module: comments, front-matter YAML subset, `%%{init}%%`.
-6. CI workflow.
-7. `NOTICE` crediting pele; a project introduction in `README.md` and its three translations.
+4. [x] `text` module: `TextMeasurer` trait and `MetricsMeasurer` with pele's tables
+   embedded and decoded at compile time; port the wrapping rules (label layout).
+5. [x] `preprocess` module: comments, front-matter YAML subset, `%%{init}%%`, entity codes.
+6. [x] CI workflow; a `render` fuzz target.
+7. [x] `NOTICE` crediting pele; a project introduction in `README.md` and its three translations.
 
 **Done when**
 - CI is green.
@@ -84,6 +93,7 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 
 ## M1 — Pie (end-to-end pipeline)
 
+0. `xtask`: convert pele's `tests/compat/<type>` cases into Rust test data.
 1. Pie lexer, parser and model (`showData`, `title`, `accTitle`, `accDescr`).
 2. Layout and emitter using `--fermaid-series-*`.
 3. Port the Mermaid spec cases from pele's `tests/compat/pie` and add `SKIPPED.md`.
@@ -104,7 +114,8 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 3. Flowchart parser covering all node shapes, edge kinds, `classDef`, `style`,
    `click` and `linkStyle`.
 4. Port svg shapes, edges and clusters.
-5. Security: link scheme allowlist; `style` limited to allowed properties.
+5. Security: URL sanitizing and a link scheme allowlist (`RenderOptions::link_schemes`);
+   `style` limited to allowed properties.
 6. Compat, snapshot and security tests; a fuzz target.
 7. Publish `0.1.0`.
 

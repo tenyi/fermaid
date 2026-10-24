@@ -12,14 +12,26 @@ fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) di
 - Untrusted input is a first-class concern: escape all diagram text, filter links and inline styles, and cap source and output size.
 - Parsers are validated against Mermaid's own parser specs and with differential fuzzing.
 
-The project is at the very beginning: only the `cargo init --lib` skeleton exists. The development plan and all settled design decisions are in `docs/ROADMAP.md`. Read it before starting work. Key points:
+The development plan and all settled design decisions are in `docs/ROADMAP.md`. Read it before starting work. Key points:
 
-- Algorithms, text metrics and limits are ported from pele v1.9.0 (`e7f092a`), written as idiomatic Rust (not a line-by-line translation).
-- Zero runtime dependencies. `std`, MSRV 1.85. One Cargo feature per diagram type.
-- Planned workspace: `crates/fermaid` (lib), `crates/fermaid-cli`, `xtask/`, `fuzz/`.
+- Algorithms, text metrics and limits are ported from pele v1.9.0 (`e7f092a`), written as idiomatic Rust (not a line-by-line translation). When behavior is in doubt, run pele's TypeScript sources and compare.
+- Zero runtime dependencies. `std`, MSRV 1.85 (no APIs stabilized later). One Cargo feature per diagram type; `default = ["all"]`.
 - CSS variables use the `--fermaid-*` prefix with pele's suffixes.
 - Output must be deterministic (byte-identical for identical input and options).
 - An explicit nesting depth limit is required, because a Rust stack overflow aborts and cannot be caught.
+
+## Architecture
+
+M0 (foundation) is done; no diagram type exists yet, so `render` always returns `ErrorCode::Unsupported`.
+
+- `crates/fermaid` — the library. `render` checks the source limit, runs `preprocess`, detects the type (`detect.rs`), looks it up (`diagram.rs`, an internal `Diagram` trait; one module per type, feature-gated), renders it and checks the output limit.
+  - `preprocess/` — `%%` comments, front matter (`yaml.rs`, a YAML subset), `%%{init}%%` (`json.rs`, strict JSON).
+  - `text/` — `Style`, `TextMeasurer`, `MetricsMeasurer` (pele's Arial tables decoded at compile time), `entities.rs` (entity codes), `label.rs` (label parsing, measuring and wrapping; a port of pele's `text/label.ts` without math and icons).
+  - `svg/` — escaping, number formatting, label `<text>` output, theme CSS variables, the document root and titles.
+  - `error.rs` (`Error` with code, kind, line, column, snippet), `options.rs` (`RenderOptions`, `Limits`, `Rendered`, `Link`), `util.rs` (JavaScript-compatible whitespace, trimming and rounding).
+- `crates/fermaid-cli` — the `fermaid` binary, hand-rolled argument parsing.
+- `fuzz/` — cargo-fuzz targets (nightly, outside the workspace).
+- `.github/workflows/ci.yml` — fmt, clippy, tests on stable and 1.85; fuzz smoke run.
 
 Update this file as real architecture lands.
 
@@ -32,6 +44,7 @@ cargo test <name_substring>      # single test / filter
 cargo test -- --nocapture        # show println! output
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
+cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60
 ```
 
 Rust edition is 2024.
