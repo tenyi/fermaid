@@ -16,7 +16,8 @@ pub(crate) mod class;
     feature = "mindmap",
     feature = "gantt",
     feature = "sankey",
-    feature = "xychart"
+    feature = "xychart",
+    feature = "quadrantchart"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -33,6 +34,8 @@ pub(crate) mod kanban;
 pub(crate) mod mindmap;
 #[cfg(feature = "pie")]
 pub(crate) mod pie;
+#[cfg(feature = "quadrantchart")]
+pub(crate) mod quadrantchart;
 #[cfg(feature = "requirement")]
 pub(crate) mod requirement;
 #[cfg(feature = "sankey")]

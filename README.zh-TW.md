@@ -8,7 +8,7 @@
 
 fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，不需要 JavaScript 執行環境、無頭瀏覽器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一個小巧、無相依套件的 TypeScript 渲染器），支援 Mermaid 12.1.0 語法，並採用 pele 自己的版面配置與視覺風格。
 
-> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、桑基圖、XY 圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
+> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、桑基圖、XY 圖、象限圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
 
 | 圖表類型 | 狀態 |
 |---|---|
@@ -26,6 +26,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 心智圖（`mindmap`） | 已支援：所有節點形狀、圖示、class 與分支顏色；橫向排列，宿主較窄時改為縱向 |
 | 桑基圖（`sankey`、`sankey-beta`） | 已支援：Mermaid 的 CSV 形式，每行一組 `source,target,value`，欄位可加引號；以及 `sankey` 的設定鍵 `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix` 與 `labelStyle` |
 | XY 圖（`xychart`、`xychart-beta`） | 已支援：`title`、以類別或範圍表示的 `x-axis`、以範圍表示的 `y-axis`、可帶點標籤的 `line` 與 `bar` 系列、`accTitle` 與 `accDescr`、`horizontal` 與 `vertical` 方向；以及 `xyChart` 的設定鍵 `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`，以及 `yAxis` 底下同樣的四個 |
+| 象限圖（`quadrantChart`） | 已支援：`title`、以 `-->` 連接的 `x-axis` 與 `y-axis`、`quadrant-1` 到 `quadrant-4`、可帶 `radius`、`color`、`stroke-color` 與 `stroke-width` 的點、`classDef` 與點的類別、`accTitle` 與 `accDescr`；以及 `quadrantChart` 的設定鍵 `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius` 與 `pointTextPadding` |
 | 其他 | 規劃中 |
 
 ## 目標
@@ -84,7 +85,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey` 與 `xychart` 目標
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart` 與 `quadrantchart` 目標
 cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新產生 pele 對這些案例的解析結果
 node tools/oracle/diff.mjs ../pele   # 與 Mermaid 自身的解析器做差異模糊測試

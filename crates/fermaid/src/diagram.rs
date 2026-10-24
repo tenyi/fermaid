@@ -91,6 +91,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Sankey => Some(&crate::diagrams::sankey::Sankey),
         #[cfg(feature = "xychart")]
         DiagramKind::XyChart => Some(&crate::diagrams::xychart::XyChart),
+        #[cfg(feature = "quadrantchart")]
+        DiagramKind::QuadrantChart => Some(&crate::diagrams::quadrantchart::QuadrantChart),
         _ => None,
     }
 }

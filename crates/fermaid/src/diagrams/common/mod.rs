@@ -1,6 +1,6 @@
 //! Parts shared by several diagram types.
 
-#[cfg(feature = "xychart")]
+#[cfg(any(feature = "xychart", feature = "quadrantchart"))]
 pub(crate) mod chars;
 pub(crate) mod fit;
 #[cfg(any(feature = "class", feature = "er"))]
@@ -14,7 +14,8 @@ pub(crate) mod literal;
     feature = "class",
     feature = "er",
     feature = "requirement",
-    feature = "sankey"
+    feature = "sankey",
+    feature = "quadrantchart"
 ))]
 pub(crate) mod ordered;
 #[cfg(any(feature = "kanban", feature = "mindmap"))]

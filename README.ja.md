@@ -8,7 +8,7 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、サンキー図、XY チャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、サンキー図、XY チャート、クアドラントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
@@ -26,6 +26,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | マインドマップ（`mindmap`） | 対応済み：すべてのノード形状、アイコン、クラス、枝の色。横向きに配置し、ホストが狭いときは縦向きにします |
 | サンキー図（`sankey`、`sankey-beta`） | 対応済み：Mermaid の CSV 形式。1 行につき `source,target,value` を 1 つ、フィールドは引用符で囲めます。`sankey` の設定キー `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix`、`labelStyle` に対応 |
 | XY チャート（`xychart`、`xychart-beta`） | 対応済み：`title`、カテゴリまたは範囲を持つ `x-axis`、範囲を持つ `y-axis`、点ラベルを持つ `line` と `bar` の系列、`accTitle` と `accDescr`、`horizontal` と `vertical` の向き。`xyChart` の設定キー `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`、および `yAxis` 側の同じ 4 つのキーに対応 |
+| クアドラントチャート（`quadrantChart`） | 対応済み：`title`、`-->` を持つ `x-axis` と `y-axis`、`quadrant-1` から `quadrant-4`、`radius`、`color`、`stroke-color`、`stroke-width` を持つ点、`classDef` と点のクラス、`accTitle` と `accDescr`。`quadrantChart` の設定キー `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius`、`pointTextPadding` に対応 |
 | その他 | 予定 |
 
 ## 目標
@@ -84,7 +85,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart` ターゲットもあります
+cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart`、`quadrantchart` ターゲットもあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
 node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
 node tools/oracle/diff.mjs ../pele   # Mermaid 自身のパーサーとの差分ファジング

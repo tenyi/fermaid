@@ -8,7 +8,7 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â€” no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie, gantt, sankey and XY charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
+> **Status:** alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie, gantt, sankey, XY and quadrant charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
@@ -26,6 +26,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Mind map (`mindmap`) | Supported: every node shape, icons, classes, and branch colors; laid out across, or down for a narrow host |
 | Sankey (`sankey`, `sankey-beta`) | Supported: the CSV form of Mermaid, `source,target,value` per line, with quoted fields; and the `sankey` config keys `width`, `height`, `nodeWidth`, `nodePadding`, `nodeAlignment`, `nodeColors`, `linkColor`, `showValues`, `prefix`, `suffix` and `labelStyle` |
 | XY chart (`xychart`, `xychart-beta`) | Supported: `title`, `x-axis` with categories or a range, `y-axis` with a range, `line` and `bar` series with point labels, `accTitle` and `accDescr`, the `horizontal` and `vertical` orientation, and the `xyChart` config keys `width`, `height`, `chartOrientation`, `showTitle`, `showLegend`, `showDataLabel`, `xAxis.showTitle`, `xAxis.showTick`, `xAxis.showLabel`, `xAxis.showAxisLine` and the same four under `yAxis` |
+| Quadrant chart (`quadrantChart`) | Supported: `title`, `x-axis` and `y-axis` with a `-->`, `quadrant-1` to `quadrant-4`, points with `radius`, `color`, `stroke-color` and `stroke-width`, `classDef` and the classes of a point, `accTitle` and `accDescr`; and the `quadrantChart` config keys `chartWidth`, `chartHeight`, `titlePadding`, `xAxisLabelPadding`, `yAxisLabelPadding`, `xAxisPosition`, `yAxisPosition`, `quadrantPadding`, `quadrantTextTopPadding`, `pointRadius` and `pointTextPadding` |
 | The rest | Planned |
 
 ## Goals
@@ -84,7 +85,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart`, `sequence`, `state`, `class`, `er`, `requirement`, `timeline`, `journey`, `kanban`, `mindmap`, `gantt`, `sankey` and `xychart` are other targets
+cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart`, `sequence`, `state`, `class`, `er`, `requirement`, `timeline`, `journey`, `kanban`, `mindmap`, `gantt`, `sankey`, `xychart` and `quadrantchart` are other targets
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
 node tools/oracle/diff.mjs ../pele   # differential fuzzing against Mermaid's own parsers

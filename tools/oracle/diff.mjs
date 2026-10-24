@@ -20,7 +20,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
 // as tools/oracle/golden.mjs does.
@@ -37,10 +37,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [quadrantchart] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -67,6 +67,7 @@ const m = await loadPele(pele, {
   'src/diagrams/sankey/db.ts': ['SankeyDb'],
   'src/diagrams/sankey/parser.ts': ['prepareTextForParsing'],
   'src/diagrams/xychart/db.ts': ['XyChartDb'],
+  'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
   'src/diagrams/common/outline.ts': ['NODE_TYPE'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
@@ -111,6 +112,7 @@ const ganttParser = m.buildParser(join(pele, 'tests/compat/gantt/upstream/gantt.
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 const sankeyParser = m.buildParser(join(pele, 'tests/compat/sankey/upstream/sankey.jison'));
 const xychartParser = m.buildParser(join(pele, 'tests/compat/xychart/upstream/xychart.jison'));
+const quadrantParser = m.buildParser(join(pele, 'tests/compat/quadrant/upstream/quadrant.jison'));
 
 const TYPES = {
   pie: {
@@ -219,6 +221,19 @@ const TYPES = {
       return xychartSummary(db);
     },
   },
+  quadrantchart: {
+    // The corpus of the quadrant chart is under another name in pele.
+    corpusName: 'quadrant',
+    keyword: /(^|\n)\s*quadrant(Chart|-[1-4])\b/,
+    fragments: ['quadrantChart', 'quadrant-1', 'quadrant-2', 'quadrant-3', 'quadrant-4', 'x-axis ', 'y-axis ', '-->', 'title ', 'classDef ', ':::', '[', ']', ',', ':', '"', '0', '1', '0.5', 'radius: 10', 'color: #ff0000', 'stroke-color: #00ff00', 'stroke-width: 5px', '\n', ';', '%%', '---\n', 'é', 'A', '❤'],
+    async reference(src) {
+      const db = new m.QuadrantDb();
+      quadrantParser.yy = asYy(db);
+      // Mermaid's Diagram.fromText encodes entities and adds a line break.
+      quadrantParser.parse(m.encodeEntities(src) + '\n');
+      return quadrantSummary(db);
+    },
+  },
   timeline: {
     keyword: /(^|\n)\s*timeline/,
     fragments: ['timeline', 'timeline TD', 'timeline LR', 'section ', 'title ', ' : ', ':', ': ', '\n', 'accTitle: t', 'accDescr: d', 'accDescr { d }', '<br>', '%%', '#', '2001', 'a b', 'é', ' '],
@@ -288,7 +303,7 @@ const work = mkdtempSync(join(tmpdir(), 'fermaid-diff-'));
 const runs = {};
 for (const type of types) {
   const spec = TYPES[type];
-  const corpus = spec.corpus ?? m.loadCorpus(type, spec.keyword);
+  const corpus = spec.corpus ?? m.loadCorpus(spec.corpusName ?? type, spec.keyword);
   // Hostile payloads are a few of the fragments, so that most inputs stay close to valid.
   const next = m.mutator(corpus, [...m.PAYLOADS.slice(0, 8), ...spec.fragments], m.random(seed));
   const inputs = [...corpus];

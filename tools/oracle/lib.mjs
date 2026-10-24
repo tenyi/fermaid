@@ -265,6 +265,33 @@ export function sankeySummary(db) {
   return out.join('\n');
 }
 
+// A quadrant chart: its four boxes, its axes, its points and its classes.
+export function quadrantSummary(db) {
+  const out = [];
+  out.push(`quadrants:${db.quadrants.map((q) => (q ? q.text : '-')).join('|')}`);
+  out.push(
+    `axes:${q(db.xAxisLeft?.text)}|${q(db.xAxisRight?.text)}|${q(db.yAxisBottom?.text)}|${q(db.yAxisTop?.text)}`
+  );
+  for (const p of db.points) {
+    out.push(`point:${q(p.text.text)}|${p.x}|${p.y}|${q(p.className)}|${styleSummary(p)}`);
+  }
+  for (const [name, style] of db.classes) {
+    out.push(`class:${q(name)}|${styleSummary(style)}`);
+  }
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
+
+// The style of a point or of a class, in the order the keys are read.
+function styleSummary(style) {
+  const out = [];
+  if (style.radius !== undefined) out.push(`radius:${style.radius}`);
+  if (style.color !== undefined) out.push(`color:${style.color}`);
+  if (style.strokeColor !== undefined) out.push(`stroke-color:${style.strokeColor}`);
+  if (style.strokeWidth !== undefined) out.push(`stroke-width:${style.strokeWidth}`);
+  return out.join(',');
+}
+
 // An XY chart: its axes, then its series.
 export function xychartSummary(db) {
   const out = [];

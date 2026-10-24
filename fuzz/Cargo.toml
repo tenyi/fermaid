@@ -118,3 +118,10 @@ path = "fuzz_targets/xychart.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "quadrantchart"
+path = "fuzz_targets/quadrantchart.rs"
+test = false
+doc = false
+bench = false

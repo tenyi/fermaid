@@ -14,6 +14,12 @@ before 1.0, a minor version may break the API.
   the `horizontal` and `vertical` orientation, and the `xyChart` config keys `width`, `height`,
   `chartOrientation`, `showTitle`, `showLegend` and `showDataLabel`, with the `showTitle`,
   `showTick`, `showLabel` and `showAxisLine` keys of `xAxis` and `yAxis`.
+- Quadrant charts, behind the `quadrantchart` feature: `title`, `x-axis` and `y-axis` with a
+  `-->`, `quadrant-1` to `quadrant-4`, points with `radius`, `color`, `stroke-color` and
+  `stroke-width`, `classDef` and the classes of a point, `accTitle` and `accDescr`, and the
+  `quadrantChart` config keys `chartWidth`, `chartHeight`, `titlePadding`,
+  `xAxisLabelPadding`, `yAxisLabelPadding`, `xAxisPosition`, `yAxisPosition`,
+  `quadrantPadding`, `quadrantTextTopPadding`, `pointRadius` and `pointTextPadding`.
 
 ## 0.2.0 - 2026-10-24
 
