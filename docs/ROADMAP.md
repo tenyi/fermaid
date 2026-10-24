@@ -282,7 +282,7 @@ The next version comes after M6, when every diagram type Mermaid 12.1.0 builds i
 
 ## M6 — The remaining types ✅ (in progress)
 
-Mermaid 12.1.0 builds 32 diagram types. M0–M5 cover twelve of them; M6 covers the rest, in
+Mermaid 12.1.0 builds 33 diagram types. M0–M5 cover twelve of them; M6 covers the rest, in
 three batches, ordered by how much the types are used. The niche types come last, as the
 roadmap says they should.
 
