@@ -5,6 +5,14 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- Gantt charts, behind the `gantt` feature: tasks with dates, durations, `after` and `until`,
+  sections, `done`, `active`, `crit`, `milestone` and `vert` tasks, excluded and included
+  days, `dateFormat`, `axisFormat`, `tickInterval`, `weekday`, `todayMarker`, `topAxis`,
+  compact mode and `click` links. Dates are UTC.
+- `RenderOptions::now` and the CLI's `--now`: the time a gantt chart's today marker shows.
+  The default is 1970-01-01, so output does not depend on the clock.
+- Timelines (`timeline`), user journeys (`journey`), kanban boards (`kanban`, with ticket links
+  through `ticketBaseUrl`) and mind maps (`mindmap`), each behind its own feature.
 - State diagrams, behind the `state` feature: states with descriptions, composite states with
   their own direction, concurrency regions, start and end, choice, fork and join, notes,
   `classDef`, `class`, `style` and `click`.

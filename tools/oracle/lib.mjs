@@ -172,6 +172,23 @@ export function kanbanSummary(db) {
   return out.join('\n');
 }
 
+// A gantt chart: its settings, then its tasks as scheduled at time 0 (run with TZ=UTC).
+export function ganttSummary(db) {
+  const t = (d) => (d && Number.isFinite(+d) ? String(+d) : '-');
+  const out = [
+    `title:${q(db.title)}|${q(db.accTitle)}|${q(db.accDescr)}`,
+    `format:${q(db.dateFormat)}|${q(db.axisFormat)}|${q(db.tickInterval)}|${q(db.todayMarker)}|${db.weekday ?? '-'}|${db.weekend}`,
+    `days:${q(db.includes.join(','))}|${q(db.excludes.join(','))}|${db.inclusiveEndDates}|${db.topAxis}`,
+    `sections:${q(db.sections.join('|'))}`,
+  ];
+  for (const k of db.getTasks(0)) {
+    const flags = ['active', 'done', 'crit', 'milestone', 'vert'].filter((f) => k[f]).join(',');
+    out.push(`task:${q(k.id)}|${q(k.task)}|${q(k.section)}|${t(k.startTime)}|${t(k.endTime)}|${t(k.renderEndTime)}|${flags}|${k.order}|${q(k.classes.join(','))}`);
+  }
+  for (const [id, url] of db.links) out.push(`link:${q(id)}|${q(url)}`);
+  return out.join('\n');
+}
+
 // A mind map: its nodes in source order, each with its parent.
 export function mindmapSummary(db) {
   const parent = new Map();

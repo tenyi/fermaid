@@ -22,11 +22,12 @@ pub(crate) mod plain;
     feature = "timeline",
     feature = "journey",
     feature = "kanban",
-    feature = "mindmap"
+    feature = "mindmap",
+    feature = "gantt"
 ))]
 #[cfg_attr(
     not(any(feature = "timeline", feature = "journey")),
-    allow(dead_code, reason = "outlines use only part of it")
+    allow(dead_code, reason = "outlines and gantt charts use only part of it")
 )]
 pub(crate) mod scan;
 #[cfg(feature = "pie")]

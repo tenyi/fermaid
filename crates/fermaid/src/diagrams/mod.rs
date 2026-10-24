@@ -13,13 +13,16 @@ pub(crate) mod class;
     feature = "timeline",
     feature = "journey",
     feature = "kanban",
-    feature = "mindmap"
+    feature = "mindmap",
+    feature = "gantt"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
 pub(crate) mod er;
 #[cfg(feature = "flowchart")]
 pub(crate) mod flowchart;
+#[cfg(feature = "gantt")]
+pub(crate) mod gantt;
 #[cfg(feature = "journey")]
 pub(crate) mod journey;
 #[cfg(feature = "kanban")]

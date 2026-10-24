@@ -68,6 +68,9 @@ pub struct RenderOptions {
     pub link_rel: Option<String>,
     /// Measures text; [`MetricsMeasurer`](crate::MetricsMeasurer) when `None`.
     pub measurer: Option<Box<dyn TextMeasurer>>,
+    /// The current time, in milliseconds since 1970-01-01 UTC, for what a gantt chart dates
+    /// from today. `None` is 1970-01-01, so that output never depends on the clock.
+    pub now: Option<f64>,
 }
 
 impl Default for RenderOptions {
@@ -87,6 +90,7 @@ impl Default for RenderOptions {
             image_schemes: None,
             link_rel: None,
             measurer: None,
+            now: None,
         }
     }
 }

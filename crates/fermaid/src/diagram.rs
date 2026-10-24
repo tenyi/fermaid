@@ -17,7 +17,8 @@ use crate::{DiagramKind, Link, RenderOptions};
         feature = "er",
         feature = "timeline",
         feature = "kanban",
-        feature = "mindmap"
+        feature = "mindmap",
+        feature = "gantt"
     )),
     allow(
         dead_code,
@@ -83,6 +84,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Kanban => Some(&crate::diagrams::kanban::Kanban),
         #[cfg(feature = "mindmap")]
         DiagramKind::Mindmap => Some(&crate::diagrams::mindmap::Mindmap),
+        #[cfg(feature = "gantt")]
+        DiagramKind::Gantt => Some(&crate::diagrams::gantt::Gantt),
         _ => None,
     }
 }

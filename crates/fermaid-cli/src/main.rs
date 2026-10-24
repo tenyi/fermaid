@@ -5,6 +5,7 @@ use std::process::ExitCode;
 
 const USAGE: &str = "\
 Usage: fermaid [INPUT|-] [-o OUTPUT] [--font-size N] [--max-width N] [--id-prefix PREFIX]
+               [--now MS]
 
 Renders the Mermaid diagram in INPUT (or standard input) to SVG.
 
@@ -13,6 +14,8 @@ Options:
       --font-size N      Font size in pixels
       --max-width N      The width the diagram should fit, in pixels
       --id-prefix PREFIX Prefix of the ids in the SVG (default: fermaid)
+      --now MS           The current time for gantt charts, in milliseconds since
+                         1970-01-01 UTC (default: 0)
   -h, --help             Show this help
   -V, --version          Show the version";
 
@@ -48,6 +51,11 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
             "--font-size" => parsed.options.font_size = Some(pixels(&value(&arg)?, "font size")?),
             "--max-width" => parsed.options.max_width = Some(pixels(&value(&arg)?, "width")?),
             "--id-prefix" => parsed.options.id_prefix = value(&arg)?,
+            "--now" => {
+                let text = value(&arg)?;
+                let now = text.parse().ok().filter(|n: &f64| n.is_finite());
+                parsed.options.now = Some(now.ok_or(format!("invalid time: {text}"))?);
+            }
             "-" => parsed.input = None,
             flag if flag.starts_with('-') => return Err(format!("unknown option: {flag}")),
             _ if parsed.input.is_some() => return Err(format!("unexpected argument: {arg}")),

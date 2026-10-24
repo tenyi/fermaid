@@ -4,7 +4,7 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** pre-alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。次はガントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応する予定です。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** pre-alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
@@ -15,6 +15,11 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | クラス図（`classDiagram`） | 対応済み：メンバー、ジェネリック型、アノテーションを持つクラス、マーカーと多重度付きの関係、名前空間、ノート、ロリポップインターフェース、`classDef`、`cssClass`、`style`、`link`、`click`、`callback` |
 | ER 図（`erDiagram`） | 対応済み：属性、キー、コメントを持つエンティティ、カラスの足記法の多重度付きリレーションシップ、エイリアス、サブグラフ、`classDef`、`class`、`style` |
 | 要求図（`requirementDiagram`） | 対応済み：あらゆる種類の要求と要素およびそのフィールド、リレーションシップ、`classDef`、`class`、`style` |
+| ガントチャート（`gantt`） | 対応済み：日付・期間・`after`・`until` を持つタスク、セクション、`done`・`active`・`crit`・`milestone`・`vert`、`excludes`・`includes`・`weekend`、`dateFormat`・`axisFormat`・`tickInterval`・`weekday`・`todayMarker`・`topAxis`、コンパクトモード、`click` リンク。日付はすべて UTC で、「今日」は `RenderOptions::now` で決まります |
+| タイムライン（`timeline`） | 対応済み：タイトル、セクション、期間とそのイベント |
+| ユーザージャーニー（`journey`） | 対応済み：タイトル、セクション、スコアとアクターを持つタスク |
+| カンバン（`kanban`） | 対応済み：列と（形状付きの）カード、`@{ … }` メタデータ（`assigned`・`ticket`・`priority`・`label`）、クラス、`ticketBaseUrl` によるチケットリンク |
+| マインドマップ（`mindmap`） | 対応済み：すべてのノード形状、アイコン、クラス、枝の色。横向きに配置し、ホストが狭いときは縦向きにします |
 | その他 | 予定 |
 
 ## 目標
@@ -38,7 +43,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` は SVG とそのサイズ・リンクを返すか、エラーコード（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行番号と列番号、問題箇所を示すスニペットを含む `Error` を返します。`detect_type` はレンダリングせずにダイアグラムの種類を判定します。`max_width` にホストで使える幅を指定すると、幅を詰められるダイアグラムは狭く描かれます（円グラフは凡例をグラフの下に移します）。`click` 文のリンクはサニタイズされ、許可されたスキーム（`link_schemes`、デフォルトは `http`、`https`、`mailto`、`tel`）のものだけが残ります。横向きのフローチャートは `max_width` に収まらないときに縦向きで描かれます。ダイアグラムの種類ごとに Cargo feature（`flowchart`、`pie` など）があり、デフォルトの `all` feature にはすべての種類が含まれます。
+`render` は SVG とそのサイズ・リンクを返すか、エラーコード（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行番号と列番号、問題箇所を示すスニペットを含む `Error` を返します。`detect_type` はレンダリングせずにダイアグラムの種類を判定します。`max_width` にホストで使える幅を指定すると、幅を詰められるダイアグラムは狭く描かれます（円グラフは凡例をグラフの下に移します）。`click` 文のリンクはサニタイズされ、許可されたスキーム（`link_schemes`、デフォルトは `http`、`https`、`mailto`、`tel`）のものだけが残ります。横向きのフローチャートは `max_width` に収まらないときに縦向きで描かれます。ダイアグラムの種類ごとに Cargo feature（`flowchart`、`pie` など）があり、デフォルトの `all` feature にはすべての種類が含まれます。ガントチャートの「今日」は `now`（1970-01-01 UTC からのミリ秒）で決まります。デフォルトは 1970-01-01 で、出力が時計に左右されることはありません。
 
 ## コマンドライン
 
@@ -46,6 +51,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 cargo install --path crates/fermaid-cli
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
+fermaid plan.mmd --now 1700000000000 -o plan.svg   # 今日のマーカー付きのガントチャート
 ```
 
 ## テーマ
@@ -71,7 +77,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement` ターゲットもあります
+cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt` ターゲットもあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
 node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
 node tools/oracle/diff.mjs ../pele   # Mermaid 自身のパーサーとの差分ファジング

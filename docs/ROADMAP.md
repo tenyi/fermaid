@@ -5,8 +5,8 @@ algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
 **v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
 
-Milestones M0–M4 are planned to task level and done. M5 onward is scoped only and will be
-refined next.
+Milestones M0–M5 are planned to task level and done. M6 is scoped only and will be refined
+next.
 
 ## Decisions
 
@@ -23,6 +23,7 @@ refined next.
 | Limits | Same defaults as pele: source 50,000 chars, output 4,000,000 chars, 5,000 edges, plus an explicit nesting depth limit (default 64), because a Rust stack overflow aborts and cannot be caught. Diagram config can never raise limits. |
 | Determinism | Same input + same options ⇒ byte-identical output. Coordinates use at most 2 decimals with trailing zeros trimmed. Ids are `{id_prefix}-{n}`. Output never depends on hash-map iteration order. |
 | Text measurement | `TextMeasurer` trait; the default `MetricsMeasurer` ports pele's Arial ASCII tables (regular/bold) and its non-ASCII rules (CJK/fullwidth 1 em, other non-ASCII 580, mono 600, combining/zero-width 0). Wrapping rules are ported too. The tables are embedded in pele's packed form and decoded at compile time (`const fn`), so no generator is needed. |
+| Dates | Gantt dates are read and drawn in UTC: there is no time zone database, and output must be deterministic. "Today" is `RenderOptions::now` (milliseconds since the epoch, CLI `--now`); `None` is 1970-01-01, not the clock. Dates no format matches fall back to `new Date(text)` for ECMAScript's ISO forms only; the other forms V8's own parser accepts (`2020-1-5`, `Jan 5 2020`, `2020-01-05 10:00`) are a known difference. |
 | Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as strict JSON, like `JSON.parse` in pele (not JSON5). Unknown keys are ignored. |
 | Testing | insta snapshots; Mermaid spec cases ported from pele's `tests/compat/<type>`, each with a `SKIPPED.md`; per-type security tests; cargo-fuzz (no panics, limits hold); differential fuzzing against Mermaid's parsers from M3 (dev-only Node harness, outside regular CI). |
 | CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. |
@@ -232,7 +233,25 @@ Notes:
   on every input.
 - Fuzzing found no panic (class 831,000 runs, ER 895,000 runs in 10 minutes).
 
+## M5 — Gantt, timeline, journey, kanban, mindmap ✅
+
+Each type is ported from pele as in M4, with compat cases, snapshot, security and speed tests,
+and a fuzz target.
+
+Notes:
+- Timelines and journeys share a plain line parser (`common/plain.rs`); kanban boards and mind
+  maps share an indented outline parser (`common/outline.rs`); all four use the tokenizer in
+  `common/scan.rs`.
+- On each type's corpus from pele, on hand-written cases, on 3,000 mutated inputs, and with
+  `max_width`, the output is byte for byte pele's, errors included. For gantt charts pele runs
+  with `TZ=UTC` and `now: 0` (and other fixed times). The only differences are dates V8's
+  legacy date parser accepts (about 3% of mutated gantt inputs), recorded under Dates above.
+- Compat cases pass. The gantt and mind map specs partly call the model directly; those cases
+  are listed in `SKIPPED.md`.
+- The differential run against Mermaid's grammars covers timeline, journey, kanban and mind
+  map; gantt is checked through its golden compat cases and the comparisons above.
+- Fuzzing found no panic.
+
 ## Later milestones (scope only)
 
-- **M5** — gantt, timeline, journey, kanban, mindmap.
 - **M6** — remaining types by usage; niche types (agentflow, wardley, …) last.

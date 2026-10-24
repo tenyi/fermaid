@@ -2,21 +2,23 @@
 // compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
 // which fermaid's model matches pele's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|journey|kanban|mindmap|requirement|sequence|state|timeline
+//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|gantt|journey|kanban|mindmap|requirement|sequence|state|timeline
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary } from './lib.mjs';
 
+// Gantt dates are local time in pele and UTC in fermaid.
+process.env.TZ = 'UTC';
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['class', 'er', 'flowchart', 'journey', 'kanban', 'mindmap', 'requirement', 'sequence', 'state', 'timeline'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|journey|kanban|mindmap|requirement|sequence|state|timeline');
+if (!peleDir || !['class', 'er', 'flowchart', 'gantt', 'journey', 'kanban', 'mindmap', 'requirement', 'sequence', 'state', 'timeline'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|gantt|journey|kanban|mindmap|requirement|sequence|state|timeline');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
+const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, GanttDb, parseGantt, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
@@ -30,6 +32,8 @@ const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr,
   'src/diagrams/requirement/parser.ts': ['parseRequirement'],
   'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
+  'src/diagrams/gantt/db.ts': ['GanttDb'],
+  'src/diagrams/gantt/parser.ts': ['parseGantt'],
   'src/diagrams/journey/db.ts': ['JourneyDb'],
   'src/diagrams/journey/parser.ts': ['parseJourney'],
   'src/diagrams/kanban/db.ts': ['KanbanDb'],
@@ -104,6 +108,10 @@ for (const { name, src } of cases) {
         const db = new JourneyDb();
         parseJourney(src, db);
         result = journeySummary(db);
+      } else if (type === 'gantt') {
+        const db = new GanttDb();
+        parseGantt(src, db);
+        result = ganttSummary(db);
       } else if (type === 'kanban') {
         const db = new KanbanDb();
         parseKanban(src, db);

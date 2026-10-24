@@ -1,0 +1,16 @@
+//! Renders arbitrary text as a gantt chart. Any panic is a bug: untrusted input must only
+//! ever produce `Err`. Output must be deterministic and within the output limit.
+#![no_main]
+
+use libfuzzer_sys::fuzz_target;
+
+fuzz_target!(|body: &str| {
+    let src = format!("gantt\n{body}");
+    let options = fermaid::RenderOptions::default();
+    let first = fermaid::render(&src, &options);
+    if let Ok(rendered) = &first {
+        assert!(rendered.svg.chars().count() <= options.limits.output);
+        assert!(!rendered.svg.contains("<script"));
+    }
+    assert_eq!(first, fermaid::render(&src, &options));
+});

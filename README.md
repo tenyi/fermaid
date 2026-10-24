@@ -4,7 +4,7 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** pre-alpha. Flowcharts, sequence, state, class, ER and requirement diagrams and pie charts are supported; every other diagram type returns an `Unsupported` error for now. Gantt charts, timelines, journeys, kanban boards and mind maps come next. See the [roadmap](docs/ROADMAP.md).
+> **Status:** pre-alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie and gantt charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
@@ -15,6 +15,11 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust �
 | Class (`classDiagram`) | Supported: classes with members, generic types and annotations, relations with markers and cardinalities, namespaces, notes, lollipop interfaces, `classDef`, `cssClass`, `style`, `link`, `click` and `callback` |
 | ER (`erDiagram`) | Supported: entities with attributes, keys and comments, relationships with crow's foot cardinalities, aliases, subgraphs, `classDef`, `class` and `style` |
 | Requirement (`requirementDiagram`) | Supported: requirements of every kind and elements with their fields, relationships, `classDef`, `class` and `style` |
+| Gantt (`gantt`) | Supported: tasks with dates, durations, `after` and `until`, sections, `done`, `active`, `crit`, `milestone` and `vert`, `excludes`, `includes` and `weekend`, `dateFormat`, `axisFormat`, `tickInterval`, `weekday`, `todayMarker`, `topAxis`, compact mode and `click` links. Dates are UTC, and today is `RenderOptions::now` |
+| Timeline (`timeline`) | Supported: title, sections, periods with their events |
+| User journey (`journey`) | Supported: title, sections, tasks with scores and actors |
+| Kanban (`kanban`) | Supported: columns and cards with shapes, `@{ … }` metadata (`assigned`, `ticket`, `priority`, `label`), classes, and ticket links through `ticketBaseUrl` |
+| Mind map (`mindmap`) | Supported: every node shape, icons, classes, and branch colors; laid out across, or down for a narrow host |
 | The rest | Planned |
 
 ## Goals
@@ -38,7 +43,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Links from `click` statements are sanitized and kept only when their scheme is allowed (`link_schemes`, by default `http`, `https`, `mailto` and `tel`); a flowchart that runs across turns to run down when it does not fit `max_width`. Each diagram type is a Cargo feature (`flowchart`, `pie`, …); the default feature `all` includes every type.
+`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Links from `click` statements are sanitized and kept only when their scheme is allowed (`link_schemes`, by default `http`, `https`, `mailto` and `tel`); a flowchart that runs across turns to run down when it does not fit `max_width`. Each diagram type is a Cargo feature (`flowchart`, `pie`, …); the default feature `all` includes every type. A gantt chart dates "today" from `now`, in milliseconds since 1970-01-01 UTC; it defaults to 1970-01-01 so that output never depends on the clock.
 
 ## Command line
 
@@ -46,6 +51,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 cargo install --path crates/fermaid-cli
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
+fermaid plan.mmd --now 1700000000000 -o plan.svg   # a gantt chart with today's marker
 ```
 
 ## Theming
@@ -71,7 +77,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart`, `sequence`, `state`, `class`, `er` and `requirement` are other targets
+cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart`, `sequence`, `state`, `class`, `er`, `requirement`, `timeline`, `journey`, `kanban`, `mindmap` and `gantt` are other targets
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
 node tools/oracle/diff.mjs ../pele   # differential fuzzing against Mermaid's own parsers
