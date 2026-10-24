@@ -50,11 +50,22 @@ pub struct RenderOptions {
     /// The width the host has for the diagram, in pixels. A type that can draw itself narrower
     /// does, so that its text is not shrunk with it.
     pub max_width: Option<f64>,
+    /// Whether a diagram that runs across may be drawn running down when it does not fit
+    /// `max_width`, which is done under `direction_breakpoint` pixels (640 when `None`).
+    pub auto_direction: bool,
+    pub direction_breakpoint: Option<f64>,
     /// Space around the drawing in pixels. Each diagram type has its own default.
     pub padding: Option<f64>,
     /// Whether the SVG scales down to fit its container.
     pub responsive: bool,
     pub limits: Limits,
+    /// Schemes a link may use besides a relative address. `None` allows `http`, `https`,
+    /// `mailto` and `tel`; an empty list allows only relative links.
+    pub link_schemes: Option<Vec<String>>,
+    /// Schemes an image may use besides a relative address. `None` allows `http` and `https`.
+    pub image_schemes: Option<Vec<String>>,
+    /// The `rel` attribute of links. `None` writes `noopener`; an empty string writes none.
+    pub link_rel: Option<String>,
     /// Measures text; [`MetricsMeasurer`](crate::MetricsMeasurer) when `None`.
     pub measurer: Option<Box<dyn TextMeasurer>>,
 }
@@ -67,9 +78,14 @@ impl Default for RenderOptions {
             font_size: None,
             id_prefix: "fermaid".to_string(),
             max_width: None,
+            auto_direction: true,
+            direction_breakpoint: None,
             padding: None,
             responsive: true,
             limits: Limits::default(),
+            link_schemes: None,
+            image_schemes: None,
+            link_rel: None,
             measurer: None,
         }
     }

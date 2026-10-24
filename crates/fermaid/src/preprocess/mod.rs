@@ -4,6 +4,9 @@
 mod json;
 mod yaml;
 
+#[cfg_attr(not(feature = "flowchart"), allow(unused_imports))]
+pub(crate) use yaml::parse_yaml;
+
 use std::collections::BTreeMap;
 
 use crate::error::{Error, ErrorCode};

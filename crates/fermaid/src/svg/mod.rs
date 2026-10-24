@@ -1,12 +1,21 @@
 //! Building blocks for SVG output: escaping, number formatting, labels and the document root.
 //! Ported from pele's `svg/` modules.
 
+#[cfg(feature = "flowchart")]
+pub(crate) mod cluster;
 mod document;
+#[cfg(feature = "flowchart")]
+pub(crate) mod edges;
+#[cfg(feature = "flowchart")]
+pub(crate) mod shapes;
 mod theme;
 mod title;
 
 pub(crate) use document::{Accessible, svg_document};
-pub(crate) use theme::{FONT_MONO, ROOT_STYLE, font_style, series_color};
+pub(crate) use theme::{
+    CRITICAL, FONT_MONO, ROOT_STYLE, ResolvedStyle, class_names, font_style, parse_float,
+    resolve_style, rounded, series_color,
+};
 pub(crate) use title::{title_label, with_title};
 
 use std::fmt::Write;

@@ -15,6 +15,12 @@ mod detect;
 mod diagram;
 mod diagrams;
 mod error;
+#[cfg(feature = "flowchart")]
+#[allow(
+    dead_code,
+    reason = "parts are used by diagram types that are not written yet"
+)]
+mod layout;
 mod options;
 mod preprocess;
 #[allow(
@@ -24,6 +30,14 @@ mod preprocess;
 )]
 mod svg;
 mod text;
+#[cfg(feature = "flowchart")]
+mod unicode;
+#[cfg(feature = "flowchart")]
+#[allow(
+    dead_code,
+    reason = "parts are used by diagram types that are not written yet"
+)]
+mod url;
 mod util;
 
 pub use detect::DiagramKind;

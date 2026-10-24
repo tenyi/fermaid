@@ -19,6 +19,215 @@ pub(crate) fn series_color(index: usize) -> String {
     format!("var(--fermaid-series-{},{})", k + 1, SERIES[k])
 }
 
+/// Corners are rounded through CSS, which older browsers support for `rx`. The default goes
+/// first so that a diagram's own style can override it.
+pub(crate) const ROUNDED: &str = " style=\"rx:var(--_r)\"";
+
+pub(crate) fn rounded(attrs: &str) -> String {
+    match attrs.find(" style=\"") {
+        None => format!("{attrs}{ROUNDED}"),
+        Some(at) => format!("{}rx:var(--_r);{}", &attrs[..at + 8], &attrs[at + 8..]),
+    }
+}
+
+/// The color of what a diagram marks as critical.
+pub(crate) const CRITICAL: &str = "var(--fermaid-critical,#e45756)";
+
+const SHAPE_PROPS: &[&str] = &[
+    "fill",
+    "fill-opacity",
+    "stroke",
+    "stroke-width",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-opacity",
+    "opacity",
+    "rx",
+    "ry",
+];
+
+const TEXT_PROPS: &[&str] = &[
+    "color",
+    "font-size",
+    "font-family",
+    "font-weight",
+    "font-style",
+    "text-decoration",
+    "letter-spacing",
+    "word-spacing",
+    "opacity",
+];
+
+/// `url\s*\(|expression\s*\(|javascript:|[<>{};\\]|@import|image-set|\/\*`, ignoring case.
+fn unsafe_value(value: &str) -> bool {
+    let v = value.to_ascii_lowercase();
+    let call = |name: &str| {
+        v.match_indices(name)
+            .any(|(i, _)| crate::util::trim_start(&v[i + name.len()..]).starts_with('('))
+    };
+    call("url")
+        || call("expression")
+        || v.contains("javascript:")
+        || v.contains(['<', '>', '{', '}', ';', '\\'])
+        || v.contains("@import")
+        || v.contains("image-set")
+        || v.contains("/*")
+}
+
+/// Mermaid style declarations split into what applies to a shape, to its outline, and to its
+/// text, each written as a `style` attribute.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(crate) struct ResolvedStyle {
+    pub shape: String,
+    pub line: String,
+    pub text: String,
+    pub stroke: Option<String>,
+    pub bold: bool,
+    pub italic: bool,
+    pub font_size: Option<f64>,
+}
+
+fn set(map: &mut Vec<(String, String)>, prop: &str, value: &str) {
+    match map.iter_mut().find(|(p, _)| p == prop) {
+        Some(entry) => entry.1 = value.to_string(),
+        None => map.push((prop.to_string(), value.to_string())),
+    }
+}
+
+fn get<'a>(map: &'a [(String, String)], prop: &str) -> Option<&'a str> {
+    map.iter().find(|(p, _)| p == prop).map(|(_, v)| v.as_str())
+}
+
+fn remove_important(value: &str) -> String {
+    let lower = value.to_ascii_lowercase();
+    let mut out = String::with_capacity(value.len());
+    let mut i = 0;
+    while let Some(at) = lower[i..].find("!important") {
+        out.push_str(&value[i..i + at]);
+        i += at + "!important".len();
+    }
+    out.push_str(&value[i..]);
+    out
+}
+
+pub(crate) fn resolve_style<S: AsRef<str>>(declarations: &[S]) -> ResolvedStyle {
+    let mut shape = Vec::new();
+    let mut text = Vec::new();
+    for decl in declarations {
+        let decl = decl.as_ref();
+        let Some(at) = decl.find(':').filter(|&at| at > 0) else {
+            continue;
+        };
+        let prop = crate::util::trim(&decl[..at]).to_lowercase();
+        let value = remove_important(&decl[at + 1..]);
+        let value = crate::util::trim(&value);
+        if value.is_empty() || unsafe_value(value) {
+            continue;
+        }
+        if SHAPE_PROPS.contains(&prop.as_str()) {
+            set(&mut shape, &prop, value);
+        }
+        if TEXT_PROPS.contains(&prop.as_str()) {
+            set(
+                &mut text,
+                if prop == "color" { "fill" } else { &prop },
+                value,
+            );
+        }
+    }
+    if shape.is_empty() && text.is_empty() {
+        return ResolvedStyle::default();
+    }
+    let mut shape_css = String::new();
+    let mut line_css = String::new();
+    for (prop, value) in &shape {
+        shape_css += &format!("{prop}:{value};");
+        if prop != "fill" && prop != "fill-opacity" {
+            line_css += &format!("{prop}:{value};");
+        }
+    }
+    let mut text_css = String::new();
+    for (prop, value) in &text {
+        text_css += &format!("{prop}:{value};");
+    }
+    let weight = get(&text, "font-weight");
+    let size = get(&text, "font-size");
+    let px = size
+        .filter(|s| {
+            let n = s.strip_suffix("px").unwrap_or(s);
+            !n.is_empty() && n.chars().all(|c| c.is_ascii_digit() || c == '.')
+        })
+        .and_then(parse_float);
+    let attr = |css: &str| {
+        if css.is_empty() {
+            String::new()
+        } else {
+            format!(" style=\"{}\"", super::esc(css))
+        }
+    };
+    ResolvedStyle {
+        shape: attr(&shape_css),
+        line: attr(&line_css),
+        text: attr(&text_css),
+        stroke: get(&shape, "stroke").map(str::to_string),
+        bold: weight.is_some_and(|w| {
+            w == "bold" || w == "bolder" || parse_float(w).is_some_and(|n| n >= 600.0)
+        }),
+        italic: get(&text, "font-style") == Some("italic"),
+        font_size: px.filter(|&p| p > 0.0 && p <= 200.0),
+    }
+}
+
+/// JavaScript's `parseFloat` for the leading decimal number of `s`.
+pub(crate) fn parse_float(s: &str) -> Option<f64> {
+    let s = crate::util::trim_start(s);
+    let mut end = 0;
+    let mut dot = false;
+    let mut digits = false;
+    for (i, c) in s.char_indices() {
+        if c.is_ascii_digit() {
+            digits = true;
+            end = i + 1;
+        } else if c == '.' && !dot {
+            dot = true;
+            if digits {
+                end = i + 1;
+            }
+        } else if (c == '-' || c == '+') && i == 0 {
+        } else {
+            break;
+        }
+    }
+    if !digits {
+        return None;
+    }
+    s[..end].trim_end_matches('.').parse().ok()
+}
+
+/// Class names from a diagram, as a string to append after other classes.
+pub(crate) fn class_names(raw: &str) -> String {
+    let mut out = String::new();
+    let mut gap = false;
+    for c in raw.chars() {
+        if crate::util::is_word(c) || c == '-' {
+            if gap && !out.is_empty() {
+                out.push(' ');
+            }
+            gap = false;
+            out.push(c);
+        } else {
+            gap = true;
+        }
+    }
+    if out.is_empty() {
+        out
+    } else {
+        format!(" {out}")
+    }
+}
+
 pub(crate) const FONT_MONO: &str = "var(--_fm)";
 pub(crate) const RADIUS: &str = "var(--fermaid-radius,4px)";
 
@@ -96,6 +305,27 @@ mod tests {
         assert!(!is_family_list("\"x\\\""));
         assert!(!is_family_list("url(x)"));
         assert!(!is_family_list("'a\"b'"));
+    }
+
+    #[test]
+    fn resolves_styles() {
+        let style = resolve_style(&[
+            "fill:#f9f",
+            "stroke:#333 !important",
+            "color:red",
+            "font-weight:700",
+            "x:url(y)",
+        ]);
+        assert_eq!(style.shape, " style=\"fill:#f9f;stroke:#333;\"");
+        assert_eq!(style.line, " style=\"stroke:#333;\"");
+        assert_eq!(style.text, " style=\"fill:red;font-weight:700;\"");
+        assert!(style.bold);
+        assert_eq!(resolve_style(&["fill:url(#x)"]), ResolvedStyle::default());
+        assert_eq!(resolve_style(&["font-size:14px"]).font_size, Some(14.0));
+        assert_eq!(class_names("a b$c "), " a b c");
+        assert_eq!(class_names("  "), "");
+        assert_eq!(rounded(" fill=\"x\""), " fill=\"x\" style=\"rx:var(--_r)\"");
+        assert_eq!(rounded(" style=\"a:b\""), " style=\"rx:var(--_r);a:b\"");
     }
 
     #[test]
