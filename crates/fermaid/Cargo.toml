@@ -18,6 +18,8 @@ flowchart = []
 pie = []
 sequence = []
 state = []
+# In progress: not yet part of `all`.
+class = []
 
 [dependencies]
 

@@ -1,7 +1,7 @@
 //! What a state diagram describes, built as Mermaid's `StateDB` (version 2) builds it. Ported
 //! from pele's `diagrams/state/db.ts` and `types.ts`.
 
-use std::collections::HashMap;
+pub(crate) use crate::diagrams::common::ordered::Ordered;
 
 use super::graph::{StateGraph, build_state_graph};
 use crate::error::Error;
@@ -123,47 +123,6 @@ pub(crate) struct StateClassDef {
 pub(crate) struct StateLink {
     pub url: String,
     pub tooltip: String,
-}
-
-/// An insertion-ordered map, as a JavaScript `Map` iterates.
-#[derive(Debug, Clone)]
-pub(crate) struct Ordered<V> {
-    pub items: Vec<(String, V)>,
-    index: HashMap<String, usize>,
-}
-
-impl<V> Default for Ordered<V> {
-    fn default() -> Self {
-        Self {
-            items: Vec::new(),
-            index: HashMap::new(),
-        }
-    }
-}
-
-impl<V> Ordered<V> {
-    pub(crate) fn get(&self, key: &str) -> Option<&V> {
-        self.index.get(key).map(|&i| &self.items[i].1)
-    }
-
-    pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut V> {
-        self.index.get(key).map(|&i| &mut self.items[i].1)
-    }
-
-    pub(crate) fn contains(&self, key: &str) -> bool {
-        self.index.contains_key(key)
-    }
-
-    /// Sets a value; a key already there keeps its place.
-    pub(crate) fn set(&mut self, key: &str, value: V) {
-        match self.index.get(key) {
-            Some(&i) => self.items[i].1 = value,
-            None => {
-                self.index.insert(key.to_string(), self.items.len());
-                self.items.push((key.to_string(), value));
-            }
-        }
-    }
 }
 
 #[derive(Debug, Default)]
@@ -439,23 +398,8 @@ impl StateDb {
     }
 
     pub(crate) fn set_acc_description(&mut self, text: &str) {
-        self.acc_descr = Some(collapse_indent(text));
+        self.acc_descr = Some(crate::util::collapse_indent(text));
     }
-}
-
-/// `text.replace(/\n\s+/g, '\n')`.
-pub(crate) fn collapse_indent(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    let mut chars = text.chars().peekable();
-    while let Some(c) = chars.next() {
-        out.push(c);
-        if c == '\n' {
-            while chars.peek().is_some_and(|&n| crate::util::is_space(n)) {
-                chars.next();
-            }
-        }
-    }
-    out
 }
 
 /// The last `direction` of a document, or TB.

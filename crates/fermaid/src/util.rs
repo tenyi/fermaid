@@ -29,6 +29,22 @@ pub(crate) fn is_line_end(c: char) -> bool {
     matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
+/// `text.replace(/\n\s+/g, '\n')`.
+#[cfg_attr(not(any(feature = "state", feature = "class")), allow(dead_code))]
+pub(crate) fn collapse_indent(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        out.push(c);
+        if c == '\n' {
+            while chars.peek().is_some_and(|&n| is_space(n)) {
+                chars.next();
+            }
+        }
+    }
+    out
+}
+
 pub(crate) fn trim(s: &str) -> &str {
     s.trim_matches(is_space)
 }
