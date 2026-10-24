@@ -27,3 +27,10 @@ path = "fuzz_targets/pie.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "flowchart"
+path = "fuzz_targets/flowchart.rs"
+test = false
+doc = false
+bench = false
