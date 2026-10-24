@@ -6,12 +6,15 @@
 mod axis;
 mod dates;
 mod db;
+mod legacy_date;
 mod lexer;
 mod parser;
 mod render;
 
 #[cfg(test)]
 mod compat;
+#[cfg(test)]
+mod date_cases;
 
 use crate::diagram::{Diagram, Input, Output};
 use crate::error::Error;

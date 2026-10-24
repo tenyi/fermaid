@@ -322,18 +322,12 @@ fn falls_back_to_the_date_parser_when_the_date_does_not_match_the_format() {
 }
 
 #[test]
-fn refuses_a_date_that_only_javascripts_own_parser_reads() {
+fn reads_a_date_that_only_javascripts_own_parser_reads() {
     // Mermaid gives a date the format does not match a second chance with JavaScript's own date
-    // parser, which reads "2014-1-12" and a bare "0" as well. fermaid falls back to the
-    // ECMAScript date time string format only, so it refuses a chart that Mermaid draws. The
-    // difference is recorded in tools/oracle/KNOWN.md.
-    let err = fermaid::render(
-        "gantt\ndateFormat YYYY-MM-DD\nA :a, 2014-1-12, 3d\n",
-        &options(None),
-    )
-    .unwrap_err();
-    assert_eq!(err.code, ErrorCode::Semantic);
-    assert_eq!(err.message, "Invalid date:2014-1-12");
+    // parser, which reads "2014-1-12" and a bare "0" as well. fermaid does the same, so the
+    // chart is drawn as Mermaid draws it.
+    let out = render("gantt\ndateFormat YYYY-MM-DD\nA :a, 2014-1-12, 3d\n");
+    assert!(out.svg.contains(">2014-01-12<"), "{}", out.svg);
 }
 
 #[test]

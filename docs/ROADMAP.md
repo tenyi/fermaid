@@ -23,7 +23,7 @@ next.
 | Limits | Same defaults as pele: source 50,000 chars, output 4,000,000 chars, 5,000 edges, plus an explicit nesting depth limit (default 64), because a Rust stack overflow aborts and cannot be caught. Diagram config can never raise limits. |
 | Determinism | Same input + same options ⇒ byte-identical output. Coordinates use at most 2 decimals with trailing zeros trimmed. Ids are `{id_prefix}-{n}`. Output never depends on hash-map iteration order. |
 | Text measurement | `TextMeasurer` trait; the default `MetricsMeasurer` ports pele's Arial ASCII tables (regular/bold) and its non-ASCII rules (CJK/fullwidth 1 em, other non-ASCII 580, mono 600, combining/zero-width 0). Wrapping rules are ported too. The tables are embedded in pele's packed form and decoded at compile time (`const fn`), so no generator is needed. |
-| Dates | Gantt dates are read and drawn in UTC: there is no time zone database, and output must be deterministic. "Today" is `RenderOptions::now` (milliseconds since the epoch, CLI `--now`); `None` is 1970-01-01, not the clock. Dates no format matches fall back to `new Date(text)` for ECMAScript's ISO forms only; the other forms V8's own parser accepts (`2020-1-5`, `Jan 5 2020`, `2020-01-05 10:00`) are a known difference, so fermaid refuses a chart that Mermaid draws. The difference is counted by `tools/oracle/diff.mjs` and described in `tools/oracle/KNOWN.md`. |
+| Dates | Gantt dates are read and drawn in UTC: there is no time zone database, and output must be deterministic. "Today" is `RenderOptions::now` (milliseconds since the epoch, CLI `--now`); `None` is 1970-01-01, not the clock. A date no format matches falls back to `new Date(text)`, which V8 reads with a parser of its own, ported in `gantt/legacy_date.rs`; the dates it reads are in `gantt/date_cases.rs`, and `tools/oracle/dates.mjs` writes them. |
 | Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as strict JSON, like `JSON.parse` in pele (not JSON5). Unknown keys are ignored. |
 | Testing | insta snapshots; Mermaid spec cases ported from pele's `tests/compat/<type>`, each with a `SKIPPED.md`; per-type security tests; cargo-fuzz (no panics, limits hold); differential fuzzing against Mermaid's parsers from M3 (dev-only Node harness, outside regular CI). |
 | CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. |
@@ -244,19 +244,18 @@ Notes:
   `common/scan.rs`.
 - On each type's corpus from pele, on hand-written cases, on 3,000 mutated inputs, and with
   `max_width`, the output is byte for byte pele's, errors included. For gantt charts pele runs
-  with `TZ=UTC` and `now: 0` (and other fixed times). The only differences are dates V8's
-  legacy date parser accepts (23 of 3,024 mutated gantt inputs), recorded under Dates above.
+  with `TZ=UTC` and `now: 0` (and other fixed times). The dates V8's own date parser reads are
+  the ones Mermaid reads, so nothing is left out.
 - Compat cases pass. The gantt and mind map specs partly call the model directly; those cases
   are listed in `SKIPPED.md`.
-- The differential run against Mermaid's grammars covers all five types: timeline, journey,
-  kanban and mind map agree on every input, and gantt agrees except for the dates V8's own
-  date parser reads, which `tools/oracle/KNOWN.md` describes.
+- The differential run against Mermaid's grammars covers all five types, and every one of
+  them agrees on every input.
 - Fuzzing found no panic.
 - Re-verified against pele 1.9.0 (`e7f092a`) and Node 22: the golden files of the five types
   regenerate byte for byte, the differential run over 3,000 mutated inputs per type reports no
-  unexplained difference for any of the thirteen types, and ten minutes of fuzzing per new
-  target found no panic (gantt 330,702 runs, timeline 233,850, journey 293,981, kanban 279,941,
-  mind map 311,144).
+  difference for any of the thirteen types, and ten minutes of fuzzing per new target found no
+  panic (gantt 757,835 runs, timeline 233,850, journey 293,981, kanban 279,941, mind map
+  311,144).
 
 ## Later milestones (scope only)
 

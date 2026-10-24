@@ -305,46 +305,6 @@ function resolveDots(url) {
   return m[1] + '/' + out.join('/') + m[3];
 }
 
-// A gantt chart's date that does not fit the chart's format gets a second chance with V8's own
-// date parser, as in Mermaid. fermaid only falls back to the ECMAScript date time string format,
-// so a date that V8 reads and that format does not is a known difference. The task data holds the
-// dates a chart can name, and the reference's task times show which of them V8 read.
-function ganttV8Dates(src) {
-  const out = new Set();
-  for (const line of src.split('\n')) {
-    const at = line.indexOf(':');
-    if (at < 0) continue;
-    for (const field of line.slice(at + 1).split(',')) {
-      const text = field.trim();
-      if (text === '') continue;
-      const date = new Date(text);
-      if (!Number.isNaN(date.getTime())) out.add(date.getTime());
-    }
-  }
-  return out;
-}
-
-// The times of the tasks in a gantt summary: the start, the end and the end that is drawn.
-function ganttTaskTimes(summary) {
-  const out = new Set();
-  for (const line of summary.split('\n')) {
-    if (!line.startsWith('task:')) continue;
-    // The first three fields are quoted and may hold a "|", so they are taken out first.
-    const fields = line.replace(/"(?:[^"\\]|\\.)*"/g, '""').split('|');
-    for (const field of fields.slice(3, 6)) {
-      const time = field.trim();
-      if (/^-?\d+$/.test(time)) out.add(Number(time));
-    }
-  }
-  return out;
-}
-
-function ganttUsedV8Date(summary, src) {
-  const times = ganttTaskTimes(summary);
-  for (const time of ganttV8Dates(src)) if (times.has(time)) return true;
-  return false;
-}
-
 let unexplained = 0;
 for (const type of types) {
   const { kept, expected, corpus } = runs[type];
@@ -361,7 +321,6 @@ for (const type of types) {
       if (want === 'error') errors++;
     } else if (known.has(`${type} ${JSON.stringify(src)}`)) listed++;
     else if (type === 'url' && resolveDots(want) === have) listed++;
-    else if (type === 'gantt' && have === 'error' && ganttUsedV8Date(want, src)) listed++;
     else differ.push({ src, want, have });
   });
   unexplained += differ.length;

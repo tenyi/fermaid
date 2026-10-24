@@ -3,9 +3,8 @@
 
 use std::collections::HashMap;
 
-use super::dates::{
-    Date, Unit, WEEKDAYS, add, add_days, format, iso_date, parse_iso, parse_strict,
-};
+use super::dates::{Date, Unit, WEEKDAYS, add, add_days, format, iso_date, parse_strict};
+use super::legacy_date;
 use crate::error::{Error, ErrorCode};
 use crate::url::safe_url;
 use crate::util::{collapse_indent, is_space, trim, trim_start};
@@ -423,7 +422,7 @@ impl GanttDb {
         }
         // What does not fit the format gets a second chance with the JavaScript date parser,
         // as in Mermaid.
-        let date = parse_iso(text);
+        let date = legacy_date::parse(text);
         if !date.valid() || date.year() < -10000.0 || date.year() > 10000.0 {
             return Err(semantic(format!("Invalid date:{text}")));
         }

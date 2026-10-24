@@ -32,7 +32,7 @@ pub(crate) const WEEKDAYS: [&str; 7] = [
     "Saturday",
 ];
 
-const MS_DAY: f64 = 86_400_000.0;
+pub(super) const MS_DAY: f64 = 86_400_000.0;
 const WEEK: f64 = 7.0 * MS_DAY;
 
 /// `ToIntegerOrInfinity`.
@@ -70,7 +70,7 @@ fn civil_from_days(z: f64) -> (f64, f64, f64) {
 }
 
 /// `MakeDay`.
-fn make_day(year: f64, month: f64, date: f64) -> f64 {
+pub(super) fn make_day(year: f64, month: f64, date: f64) -> f64 {
     if !year.is_finite() || !month.is_finite() || !date.is_finite() {
         return f64::NAN;
     }
@@ -84,7 +84,7 @@ fn make_day(year: f64, month: f64, date: f64) -> f64 {
 }
 
 /// `MakeTime`.
-fn make_time(h: f64, m: f64, s: f64, ms: f64) -> f64 {
+pub(super) fn make_time(h: f64, m: f64, s: f64, ms: f64) -> f64 {
     if !h.is_finite() || !m.is_finite() || !s.is_finite() || !ms.is_finite() {
         return f64::NAN;
     }
@@ -842,111 +842,6 @@ pub(crate) fn parse_strict(input: &str, template: &str, now: Date) -> Option<Dat
     (date.valid() && format(date, template).as_deref() == Some(input)).then_some(date)
 }
 
-/// What `new Date(text)` makes of a string in ECMAScript's date time string format. Local
-/// time is UTC here. As V8 does, a day past the end of its month runs into the next. V8 also
-/// takes other forms, through a parser of its own, which this does not.
-pub(crate) fn parse_iso(text: &str) -> Date {
-    let s = text.as_bytes();
-    let mut i = 0;
-    let digits = |i: &mut usize, n: usize| -> Option<f64> {
-        let part = s.get(*i..*i + n)?;
-        if !part.iter().all(u8::is_ascii_digit) {
-            return None;
-        }
-        *i += n;
-        Some(
-            part.iter()
-                .fold(0.0, |a, &d| a * 10.0 + f64::from(d - b'0')),
-        )
-    };
-    let mut parse = || -> Option<f64> {
-        let year = match s.first()? {
-            b'+' | b'-' => {
-                let negative = s[0] == b'-';
-                i = 1;
-                let y = digits(&mut i, 6)?;
-                if negative && y == 0.0 {
-                    return None;
-                }
-                if negative { -y } else { y }
-            }
-            _ => digits(&mut i, 4)?,
-        };
-        let mut month = 1.0;
-        let mut day = 1.0;
-        if s.get(i) == Some(&b'-') {
-            i += 1;
-            month = digits(&mut i, 2)?;
-            if s.get(i) == Some(&b'-') {
-                i += 1;
-                day = digits(&mut i, 2)?;
-            }
-        }
-        let (mut h, mut m, mut sec, mut ms) = (0.0, 0.0, 0.0, 0.0);
-        let mut offset = 0.0;
-        if s.get(i) == Some(&b'T') {
-            i += 1;
-            h = digits(&mut i, 2)?;
-            if s.get(i) != Some(&b':') {
-                return None;
-            }
-            i += 1;
-            m = digits(&mut i, 2)?;
-            if s.get(i) == Some(&b':') {
-                i += 1;
-                sec = digits(&mut i, 2)?;
-                if s.get(i) == Some(&b'.') {
-                    i += 1;
-                    let from = i;
-                    while s.get(i).is_some_and(u8::is_ascii_digit) {
-                        i += 1;
-                    }
-                    if i == from {
-                        return None;
-                    }
-                    let frac = &s[from..i.min(from + 3)];
-                    ms = frac
-                        .iter()
-                        .fold(0.0, |a, &d| a * 10.0 + f64::from(d - b'0'))
-                        * 10f64.powi(3 - frac.len() as i32);
-                }
-            }
-            match s.get(i) {
-                Some(b'Z') => i += 1,
-                Some(&c @ (b'+' | b'-')) => {
-                    i += 1;
-                    let oh = digits(&mut i, 2)?;
-                    if s.get(i) != Some(&b':') {
-                        return None;
-                    }
-                    i += 1;
-                    let om = digits(&mut i, 2)?;
-                    if oh > 23.0 || om > 59.0 {
-                        return None;
-                    }
-                    offset = (oh * 60.0 + om) * if c == b'+' { 1.0 } else { -1.0 };
-                }
-                _ => {}
-            }
-        }
-        if i != s.len() {
-            return None;
-        }
-        if !(1.0..=12.0).contains(&month)
-            || !(1.0..=31.0).contains(&day)
-            || h > 24.0
-            || m > 59.0
-            || sec > 59.0
-            || (h == 24.0 && (m > 0.0 || sec > 0.0 || ms > 0.0))
-        {
-            return None;
-        }
-        let t = make_day(year, month - 1.0, day) * MS_DAY + make_time(h, m, sec, ms);
-        Some(t - offset * 60_000.0)
-    };
-    Date::new(parse().unwrap_or(f64::NAN))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -998,16 +893,5 @@ mod tests {
         );
         assert_eq!(format(at(2014.0, 0.0, 6.0), "w"), None);
         assert_eq!(iso_date(at(-5.0, 0.0, 1.0)), "00-5-01-01");
-    }
-
-    #[test]
-    fn reads_iso_strings() {
-        assert_eq!(parse_iso("2020-01-05").time(), at(2020.0, 0.0, 5.0).time());
-        assert_eq!(
-            parse_iso("2020-01-05T10:00:00+02:00").time(),
-            Date::local(2020.0, 0.0, 5.0, 8.0, 0.0, 0.0, 0.0).time()
-        );
-        assert!(!parse_iso("2020-13-05").valid());
-        assert!(!parse_iso("Jan 5").valid());
     }
 }
