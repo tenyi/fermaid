@@ -296,7 +296,7 @@ draws differently from Mermaid follows Mermaid, and the difference is recorded i
 ### M6a — The charts people reach for
 
 - [x] Sankey charts, behind the `sankey` feature.
-- [ ] XY charts, behind the `xychart` feature.
+- [x] XY charts, behind the `xychart` feature.
 - [ ] Quadrant charts, behind the `quadrant` feature.
 - [ ] Git graphs, behind the `git` feature.
 
@@ -312,6 +312,20 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 2,775 inputs,
   the golden file of the Mermaid specs regenerates byte for byte from pele, and ten minutes of
   fuzzing (1,072,313 runs) found no panic.
+- An XY chart is read with Mermaid's own `xychart.jison` grammar, through a hand-written lexer
+  that walks UTF-16 code units, as the jison lexer does. The layout is pele's own, as it is
+  for every type: Mermaid draws the chart with d3, and the two are not the same picture.
+- The configuration lives under `xyChart`, as in Mermaid's schema, and not under `xychart`.
+- The value of a bar is always written past its end, which is what `showDataLabelOutsideBar`
+  asks for in Mermaid. Inside the bar, whether the value fits changes from bar to bar and
+  with the width of the chart, so fermaid writes it outside as well.
+- A tick step below one is the negative of its inverse, so that the tick values are found by
+  division and print without rounding noise: 0.3, not 0.30000000000000004.
+- The differential run against Mermaid's own grammar reports no difference over 3,070 inputs,
+  the 64 Mermaid spec cases pass, and ten minutes of fuzzing (1,774,589 runs) found no panic.
+- The picture is compared with pele's, chart by chart, by `tools/oracle/render-xychart.mjs`:
+  eight charts, with lines, bars, a horizontal one, a point-label one and a long one, come out
+  the same to the byte once the names of the classes and of the CSS variables are normalized.
 
 ### M6b — The structural diagrams
 
