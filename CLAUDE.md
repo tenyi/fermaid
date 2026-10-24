@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) diagram text to SVG — no JavaScript runtime, no headless browser, no Node.js. It is inspired by [obsidianmd/pele](https://github.com/obsidianmd/pele), a small, synchronous, dependency-free TypeScript Mermaid-to-SVG renderer. Pele is the main reference for behavior and scope:
+fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) diagram text to SVG — no JavaScript runtime, no headless browser, no Node.js. It is inspired by [obsidianmd/pele](https://github.com/obsidianmd/pele), a small, synchronous, dependency-free TypeScript Mermaid-to-SVG renderer. Pele is the main reference for behavior and scope, and Mermaid's own behavior is the specification:
 
 - Targets Mermaid 12.1.0 syntax, but with its own layout and visual style (pixel-identical output to Mermaid.js is not a goal).
 - Each diagram type is a self-contained unit (parser + layout + SVG emitter) that can be registered on its own; the full entry point includes all types.
@@ -15,6 +15,7 @@ fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) di
 The development plan and all settled design decisions are in `docs/ROADMAP.md`. Read it before starting work. Key points:
 
 - Algorithms, text metrics and limits are ported from pele v1.9.0 (`e7f092a`), written as idiomatic Rust (not a line-by-line translation). When behavior is in doubt, run pele's TypeScript sources and compare.
+- pele is a reference, not the specification: Mermaid is. Where pele has a defect — a keyword whose whitespace swallows the next line, a grammar that misreads a task — fermaid follows Mermaid instead, and the difference is recorded in `tools/oracle/KNOWN.md` and the roadmap. A behavior that only looks wrong but that Mermaid shares is not a defect: port it as it is and pin it with a test.
 - Zero runtime dependencies. `std`, MSRV 1.85 (no APIs stabilized later). One Cargo feature per diagram type; `default = ["all"]`.
 - CSS variables use the `--fermaid-*` prefix with pele's suffixes.
 - Output must be deterministic (byte-identical for identical input and options).
