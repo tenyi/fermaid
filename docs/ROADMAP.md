@@ -298,7 +298,7 @@ draws differently from Mermaid follows Mermaid, and the difference is recorded i
 - [x] Sankey charts, behind the `sankey` feature.
 - [x] XY charts, behind the `xychart` feature.
 - [x] Quadrant charts, behind the `quadrantchart` feature.
-- [ ] Git graphs, behind the `git` feature.
+- [x] Git graphs, behind the `git` feature.
 
 Notes:
 - A sankey chart is written as CSV, as Mermaid's grammar reads it: a `source,target,value`
@@ -335,6 +335,15 @@ Notes:
 - A stroke color is only drawn when there is a stroke width to draw it with, as in Mermaid.
 - The differential run against Mermaid's own grammar reports no difference over 3,029 inputs,
   the 29 Mermaid spec cases pass, ten minutes of fuzzing (1,404,030 runs) found no panic, and
+  the picture comes out the same as pele's, chart by chart.
+- A git graph is read with Mermaid's own Langium grammar, through a hand-written lexer that
+  answers as Chevrotain does: the keywords are tried first, and a name that is longer than the
+  keyword it starts with wins, so `commits` is a branch and not the word `commit`. The layout
+  is pele's own, as it is for every type.
+- Mermaid ends the id of a commit it made up with seven random digits; fermaid derives them from
+  the number of the commit, so the same text always gives the same ids.
+- The differential run against Mermaid's own grammar reports no difference over 3,094 inputs,
+  the 100 Mermaid spec cases pass, ten minutes of fuzzing (1,236,337 runs) found no panic, and
   the picture comes out the same as pele's, chart by chart.
 
 ### M6b — The structural diagrams
