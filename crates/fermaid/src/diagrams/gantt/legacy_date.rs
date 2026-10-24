@@ -663,27 +663,31 @@ fn is_millisecond(n: i64) -> bool {
 fn read_milliseconds(token: Token) -> i64 {
     let mut number = token.number();
     let mut length = token.length();
-    if length < 3 {
+    match length.cmp(&3) {
         // Fewer than three digits: put the most significant one in the hundreds.
-        if length == 1 {
-            number *= 100;
-        } else if length == 2 {
-            number *= 10;
-        }
-    } else if length > 3 {
-        if length > MAX_SIGNIFICANT_DIGITS {
-            length = MAX_SIGNIFICANT_DIGITS;
-        }
-        // More than three digits: keep the three most significant ones.
-        let mut factor = 1;
-        loop {
-            factor *= 10;
-            length -= 1;
-            if length <= 3 {
-                break;
+        std::cmp::Ordering::Less => {
+            if length == 1 {
+                number *= 100;
+            } else if length == 2 {
+                number *= 10;
             }
         }
-        number /= factor;
+        std::cmp::Ordering::Equal => {}
+        std::cmp::Ordering::Greater => {
+            if length > MAX_SIGNIFICANT_DIGITS {
+                length = MAX_SIGNIFICANT_DIGITS;
+            }
+            // More than three digits: keep the three most significant ones.
+            let mut factor = 1;
+            loop {
+                factor *= 10;
+                length -= 1;
+                if length <= 3 {
+                    break;
+                }
+            }
+            number /= factor;
+        }
     }
     number
 }

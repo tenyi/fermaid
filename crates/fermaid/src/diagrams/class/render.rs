@@ -92,7 +92,7 @@ struct Card {
     parent: i64,
 }
 
-fn base<'a>(node: &'a GraphNode, label: Label, w: f64, h: f64, font_size: f64) -> View<'a> {
+fn base(node: &GraphNode, label: Label, w: f64, h: f64, font_size: f64) -> View<'_> {
     View {
         node,
         class: None,

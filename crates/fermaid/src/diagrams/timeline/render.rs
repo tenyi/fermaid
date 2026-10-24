@@ -261,9 +261,7 @@ fn draw(db: &TimelineDb, input: &Input<'_>, vertical: bool) -> Output {
     };
 
     let mut body = String::new();
-    let height;
-
-    if vertical {
+    let height = if vertical {
         let axis_x = left + col_w + AXIS;
         let spine_x = axis_x + SPINE;
         let events_x = spine_x + SPINE;
@@ -334,7 +332,7 @@ fn draw(db: &TimelineDb, input: &Input<'_>, vertical: bool) -> Output {
             );
             y = tip;
         }
-        height = y + pad;
+        y + pad
     } else {
         let mut header_h: f64 = 0.0;
         let section_labels: Vec<Option<Label>> = groups
@@ -415,8 +413,8 @@ fn draw(db: &TimelineDb, input: &Input<'_>, vertical: bool) -> Output {
                 marker("arrow_point", tip, axis_y, 1.0, 0.0, "var(--_l)")
             );
         }
-        height = bottom + pad;
-    }
+        bottom + pad
+    };
 
     let total_width = (width + 2.0 * pad).ceil();
     let total_height = height.max(pad * 2.0).ceil();
