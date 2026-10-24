@@ -145,12 +145,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     fragments.extend(["\n", "  ", ":::", "::icon(", "[", "]", "((", "))", "<br>"]);
     let corpus = [FULL];
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 400, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -188,18 +192,35 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}{}", " ".repeat(N)),
         format!("{head}{}", "%%\n".repeat(N / 3)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         for max_width in [None, Some(300.0)] {
             let started = Instant::now();
-            let _ = fermaid::render(src, &options(max_width));
+            let out = fermaid::render(src, &options(max_width));
             let took = started.elapsed();
             assert!(
                 took < budget,
                 "{:?} took {took:?}",
                 &src[..src.len().min(40)]
             );
+            if out.is_ok() {
+                rendered += 1;
+            }
         }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 10,
+        "only {rendered} of {} cases were drawn",
+        cases.len() * 2
+    );
+}
+
+#[test]
+fn keeps_the_node_an_icon_belongs_to() {
+    let out = render("mindmap\n  root\n    a\n    ::icon(fa fa-book)\n");
+    assert!(out.svg.contains("data-id=\"a\""), "{}", out.svg);
+    assert!(out.svg.contains(">a<"), "{}", out.svg);
 }
 
 #[test]

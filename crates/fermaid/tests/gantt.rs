@@ -102,28 +102,58 @@ fn today_follows_the_given_time() {
     // At the default time, 1970-01-01, the chart is long past and has no marker.
     let out = fermaid::render(FULL, &options(None)).unwrap();
     assert!(!out.svg.contains("fermaid-today"));
+    // At the given time the marker is drawn, and `todayMarker off` takes it away. Without the
+    // given time both statements hold whatever the chart says.
+    assert!(render(FULL).svg.contains("fermaid-today"));
     let off = FULL.replace("excludes weekends", "todayMarker off");
     assert!(!svg(&off).contains("fermaid-today"));
+}
+
+#[test]
+fn the_today_marker_sits_on_the_given_day() {
+    let out = render(FULL);
+    let marker = out.svg.split("fermaid-today").nth(1).unwrap();
+    let x = marker.split('M').nth(1).unwrap().split(',').next().unwrap();
+    let tick = out
+        .svg
+        .split("<text x=\"")
+        .find(|p| p.contains("2014-01-15"))
+        .expect("the day is on the axis");
+    assert_eq!(
+        x,
+        tick.split('"').next().unwrap(),
+        "the marker is off its day"
+    );
 }
 
 #[test]
 fn packs_rows_in_compact_mode() {
     let out = render(COMPACT);
     assert_eq!(tasks(&out.svg), 4);
-    // A and C share a row, as do the top and bottom axis labels.
-    let normal = render(&COMPACT.replace("displayMode: compact", "title: x"));
-    assert!(out.height < normal.height);
+    // A and C share a row, as do the top and bottom axis labels. The chart to compare with is
+    // the same one without the front matter: a chart with a title is taller either way, so
+    // comparing with that would hold even if compact mode were ignored.
+    let normal = render(&COMPACT.replace("---\ndisplayMode: compact\n---\n", ""));
+    assert!(
+        out.height < normal.height,
+        "{} vs {}",
+        out.height,
+        normal.height
+    );
 }
 
 #[test]
 fn reports_errors() {
     let err = fermaid::render("gantt\nA :a, 2024-01-01\n", &options(None)).unwrap_err();
     assert_eq!(err.kind, Some(DiagramKind::Gantt));
+    assert_eq!(err.code, ErrorCode::Semantic);
+    assert_eq!(err.message, "Invalid date:a");
     let err = fermaid::render("gantt\ndateFormat\n", &options(None)).unwrap_err();
     assert_eq!(err.code, ErrorCode::Syntax);
     assert_eq!(err.line, 2);
     let err = fermaid::render("gantt\nA :a, 2024-13-45, 1d\n", &options(None)).unwrap_err();
     assert_eq!(err.code, ErrorCode::Semantic);
+    assert_eq!(err.message, "Invalid date:2024-13-45");
 }
 
 #[test]
@@ -180,12 +210,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     ]);
     let corpus = [FULL, COMPACT];
     let mut rnd = Random::new(13);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 300, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -230,16 +264,74 @@ fn stays_fast_on_large_and_hostile_input() {
         ),
         format!("{head}{}", "%%\n".repeat(N / 3)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 6,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_the_axis_in_the_given_format() {
+    let svg = svg("gantt\ndateFormat YYYY-MM-DD\naxisFormat %d/%m\nA :a, 2024-01-01, 3d\n");
+    assert!(svg.contains(">01/01<"), "{svg}");
+    assert!(!svg.contains(">2024-01-01<"), "{svg}");
+}
+
+#[test]
+fn shades_the_excluded_weekends() {
+    let out = render(FULL);
+    let at = out
+        .svg
+        .find("fermaid-excluded")
+        .expect("the weekends are shaded");
+    let segment = &out.svg[at..];
+    let end = segment.find("</g>").expect("the group ends");
+    assert_eq!(segment[..end].matches("<rect").count(), 3, "{segment}");
+}
+
+#[test]
+fn adds_the_last_day_when_the_end_dates_are_inclusive() {
+    let plain = svg("gantt\ndateFormat YYYY-MM-DD\nA :a, 2024-01-01, 2024-01-03\n");
+    assert!(!plain.contains(">2024-01-04<"), "{plain}");
+    let inclusive =
+        svg("gantt\ndateFormat YYYY-MM-DD\ninclusiveEndDates\nA :a, 2024-01-01, 2024-01-03\n");
+    assert!(inclusive.contains(">2024-01-04<"), "{inclusive}");
+}
+
+#[test]
+fn falls_back_to_the_date_parser_when_the_date_does_not_match_the_format() {
+    // As in Mermaid, a date the format does not describe is read the way JavaScript reads it.
+    let out = render("gantt\ndateFormat DD/MM/YYYY\nA :a, 2024-01-06, 3d\n");
+    assert!(out.svg.contains(">2024-01-06<"), "{}", out.svg);
+}
+
+#[test]
+fn draws_a_milestone_as_a_diamond() {
+    let out = render(
+        "gantt\ndateFormat YYYY-MM-DD\nFunctionality added :milestone, isadded, 2014-01-25, 0d\n",
+    );
+    assert!(
+        out.svg
+            .contains("fermaid-milestone\" data-id=\"isadded\"><path"),
+        "{}",
+        out.svg
+    );
 }
 
 #[test]

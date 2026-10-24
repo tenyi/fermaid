@@ -44,8 +44,33 @@ fn draws_periods_events_and_sections() {
         assert!(out.svg.contains(needle), "{needle}");
     }
     assert!(out.links.is_empty());
-    let down = svg(&FULL.replace("timeline\n", "timeline TD\n"));
-    assert_ne!(down, out.svg);
+}
+
+#[test]
+fn lays_the_events_out_in_a_row_or_in_a_column() {
+    // `TD` puts the events under one another, so they share an x and differ in their y.
+    let across = svg("timeline\n 2001 : a\n 2002 : b\n 2003 : c\n");
+    assert!(across.contains("<rect x=\"8\""), "{across}");
+    assert!(across.contains("<rect x=\"400\""), "{across}");
+    let down = svg("timeline TD\n 2001 : a\n 2002 : b\n 2003 : c\n");
+    assert_eq!(down.matches("<rect x=\"232\"").count(), 3, "{down}");
+}
+
+#[test]
+fn writes_the_accessible_title_and_description() {
+    let out = render("timeline\naccTitle: the title\naccDescr: the description\n 2001 : a\n");
+    assert!(
+        out.svg
+            .contains("<title id=\"fermaid-title\">the title</title>"),
+        "{}",
+        out.svg
+    );
+    assert!(
+        out.svg
+            .contains("<desc id=\"fermaid-desc\">the description</desc>"),
+        "{}",
+        out.svg
+    );
 }
 
 #[test]
@@ -115,12 +140,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     ]);
     let corpus = [FULL];
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 800, "only {rendered} of 1500 mutations rendered");
 }
 
 #[test]
@@ -148,16 +177,26 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}accDescr {{{}", "x ".repeat(N / 2)),
         format!("{head}title {}", "x".repeat(N)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 6,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
 }
 
 #[test]

@@ -190,6 +190,17 @@ fn passes_mermaid_specs() {
     for (case, (name, expected)) in CASES.iter().zip(EXPECTED) {
         assert_eq!(case.name, *name, "expected.rs is out of date");
         if skipped.contains(&case.name) {
+            // The golden file says both sides reject this source, and that has to stay true:
+            // the case is listed because there is nothing to compare, not because there is
+            // something that happens to be different.
+            if expected.starts_with("error:") {
+                let got = outcome(case.src);
+                assert!(
+                    got.starts_with("error:"),
+                    "{} is listed in SKIPPED.md as rejected, but fermaid draws it",
+                    case.name
+                );
+            }
             continue;
         }
         assert_ne!(

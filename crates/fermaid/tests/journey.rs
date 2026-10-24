@@ -50,9 +50,27 @@ fn draws_tasks_scores_and_people() {
 
 #[test]
 fn shows_markup_as_text() {
-    let svg = svg("journey\n <b>bold</b> :fa-car: 3: <i>me</i>\n");
-    assert!(svg.contains("&lt;b&gt;bold&lt;/b&gt;"));
-    assert!(!svg.contains("<b>") && !svg.contains("<i>"));
+    let svg = svg("journey\n <b>bold</b>: 3: <i>me</i>\n");
+    assert!(svg.contains("&lt;b&gt;bold&lt;/b&gt;"), "{svg}");
+    assert!(svg.contains("&lt;i&gt;me&lt;/i&gt;"), "{svg}");
+    assert!(!svg.contains("<b>") && !svg.contains("<i>"), "{svg}");
+}
+
+#[test]
+fn draws_the_face_the_score_asks_for() {
+    for (score, face) in [
+        ("5", "happy"),
+        ("3", "neutral"),
+        ("1", "sad"),
+        // A score that is not a number is neither happy nor sad.
+        ("x", "neutral"),
+    ] {
+        let svg = svg(&format!("journey\n task: {score}: me\n"));
+        assert!(
+            svg.contains(&format!("fermaid-face-{face}")),
+            "score {score}: {svg}"
+        );
+    }
 }
 
 #[test]
@@ -112,12 +130,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     ]);
     let corpus = [FULL];
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 600, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -149,23 +171,38 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}accDescr {{{}", "x ".repeat(N / 2)),
         format!("{head}title {}", "x".repeat(N)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 4,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
 }
 
 #[test]
 fn snapshots() {
     let cases = [
         ("full", FULL.to_string()),
-        ("titled", format!("---\ntitle: Day\n---\n{FULL}")),
+        // The chart in FULL brings a title of its own, which would shadow the front matter's
+        // and make the two snapshots the same.
+        (
+            "titled",
+            "---\ntitle: Day\n---\njourney\n Make tea: 5: Me\n".to_string(),
+        ),
     ];
     for (name, src) in cases {
         insta::assert_snapshot!(name, svg(&src));

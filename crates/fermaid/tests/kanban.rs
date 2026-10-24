@@ -87,7 +87,32 @@ fn reports_errors_with_positions() {
 
     let err = fermaid::render("kanban\n  a\n b\n  c\n", &RenderOptions::default()).unwrap_err();
     assert_eq!(err.code, ErrorCode::Semantic);
-    assert!(err.message.contains("Items without section"));
+    assert!(
+        err.message.contains("Items without section"),
+        "{}",
+        err.message
+    );
+    // A semantic error carries no position of its own.
+    assert_eq!((err.line, err.column), (0, 0));
+}
+
+#[test]
+fn marks_only_the_outermost_priorities() {
+    // A priority of medium gets no stripe: the stripe is for the two outermost ones.
+    let medium = svg("kanban\n Todo\n  c1@{ priority: 'Medium' }\n");
+    assert_eq!(count(&medium, "class=\"fermaid-priority\""), 0, "{medium}");
+}
+
+#[test]
+fn puts_a_class_on_the_column_or_on_the_card() {
+    // Where the class is written decides what it lands on.
+    let column = svg("kanban\n Todo\n :::done\n  card\n");
+    assert!(
+        column.contains("fermaid-cluster fermaid-column done"),
+        "{column}"
+    );
+    let card = svg("kanban\n Todo\n  card\n  :::done\n");
+    assert!(card.contains("fermaid-node fermaid-card done"), "{card}");
 }
 
 #[test]
@@ -141,12 +166,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     ]);
     let corpus = [FULL];
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 500, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -177,16 +206,26 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}  c\n    a@{{ {}", "x: 1, ".repeat(N / 6)),
         format!("{head}{}", "%%\n".repeat(N / 3)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 5,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
 }
 
 #[test]
