@@ -143,6 +143,8 @@ Notes:
   resolver, fermaid draws a dashed placeholder where pele leaves the space empty. This also
   settles the side-by-side review.
 - A random graph of 5,000 edges renders in about 0.1 s in a release build (pele: 0.4 s).
+- 10 minutes of fuzzing the `flowchart` target (625,000 runs, seeded with pele's flowchart
+  corpus) found no panic.
 
 **Done when**
 - Compat tests pass.
