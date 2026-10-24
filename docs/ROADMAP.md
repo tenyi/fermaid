@@ -18,6 +18,7 @@ refined when M3 ends.
 | Errors | Strict: `Err(Error)`, no partial SVG. No lenient mode for now. |
 | Platform | `std`, `rust-version = "1.85"`, edition 2024. |
 | Diagram selection | One Cargo feature per diagram type, `default = ["all"]`. The `Diagram` trait stays internal; there is no runtime `register()`. |
+| Links | Click targets are sanitized as `@braintree/sanitize-url` does (as Mermaid does), then kept only when relative or of a scheme in `RenderOptions::link_schemes` (default `http`, `https`, `mailto`, `tel`). A refused link is left out, not written as `about:blank`. |
 | Theming | CSS variables `--fermaid-bg`, `--fermaid-fg`, `--fermaid-line`, `--fermaid-accent`, `--fermaid-series-1..8`, … (same suffixes as pele). |
 | Limits | Same defaults as pele: source 50,000 chars, output 4,000,000 chars, 5,000 edges, plus an explicit nesting depth limit (default 64), because a Rust stack overflow aborts and cannot be caught. Diagram config can never raise limits. |
 | Determinism | Same input + same options ⇒ byte-identical output. Coordinates use at most 2 decimals with trailing zeros trimmed. Ids are `{id_prefix}-{n}`. Output never depends on hash-map iteration order. |
@@ -118,18 +119,30 @@ Notes:
 - 10 minutes of fuzzing produces no panic.
 - The SVG renders in a browser and its theme can be changed through CSS.
 
-## M2 — Flowchart (core layout)
+## M2 — Flowchart (core layout) (done, except publishing)
 
-1. `layout::layered`: port pele's Sugiyama layout (ranking, crossing
+1. [x] `layout::layered`: port pele's Sugiyama layout (ranking, crossing
    reduction, dummy/label nodes, edge tracks, straighten/settle/snap).
-2. `layout::compound` for subgraphs; `components` for disconnected subgraphs.
-3. Flowchart parser covering all node shapes, edge kinds, `classDef`, `style`,
-   `click` and `linkStyle`.
-4. Port svg shapes, edges and clusters.
-5. Security: URL sanitizing and a link scheme allowlist (`RenderOptions::link_schemes`);
-   `style` limited to allowed properties.
-6. Compat, snapshot and security tests; a fuzz target.
-7. Publish `0.1.0`.
+2. [x] `layout::compound` for subgraphs. (pele's `components` is used only by other diagram
+   types; it moves to the milestone of the first type that needs it.)
+3. [x] Flowchart parser covering all node shapes, edge kinds, `classDef`, `style`,
+   `click` and `linkStyle`. The lexer works on UTF-16 code units, as Mermaid's jison lexer does.
+4. [x] Port svg shapes, edges and clusters.
+5. [x] Security: URL sanitizing and a link scheme allowlist (`RenderOptions::link_schemes`,
+   `image_schemes`, `link_rel`); `style` limited to allowed properties.
+6. [x] Compat, snapshot and security tests; a fuzz target.
+7. [ ] Publish `0.1.0` (needs the owner's crates.io token).
+
+Notes:
+- Compat: 301 cases from pele's port of the Mermaid flowchart specs. `tools/oracle/golden.mjs`
+  records what pele makes of each, and fermaid's model matches it on all 274 that are not
+  skipped (27 are built from test-code values; see `SKIPPED.md`).
+- All 114 flowchart examples from the Mermaid docs render. On pele's flowchart corpus (379
+  inputs), the inputs in pele's own flowchart tests (102) and 2,000 mutated inputs, the output
+  is byte for byte pele's, errors included, except where a node has an icon: with no icon
+  resolver, fermaid draws a dashed placeholder where pele leaves the space empty. This also
+  settles the side-by-side review.
+- A random graph of 5,000 edges renders in about 0.1 s in a release build (pele: 0.4 s).
 
 **Done when**
 - Compat tests pass.

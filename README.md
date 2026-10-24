@@ -4,12 +4,13 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** pre-alpha. Pie charts are supported; every other diagram type returns an `Unsupported` error for now. Flowcharts come next, then sequence diagrams. See the [roadmap](docs/ROADMAP.md).
+> **Status:** pre-alpha. Flowcharts and pie charts are supported; every other diagram type returns an `Unsupported` error for now. Sequence diagrams come next. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
 | Pie (`pie`) | Supported: `showData`, `title`, `accTitle`, `accDescr`, and the `pie` config keys `textPosition`, `donutHole` and `legendPosition` |
-| Flowchart, sequence, and the rest | Planned |
+| Flowchart (`flowchart`, `graph`) | Supported: every node shape, including `@{ shape: … }`, all edge kinds and lengths, edge ids, subgraphs with their own direction, `classDef`, `class`, `style`, `linkStyle`, `click` links and tooltips, markdown labels, and the `flowchart` config keys `curve`, `nodeSpacing`, `rankSpacing` and `wrappingWidth` |
+| Sequence, and the rest | Planned |
 
 ## Goals
 
@@ -32,7 +33,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Each diagram type is a Cargo feature (`pie`, …); the default feature `all` includes every type.
+`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Links from `click` statements are sanitized and kept only when their scheme is allowed (`link_schemes`, by default `http`, `https`, `mailto` and `tel`); a flowchart that runs across turns to run down when it does not fit `max_width`. Each diagram type is a Cargo feature (`flowchart`, `pie`, …); the default feature `all` includes every type.
 
 ## Command line
 
@@ -65,8 +66,9 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz; `pie` is another target
+cargo +nightly fuzz run render    # needs cargo-fuzz; `pie` and `flowchart` are other targets
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
+node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
 ```
 
 The minimum supported Rust version is 1.85.

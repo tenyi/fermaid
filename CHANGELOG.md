@@ -3,6 +3,20 @@
 All notable changes are recorded here. fermaid follows [Semantic Versioning](https://semver.org);
 before 1.0, a minor version may break the API.
 
+## 0.1.0 (unreleased)
+
+- Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
+  metadata, all edge kinds and lengths, edge ids, subgraphs with their own direction,
+  `classDef`, `class`, `style`, `linkStyle`, `click` links and tooltips, markdown labels, and
+  the `flowchart` config keys `curve`, `nodeSpacing`, `rankSpacing` and `wrappingWidth`. The
+  layered and compound layouts are ported from pele.
+- `RenderOptions::link_schemes`, `image_schemes` and `link_rel`: links from diagram text are
+  sanitized and kept only when relative or of an allowed scheme.
+- `RenderOptions::auto_direction` and `direction_breakpoint`: a diagram that runs across turns
+  to run down when it does not fit `max_width`.
+- Style declarations from diagram text are limited to presentation properties; values that
+  could load or run anything are dropped.
+
 ## 0.0.1 (unreleased)
 
 The first release, which reserves the name on crates.io.

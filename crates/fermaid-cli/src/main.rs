@@ -23,7 +23,7 @@ struct Args {
 }
 
 enum Parsed {
-    Run(Args),
+    Run(Box<Args>),
     Exit(String),
 }
 
@@ -54,7 +54,7 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
             _ => parsed.input = Some(arg),
         }
     }
-    Ok(Parsed::Run(parsed))
+    Ok(Parsed::Run(Box::new(parsed)))
 }
 
 fn pixels(text: &str, what: &str) -> Result<f64, String> {
@@ -103,7 +103,7 @@ fn main() -> ExitCode {
             println!("{text}");
             ExitCode::SUCCESS
         }
-        Ok(Parsed::Run(args)) => match run(args) {
+        Ok(Parsed::Run(args)) => match run(*args) {
             Ok(()) => ExitCode::SUCCESS,
             Err(message) => {
                 eprintln!("fermaid: {message}");
@@ -154,10 +154,7 @@ mod tests {
         assert!(parse(&["--max-width", "wide"]).is_err());
         assert!(parse(&["--bogus"]).is_err());
         assert!(parse(&["a", "b"]).is_err());
-        assert!(matches!(
-            parse(&["-"]),
-            Ok(Parsed::Run(Args { input: None, .. }))
-        ));
+        assert!(matches!(parse(&["-"]), Ok(Parsed::Run(args)) if args.input.is_none()));
         assert!(matches!(parse(&["-h"]), Ok(Parsed::Exit(_))));
     }
 }

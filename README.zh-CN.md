@@ -4,12 +4,13 @@
 
 fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，无需 JavaScript 运行时、无头浏览器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一个小巧、无依赖的 TypeScript 渲染器），支持 Mermaid 12.1.0 语法，并采用 pele 自己的布局与视觉风格。
 
-> **状态：** pre-alpha。已支持饼图；其他图表类型目前会返回 `Unsupported` 错误。接下来是流程图，然后是时序图。请参阅[开发路线图](docs/ROADMAP.md)。
+> **状态：** pre-alpha。已支持流程图和饼图；其他图表类型目前会返回 `Unsupported` 错误。接下来是时序图。请参阅[开发路线图](docs/ROADMAP.md)。
 
 | 图表类型 | 状态 |
 |---|---|
 | 饼图（`pie`） | 已支持：`showData`、`title`、`accTitle`、`accDescr`，以及 `pie` 配置项 `textPosition`、`donutHole` 和 `legendPosition` |
-| 流程图、时序图及其他 | 计划中 |
+| 流程图（`flowchart`、`graph`） | 已支持：所有节点形状（含 `@{ shape: … }`）、各种连线及长度、连线 ID、可自定义方向的子图、`classDef`、`class`、`style`、`linkStyle`、`click` 链接与提示文字、Markdown 标签，以及 `flowchart` 配置项 `curve`、`nodeSpacing`、`rankSpacing` 和 `wrappingWidth` |
+| 时序图及其他 | 计划中 |
 
 ## 目标
 
@@ -32,7 +33,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` 返回 SVG 及其尺寸和链接，或返回一个 `Error`，其中包含错误代码（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行号和列号，以及指出问题位置的代码片段。`detect_type` 无需渲染即可判断图表类型。将 `max_width` 设为宿主可用的宽度，能画得更窄的图表就会变窄（饼图会把图例移到图的下方）。每种图表类型都是一个 Cargo feature（`pie`、…）；默认的 `all` feature 包含所有类型。
+`render` 返回 SVG 及其尺寸和链接，或返回一个 `Error`，其中包含错误代码（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行号和列号，以及指出问题位置的代码片段。`detect_type` 无需渲染即可判断图表类型。将 `max_width` 设为宿主可用的宽度，能画得更窄的图表就会变窄（饼图会把图例移到图的下方）。`click` 语句中的链接会经过清理，且只保留允许的 scheme（`link_schemes`，默认为 `http`、`https`、`mailto` 和 `tel`）；横向的流程图在放不进 `max_width` 时会改为纵向。每种图表类型都是一个 Cargo feature（`flowchart`、`pie`、…）；默认的 `all` feature 包含所有类型。
 
 ## 命令行
 
@@ -65,8 +66,9 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie` 目标
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie` 和 `flowchart` 目标
 cargo xtask compat pie --pele ../pele   # 从 pele 源码重新生成 Mermaid 规范测试用例
+node tools/oracle/golden.mjs ../pele flowchart   # 重新生成 pele 对这些用例的解析结果
 ```
 
 最低支持的 Rust 版本为 1.85。

@@ -4,12 +4,13 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** pre-alpha。円グラフに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。次はフローチャート、その後にシーケンス図に対応する予定です。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** pre-alpha。フローチャートと円グラフに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。次はシーケンス図に対応する予定です。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
 | 円グラフ（`pie`） | 対応済み：`showData`、`title`、`accTitle`、`accDescr`、および `pie` の設定キー `textPosition`、`donutHole`、`legendPosition` |
-| フローチャート、シーケンス図、その他 | 予定 |
+| フローチャート（`flowchart`、`graph`） | 対応済み：すべてのノード形状（`@{ shape: … }` を含む）、あらゆる種類と長さのエッジ、エッジ ID、独自の向きを持てるサブグラフ、`classDef`、`class`、`style`、`linkStyle`、`click` のリンクとツールチップ、Markdown ラベル、および `flowchart` の設定キー `curve`、`nodeSpacing`、`rankSpacing`、`wrappingWidth` |
+| シーケンス図、その他 | 予定 |
 
 ## 目標
 
@@ -32,7 +33,7 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` は SVG とそのサイズ・リンクを返すか、エラーコード（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行番号と列番号、問題箇所を示すスニペットを含む `Error` を返します。`detect_type` はレンダリングせずにダイアグラムの種類を判定します。`max_width` にホストで使える幅を指定すると、幅を詰められるダイアグラムは狭く描かれます（円グラフは凡例をグラフの下に移します）。ダイアグラムの種類ごとに Cargo feature（`pie` など）があり、デフォルトの `all` feature にはすべての種類が含まれます。
+`render` は SVG とそのサイズ・リンクを返すか、エラーコード（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行番号と列番号、問題箇所を示すスニペットを含む `Error` を返します。`detect_type` はレンダリングせずにダイアグラムの種類を判定します。`max_width` にホストで使える幅を指定すると、幅を詰められるダイアグラムは狭く描かれます（円グラフは凡例をグラフの下に移します）。`click` 文のリンクはサニタイズされ、許可されたスキーム（`link_schemes`、デフォルトは `http`、`https`、`mailto`、`tel`）のものだけが残ります。横向きのフローチャートは `max_width` に収まらないときに縦向きで描かれます。ダイアグラムの種類ごとに Cargo feature（`flowchart`、`pie` など）があり、デフォルトの `all` feature にはすべての種類が含まれます。
 
 ## コマンドライン
 
@@ -65,8 +66,9 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie` ターゲットもあります
+cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie` と `flowchart` ターゲットもあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
+node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
 ```
 
 サポートする最小の Rust バージョンは 1.85 です。
