@@ -91,7 +91,7 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 - `fermaid` returns an `Unsupported` error with line and column for an unknown diagram type.
 - Measurer unit tests match pele's `metricsMeasurer` on a fixed set of cases.
 
-## M1 — Pie (end-to-end pipeline)
+## M1 — Pie (end-to-end pipeline) (done, except publishing)
 
 0. [x] `xtask`: convert pele's `tests/compat/<type>` cases into Rust test data
    (`cargo xtask compat <type> --pele <DIR>` writes `crates/fermaid/tests/compat/<type>/cases.rs`).
@@ -108,6 +108,8 @@ Notes:
 - Output was compared byte for byte with pele 1.9.0 (after renaming `pele` to `fermaid`) on
   pele's pie corpus, its hostile payloads and 3,000 mutated inputs: identical, errors and their
   positions included.
+- 10 minutes of fuzzing the `pie` target (1.79 million runs, seeded with the pie corpus) found
+  no panic.
 - As in pele, pie errors are positioned in the text after preprocessing (comment lines and
   front matter removed), so a line number can be off when comments precede the error.
 
