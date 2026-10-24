@@ -75,11 +75,11 @@ impl ClassMember {
                 .map(|close| start + close)
                 .filter(|&close| close > start)
                 .and_then(|close| {
-                input[start + 1..close]
-                    .iter()
-                    .rposition(|&c| c == '(')
-                    .map(|open| (start + 1 + open, close))
-            });
+                    input[start + 1..close]
+                        .iter()
+                        .rposition(|&c| c == '(')
+                        .map(|open| (start + 1 + open, close))
+                });
             if let Some((open, close)) = found {
                 let first = input[start];
                 let visible = is_visibility(first) && open > start + 1;
@@ -103,7 +103,12 @@ impl ClassMember {
                 }
                 self.return_type = trim(&text(&input[rest.min(stop)..stop])).to_string();
                 if classifier.is_none() {
-                    if let Some(last) = self.return_type.chars().last().filter(|&c| c == '$' || c == '*') {
+                    if let Some(last) = self
+                        .return_type
+                        .chars()
+                        .last()
+                        .filter(|&c| c == '$' || c == '*')
+                    {
                         classifier = Some(last);
                         self.return_type.pop();
                     }
@@ -214,6 +219,7 @@ pub(crate) struct StyleClass {
     pub text_styles: Vec<String>,
 }
 
+#[derive(Debug)]
 pub(crate) struct ClassDb {
     pub direction: String,
     pub classes: Ordered<ClassNode>,
@@ -462,8 +468,16 @@ impl ClassDb {
         self.acc_descr = Some(collapse_indent(text));
     }
 
-    pub(crate) fn add_namespace(&mut self, id: &str, label: Option<String>) -> Result<String, Error> {
-        let prefix = self.namespace_stack.last().filter(|p| !p.is_empty()).cloned();
+    pub(crate) fn add_namespace(
+        &mut self,
+        id: &str,
+        label: Option<String>,
+    ) -> Result<String, Error> {
+        let prefix = self
+            .namespace_stack
+            .last()
+            .filter(|p| !p.is_empty())
+            .cloned();
         let qualified = match &prefix {
             Some(p) => format!("{p}.{id}"),
             None => id.to_string(),
@@ -545,7 +559,12 @@ impl ClassDb {
         self.namespace_stack.pop();
     }
 
-    pub(crate) fn add_classes_to_namespace(&mut self, id: &str, class_names: &[String], note_names: &[String]) {
+    pub(crate) fn add_classes_to_namespace(
+        &mut self,
+        id: &str,
+        class_names: &[String],
+        note_names: &[String],
+    ) {
         if !self.namespaces.contains(id) {
             return;
         }
@@ -613,9 +632,15 @@ mod tests {
         let a = db.namespaces.get("A").unwrap();
         assert!(!a.explicit);
         assert_eq!(a.children, ["A.B"]);
-        assert_eq!(db.namespaces.get("A.B").unwrap().parent.as_deref(), Some("A"));
+        assert_eq!(
+            db.namespaces.get("A.B").unwrap().parent.as_deref(),
+            Some("A")
+        );
         let deep = vec!["x"; 100].join(".");
-        assert_eq!(db.add_namespace(&deep, None).unwrap_err().code, ErrorCode::Limit);
+        assert_eq!(
+            db.add_namespace(&deep, None).unwrap_err().code,
+            ErrorCode::Limit
+        );
     }
 
     #[test]

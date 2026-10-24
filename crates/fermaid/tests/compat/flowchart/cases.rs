@@ -420,55 +420,55 @@ const CASES: &[Case] = &[
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation default definitions",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nlinkStyle default interpolate basis",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation numbered definitions",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nA-->C\nlinkStyle 0 interpolate basis\nlinkStyle 1 interpolate cardinal",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle edge curve properties using edge ID",
-        src: "graph TD\n",
+        src: "graph TD\nA e1@-->B\nA uniqueName@-->C\ne1@{curve: basis}\nuniqueName@{curve: cardinal}",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle edge curve properties using edge ID but without overriding default",
-        src: "graph TD\n",
+        src: "graph TD\nA e1@-->B\nA-->C\nlinkStyle default interpolate linear\ne1@{curve: stepAfter}",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle edge curve properties using edge ID mixed with line interpolation",
-        src: "graph TD\n",
+        src: "graph TD\nA e1@-->B-->D\nA-->C e4@-->D-->E\nlinkStyle default interpolate linear\nlinkStyle 1 interpolate basis\ne1@{curve: monotoneX}\ne4@{curve: stepBefore}",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation multi-numbered definitions",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nA-->C\nlinkStyle 0,1 interpolate basis",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation default with style",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nlinkStyle default interpolate basis stroke-width:1px;",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation numbered with style",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nA-->C\nlinkStyle 0 interpolate basis stroke-width:1px;\nlinkStyle 1 interpolate cardinal stroke-width:1px;",
         todo: false,
     },
     Case {
         file: "flow-lines.spec.js",
         name: "[Lines] when parsing > should handle line interpolation multi-numbered with style",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nA-->C\nlinkStyle 0,1 interpolate basis stroke-width:1px;",
         todo: false,
     },
     Case {
@@ -924,7 +924,7 @@ const CASES: &[Case] = &[
     Case {
         file: "flow-style.spec.js",
         name: "[Style] when parsing > should handle style definitions with more then 1 digit in a row",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B1\nA-->B2\nA-->B3\nA-->B4\nA-->B5\nA-->B6\nA-->B7\nA-->B8\nA-->B9\nA-->B10\nA-->B11\nlinkStyle 10 stroke-width:1px;",
         todo: false,
     },
     Case {
@@ -942,7 +942,7 @@ const CASES: &[Case] = &[
     Case {
         file: "flow-style.spec.js",
         name: "[Style] when parsing > should handle multi-numbered style definitions with more then 1 digit in a row",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B1\nA-->B2\nA-->B3\nA-->B4\nA-->B5\nA-->B6\nA-->B7\nA-->B8\nA-->B9\nA-->B10\nA-->B11\nA-->B12\nlinkStyle 10,11 stroke-width:1px;",
         todo: false,
     },
     Case {
@@ -1758,7 +1758,7 @@ const CASES: &[Case] = &[
     Case {
         file: "subgraph.spec.js",
         name: "when parsing subgraphs > should handle nested subgraphs",
-        src: "graph TD\n",
+        src: "graph TD\nA-->B\nsubgraph myTitle\n\n c-->d \n\n subgraph inner\n\n   e-->f \n end \n\n subgraph inner\n\n   h-->i \n end \n\nend\n",
         todo: false,
     },
     Case {

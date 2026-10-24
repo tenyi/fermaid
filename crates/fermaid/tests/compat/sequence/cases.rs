@@ -282,7 +282,7 @@ const CASES: &[Case] = &[
     Case {
         file: "sequenceDiagram.spec.js",
         name: "when parsing a sequenceDiagram > should handle in arrow messages",
-        src: "sequenceDiagram\n",
+        src: "sequenceDiagram\nAlice-->>Bob:Hello Bob, how are you?",
         todo: false,
     },
     Case {
@@ -462,7 +462,7 @@ const CASES: &[Case] = &[
     Case {
         file: "sequenceDiagram.spec.js",
         name: "when parsing a sequenceDiagram > should handle special characters in signals",
-        src: "sequenceDiagram\n",
+        src: "sequenceDiagram\nAlice->Bob: -:<>,;# comment",
         todo: false,
     },
     Case {

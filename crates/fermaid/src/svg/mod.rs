@@ -1,14 +1,19 @@
 //! Building blocks for SVG output: escaping, number formatting, labels and the document root.
 //! Ported from pele's `svg/` modules.
 
-#[cfg(feature = "flowchart")]
+#[cfg(any(feature = "flowchart", feature = "class"))]
 pub(crate) mod cluster;
 mod document;
-#[cfg(any(feature = "flowchart", feature = "state"))]
+#[cfg(any(feature = "flowchart", feature = "state", feature = "class"))]
 pub(crate) mod edges;
-#[cfg(any(feature = "flowchart", feature = "sequence", feature = "state"))]
+#[cfg(any(
+    feature = "flowchart",
+    feature = "sequence",
+    feature = "state",
+    feature = "class"
+))]
 pub(crate) mod markers;
-#[cfg(any(feature = "flowchart", feature = "state"))]
+#[cfg(any(feature = "flowchart", feature = "state", feature = "class"))]
 pub(crate) mod shapes;
 mod theme;
 mod title;

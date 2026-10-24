@@ -173,7 +173,12 @@ impl S {
 }
 
 const NONE: u32 = u32::MAX;
-const DIRECTIONS: [T; 4] = [T::DirectionTb, T::DirectionBt, T::DirectionRl, T::DirectionLr];
+const DIRECTIONS: [T; 4] = [
+    T::DirectionTb,
+    T::DirectionBt,
+    T::DirectionRl,
+    T::DirectionLr,
+];
 
 fn is_space(c: u32) -> bool {
     if c < 128 {
@@ -219,9 +224,9 @@ impl Lexer<'_> {
 
     fn emit(&mut self, t: T, s: usize, e: usize) -> bool {
         self.out.types.push(t);
-        self.out
-            .texts
-            .push(String::from_utf16_lossy(&self.src[s.min(self.n)..e.min(self.n)]));
+        self.out.texts.push(String::from_utf16_lossy(
+            &self.src[s.min(self.n)..e.min(self.n)],
+        ));
         self.out.starts.push(s);
         self.p = e;
         true
@@ -432,7 +437,11 @@ impl Lexer<'_> {
         }
         let line = self.dir.as_ref().expect("line");
         // `.*` is greedy, so the last place on the line wins; it must not lie before `p`.
-        let found = (0..4).find_map(|k| line.last[k].filter(|&(d, _)| d >= p).map(|(_, stop)| (k, stop)));
+        let found = (0..4).find_map(|k| {
+            line.last[k]
+                .filter(|&(d, _)| d >= p)
+                .map(|(_, stop)| (k, stop))
+        });
         match found {
             Some((k, stop)) => self.emit(DIRECTIONS[k], p, stop),
             None => false,
@@ -663,7 +672,11 @@ impl Lexer<'_> {
                     true
                 }
                 S::AccTitle | S::AccDescr => {
-                    let t = if self.state == S::AccTitle { T::AccTitleValue } else { T::AccDescrValue };
+                    let t = if self.state == S::AccTitle {
+                        T::AccTitleValue
+                    } else {
+                        T::AccDescrValue
+                    };
                     let e = self.until(10);
                     self.emit(t, p, e);
                     self.pop();
@@ -701,7 +714,11 @@ pub(crate) fn tokenize(src: &[u16]) -> Tokens {
         p: 0,
         state: S::Initial,
         stack: Vec::new(),
-        out: Tokens { types: Vec::new(), texts: Vec::new(), starts: Vec::new() },
+        out: Tokens {
+            types: Vec::new(),
+            texts: Vec::new(),
+            starts: Vec::new(),
+        },
         dir: None,
     }
     .run()

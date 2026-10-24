@@ -12,7 +12,8 @@ use crate::{DiagramKind, Link, RenderOptions};
         feature = "pie",
         feature = "flowchart",
         feature = "sequence",
-        feature = "state"
+        feature = "state",
+        feature = "class"
     )),
     allow(
         dead_code,
@@ -64,6 +65,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Sequence => Some(&crate::diagrams::sequence::Sequence),
         #[cfg(feature = "state")]
         DiagramKind::State => Some(&crate::diagrams::state::State),
+        #[cfg(feature = "class")]
+        DiagramKind::Class => Some(&crate::diagrams::class::Class),
         _ => None,
     }
 }

@@ -1,12 +1,12 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
 // parser Mermaid uses: `@mermaid-js/parser` for pie, and the parsers jison generates from
-// Mermaid's flowchart, sequence and state grammars, which pele vendors, driving pele's port of
+// Mermaid's flowchart, sequence, state and class grammars, which pele vendors, driving pele's port of
 // Mermaid's model. `url` checks the link sanitizer against `@braintree/sanitize-url`, which
 // Mermaid applies to click targets, on addresses mutated from a list below. fermaid's side runs as the ignored `oracle_dump` test of each type. Both
 // sides are reduced to the summaries in `lib.mjs`, and errors to just "error".
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { flowSummary, loadPele, pieSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, flowSummary, loadPele, pieSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -48,6 +48,8 @@ const m = await loadPele(pele, {
   'src/diagrams/flowchart/db.ts': ['FlowDb'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
   'src/diagrams/state/db.ts': ['StateDb'],
+  'src/diagrams/class/db.ts': ['ClassDb'],
+  'src/diagrams/class/graph.ts': ['buildClassGraph'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
@@ -79,6 +81,7 @@ function asYy(db, extra) {
 const flowParser = m.buildParser(join(pele, 'tests/compat/flowchart/upstream/flow.jison'));
 const seqParser = m.buildParser(join(pele, 'tests/compat/sequence/upstream/sequenceDiagram.jison'));
 const stateParser = m.buildParser(join(pele, 'tests/compat/state/upstream/stateDiagram.jison'));
+const classParser = m.buildParser(join(pele, 'tests/compat/class/upstream/classDiagram.jison'));
 
 const TYPES = {
   pie: {
@@ -119,6 +122,16 @@ const TYPES = {
       stateParser.yy = asYy(db);
       stateParser.parse(src);
       return stateSummary(db);
+    },
+  },
+  class: {
+    keyword: /(^|\n)\s*classDiagram/,
+    fragments: ['class ', 'namespace ', '{', '}', '<|--', '*--', 'o--', '-->', '..>', '..|>', '--', '..', '()--', '--()', ' : ', '~T~', '<<interface>>', 'note for A "x"', 'note "y"', '"1"', '"*"', '["label"]', 'classDef c fill:red', 'cssClass "A" c', ':::c', 'style A fill:blue', 'link A "https://x" "tip"', 'click A href "https://y" _self', 'callback A "f"', '+x()$', '-y*', '#z', '~w', '(', ')', '.', '`', 'direction LR', '%%', 'A', 'é', '\n', ' '],
+    async reference(src) {
+      const db = new m.ClassDb();
+      classParser.yy = asYy(db, { relationType: db.relationType, lineType: db.lineType });
+      classParser.parse(src);
+      return classSummary(db, m.buildClassGraph);
     },
   },
   url: {

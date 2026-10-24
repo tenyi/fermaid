@@ -13,13 +13,12 @@ categories = ["visualization", "rendering"]
 [features]
 default = ["all"]
 # Every diagram type. Each type gets its own feature as it lands.
-all = ["flowchart", "pie", "sequence", "state"]
+all = ["class", "flowchart", "pie", "sequence", "state"]
+class = []
 flowchart = []
 pie = []
 sequence = []
 state = []
-# In progress: not yet part of `all`.
-class = []
 
 [dependencies]
 

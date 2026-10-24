@@ -300,15 +300,23 @@ fn closing(toks: &[Tok], open: usize) -> Result<usize, String> {
     Err("unbalanced brackets".to_string())
 }
 
+/// The first string literal, joined with the literals that `+` adds to it.
 fn first_string(toks: &[Tok]) -> Option<String> {
-    toks.iter().find_map(|tok| match tok {
-        Tok::Str(s) => Some(s.clone()),
-        _ => None,
-    })
+    let at = toks.iter().position(|tok| matches!(tok, Tok::Str(_)))?;
+    let mut out = String::new();
+    let mut k = at;
+    while let Some(Tok::Str(s)) = toks.get(k) {
+        out.push_str(s);
+        if !is_punct(toks.get(k + 1), '+') {
+            break;
+        }
+        k += 2;
+    }
+    Some(out)
 }
 
 /// Finds the `describe`/`it` structure of a spec file and the diagram source of each test: the
-/// first string literal in its body, or each element of an `it.each` table.
+/// first string literal in its body (with any literals concatenated to it), or each element of an `it.each` table.
 fn extract(text: &str) -> Result<Vec<Case>, String> {
     let toks = tokenize(text)?;
     let mut cases = Vec::new();

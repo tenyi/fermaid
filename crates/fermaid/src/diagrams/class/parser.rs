@@ -84,7 +84,9 @@ impl Parser<'_> {
 
     fn fail<X>(&self, expected: &str) -> Res<X> {
         if self.t() == T::Error {
-            return Err(Error::new(ErrorCode::Syntax, "Unrecognized text.").at(self.src, self.here()));
+            return Err(
+                Error::new(ErrorCode::Syntax, "Unrecognized text.").at(self.src, self.here())
+            );
         }
         Err(Error::new(
             ErrorCode::Syntax,

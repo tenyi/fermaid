@@ -114,3 +114,42 @@ export function stateSummary(db) {
   out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
   return out.join('\n');
 }
+
+export const memberSummary = (m) =>
+  `${m.memberType}:${q(m.visibility)}|${q(m.id)}|${q(m.classifier)}|${q(m.parameters)}|${q(m.returnType)}|${q(m.getDisplayDetails().displayText)}`;
+export function classSummary(db, buildClassGraph) {
+  const out = [`dir:${q(db.direction)}`];
+  for (const [id, c] of db.classes) {
+    out.push(
+      `class:${q(id)}|${q(c.type)}|${q(c.label)}|${q(c.cssClasses)}|a=${list(c.annotations)}|s=${list(c.styles)}|p=${q(c.parent)}|` +
+        `l=${q(c.link)}|${q(c.linkTarget)}|cb=${c.haveCallback === true}|t=${q(c.tooltip)}`
+    );
+    for (const m of c.members) out.push(`  member:${memberSummary(m)}`);
+    for (const m of c.methods) out.push(`  method:${memberSummary(m)}`);
+  }
+  for (const r of db.relations) {
+    const { type1, type2, lineType } = r.relation;
+    out.push(`rel:${q(r.id1)}|${q(r.id2)}|${q(r.relationTitle1)}|${q(r.relationTitle2)}|${q(r.title)}|${type1}|${type2}|${lineType}`);
+  }
+  for (const [id, n] of db.notes) out.push(`note:${q(id)}|${q(n.class)}|${q(n.text)}|${n.index}|p=${q(n.parent)}`);
+  for (const [id, ns] of db.namespaces) {
+    out.push(
+      `ns:${q(id)}|${q(ns.label)}|c=${list([...ns.classes.keys()])}|n=${list([...ns.notes.keys()])}|k=${list([...ns.children.keys()])}|p=${q(ns.parent)}|${ns.explicit}`
+    );
+  }
+  for (const i of db.interfaces) out.push(`iface:${q(i.id)}|${q(i.label)}|${q(i.classId)}`);
+  for (const [id, sc] of db.styleClasses) out.push(`style:${q(id)}|s=${list(sc.styles)}|t=${list(sc.textStyles)}`);
+  for (const hierarchical of [true, false]) {
+    const graph = buildClassGraph(db, hierarchical);
+    for (const n of graph.nodes) {
+      out.push(`node:${hierarchical}|${q(n.id)}|${q(n.label)}|${n.shape}|p=${q(n.parentId)}|${n.parent}|${opt(n.colorIndex)}`);
+    }
+    for (const e of graph.edges) {
+      out.push(
+        `edge:${hierarchical}|${q(e.id)}|${e.source}|${e.target}|${q(e.label)}|${e.arrowTypeStart}|${e.arrowTypeEnd}|${q(e.startLabelRight)}|${q(e.endLabelLeft)}|${e.pattern}`
+      );
+    }
+  }
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}

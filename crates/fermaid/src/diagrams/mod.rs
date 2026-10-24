@@ -1,10 +1,13 @@
 //! The diagram types, one module each behind its own Cargo feature.
 
+#[cfg(feature = "class")]
+pub(crate) mod class;
 #[cfg(any(
     feature = "pie",
     feature = "flowchart",
     feature = "sequence",
-    feature = "state"
+    feature = "state",
+    feature = "class"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "flowchart")]
