@@ -2,6 +2,10 @@
 
 [English](README.md) | [繁體中文](README.zh-TW.md) | **简体中文** | [日本語](README.ja.md)
 
+[![crates.io](https://img.shields.io/crates/v/fermaid.svg)](https://crates.io/crates/fermaid)
+[![docs.rs](https://img.shields.io/docsrs/fermaid.svg)](https://docs.rs/fermaid)
+[![license](https://img.shields.io/crates/l/fermaid.svg)](https://crates.io/crates/fermaid)
+
 fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，无需 JavaScript 运行时、无头浏览器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一个小巧、无依赖的 TypeScript 渲染器），支持 Mermaid 12.1.0 语法，并采用 pele 自己的布局与视觉风格。
 
 > **状态：** alpha。已支持流程图、时序图、状态图、类图、ER 图、需求图、饼图、甘特图、时间线、用户旅程、看板和思维导图；其他图表类型目前会返回 `Unsupported` 错误。请参阅[开发路线图](docs/ROADMAP.md)。

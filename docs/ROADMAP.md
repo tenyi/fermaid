@@ -259,12 +259,16 @@ Notes:
 
 ## Release — 0.2.0
 
-The first published version. The crates.io names `fermaid` and `fermaid-cli` were free, and
-`0.0.1` and `0.1.0` were never published, so `0.2.0` is the only version crates.io shows.
+The first published version.
 
-1. [ ] Publish `fermaid` 0.2.0 to crates.io, then `fermaid-cli` 0.2.0, which depends on it
-   (needs the owner's crates.io token).
+1. [x] Publish `fermaid` 0.2.0 to crates.io, then `fermaid-cli` 0.2.0, which depends on it.
 2. [ ] Tag `v0.2.0`, push the tag and publish the GitHub release.
+
+Notes:
+- The crates.io names `fermaid` and `fermaid-cli` were free, and `0.0.1` and `0.1.0` were
+  never published, so `0.2.0` is the only version crates.io shows.
+- The library is `fermaid` and the command line tool is `fermaid-cli`; the tool depends on
+  the library, so the library goes first.
 
 ## Later milestones (scope only)
 
