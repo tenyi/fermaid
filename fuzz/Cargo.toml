@@ -20,3 +20,10 @@ path = "fuzz_targets/render.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "pie"
+path = "fuzz_targets/pie.rs"
+test = false
+doc = false
+bench = false
