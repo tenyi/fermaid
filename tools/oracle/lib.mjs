@@ -172,6 +172,18 @@ export function kanbanSummary(db) {
   return out.join('\n');
 }
 
+// A mind map: its nodes in source order, each with its parent.
+export function mindmapSummary(db) {
+  const parent = new Map();
+  for (const n of db.nodes) for (const c of n.children) parent.set(c.id, n.id);
+  const out = db.nodes.map(
+    (n) =>
+      `node:${n.id}|${q(n.nodeId)}|${n.level}|${q(n.descr)}|${n.type}|${parent.get(n.id) ?? '-'}|${n.section ?? '-'}|${q(n.class)}|${q(n.icon)}`
+  );
+  out.push(`title:${q(db.title)}`);
+  return out.join('\n');
+}
+
 export function requirementSummary(db, buildRequirementGraph) {
   const out = [`dir:${q(db.direction)}`];
   for (const [name, r] of db.requirements) {

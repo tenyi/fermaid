@@ -1,0 +1,209 @@
+//! Mind map rendering, security, limits and speed.
+#![cfg(feature = "mindmap")]
+
+mod support;
+
+use std::time::{Duration, Instant};
+
+use fermaid::{DiagramKind, ErrorCode, Limits, RenderOptions};
+use support::{PAYLOADS, Random, assert_inert, mutate};
+
+const FULL: &str = "mindmap
+  root((mindmap))
+    Origins
+      Long history
+      ::icon(fa fa-book)
+      Popularisation
+        British popular psychology author Tony Buzan
+    Research
+      On effectiveness<br/>and features
+      On Automatic creation
+        Uses
+            Creative techniques
+            Strategic planning
+    Tools
+      Pen and paper
+      Mermaid
+      :::urgent
+    id1[Square]
+    id2(Rounded)
+    id4)Cloud(
+    id5))Bang((
+    id6{{Hexagon}}
+";
+
+fn render(src: &str) -> fermaid::Rendered {
+    fermaid::render(src, &RenderOptions::default()).unwrap_or_else(|e| panic!("{src:?}: {e}"))
+}
+
+fn narrow(src: &str) -> fermaid::Rendered {
+    let options = RenderOptions {
+        max_width: Some(360.0),
+        ..RenderOptions::default()
+    };
+    fermaid::render(src, &options).unwrap_or_else(|e| panic!("{src:?}: {e}"))
+}
+
+fn svg(src: &str) -> String {
+    render(src).svg
+}
+
+fn count(svg: &str, needle: &str) -> usize {
+    svg.matches(needle).count()
+}
+
+fn try_render(src: &str) -> Option<String> {
+    fermaid::render(src, &RenderOptions::default())
+        .ok()
+        .map(|r| r.svg)
+}
+
+#[test]
+fn draws_branches_and_shapes() {
+    let out = render(FULL);
+    assert_eq!(out.kind, DiagramKind::Mindmap);
+    assert_eq!(count(&out.svg, "fermaid-node "), 19);
+    assert_eq!(count(&out.svg, "fermaid-edge\""), 18);
+    assert_eq!(count(&out.svg, "fermaid-branch fermaid-section-"), 8);
+    assert_eq!(count(&out.svg, "fermaid-shape-branch"), 6);
+    assert_eq!(count(&out.svg, " fermaid-root"), 1);
+    for needle in [
+        "fermaid-shape-circle fermaid-root",
+        "fermaid-shape-cloud",
+        "fermaid-shape-bang",
+        "fermaid-shape-hex",
+        "fermaid-shape-rect",
+        "fermaid-shape-rounded",
+        " urgent\"",
+        ">Origins<",
+    ] {
+        assert!(out.svg.contains(needle), "{needle}");
+    }
+    assert!(out.links.is_empty());
+}
+
+#[test]
+fn runs_down_in_a_narrow_host() {
+    let wide = render(FULL);
+    let down = narrow(FULL);
+    assert!(down.width <= 360.0);
+    assert!(down.height > wide.height);
+    // The root becomes a pill heading the outline.
+    assert!(down.svg.contains("fermaid-shape-stadium fermaid-root"));
+}
+
+#[test]
+fn colors_wrap_after_eleven_branches() {
+    let src: String =
+        "mindmap\n root\n".to_string() + &(0..13).map(|i| format!("  b{i}\n")).collect::<String>();
+    let svg = svg(&src);
+    assert!(svg.contains("fermaid-section-10\""));
+    assert!(!svg.contains("fermaid-section-11\""));
+    assert_eq!(count(&svg, "fermaid-section-0\""), 2);
+}
+
+#[test]
+fn reports_errors_with_positions() {
+    let err = fermaid::render("mindmap\n  root\n a\n", &RenderOptions::default()).unwrap_err();
+    assert_eq!(err.code, ErrorCode::Semantic);
+    assert_eq!(err.kind, Some(DiagramKind::Mindmap));
+    assert!(err.message.contains("only one root"));
+
+    // The bracket is still open at the end of the text.
+    let err = fermaid::render("mindmap\n  root[a\n", &RenderOptions::default()).unwrap_err();
+    assert_eq!(err.code, ErrorCode::Syntax);
+    assert_eq!(err.line, 4);
+}
+
+#[test]
+fn output_is_deterministic() {
+    assert_eq!(svg(FULL), svg(FULL));
+    assert_eq!(narrow(FULL), narrow(FULL));
+}
+
+#[test]
+fn is_inert_for_hostile_and_mutated_inputs() {
+    let mut rendered = 0;
+    for payload in PAYLOADS {
+        let p = payload.replace('\n', " ");
+        for src in [
+            format!("mindmap\n  r[{p}]\n    a[{p}]"),
+            format!("mindmap\n  r\n    a\n    :::{p}"),
+            format!("mindmap\n  r\n    a\n    ::icon({p})"),
+            format!("mindmap\n  r\n    a(\"`{p}`\")"),
+            format!("---\ntitle: \"{p}\"\n---\nmindmap\n  r"),
+        ] {
+            let Some(svg) = try_render(&src) else {
+                continue;
+            };
+            assert_inert(&svg, &src);
+            rendered += 1;
+        }
+    }
+    assert!(rendered > 50, "only {rendered} hostile inputs rendered");
+    let mut fragments: Vec<&str> = PAYLOADS.to_vec();
+    fragments.extend(["\n", "  ", ":::", "::icon(", "[", "]", "((", "))", "<br>"]);
+    let corpus = [FULL];
+    let mut rnd = Random::new(11);
+    for _ in 0..1500 {
+        let src = mutate(&corpus, &fragments, &mut rnd);
+        if let Some(svg) = try_render(&src) {
+            assert_inert(&svg, &src);
+        }
+    }
+}
+
+fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
+    (0..n).map(line).collect()
+}
+
+#[test]
+fn stays_fast_on_large_and_hostile_input() {
+    // Debug builds are several times slower than release.
+    let budget = Duration::from_secs(if cfg!(debug_assertions) { 30 } else { 3 });
+    let options = |max_width| RenderOptions {
+        max_width,
+        limits: Limits {
+            source: usize::MAX,
+            output: usize::MAX,
+            ..Limits::default()
+        },
+        ..RenderOptions::default()
+    };
+    const N: usize = 50000;
+    let head = "mindmap\n";
+    let cases = [
+        format!("{head}  r[{}]", "x".repeat(N)),
+        format!("{head}  r[{}]", "x ".repeat(N / 2)),
+        format!("{head}  r\n{}", repeat(4000, |i| format!("    a{i}\n"))),
+        // A chain of nodes, each set in one further than the last.
+        format!(
+            "{head}{}",
+            repeat(2000, |i| format!("{}a{i}\n", " ".repeat(i + 1)))
+        ),
+        format!(
+            "{head}  r\n{}",
+            repeat(2000, |i| format!("   a{i}\n    b{i}\n"))
+        ),
+        format!("{head}{}", " ".repeat(N)),
+        format!("{head}{}", "%%\n".repeat(N / 3)),
+    ];
+    for src in &cases {
+        for max_width in [None, Some(300.0)] {
+            let started = Instant::now();
+            let _ = fermaid::render(src, &options(max_width));
+            let took = started.elapsed();
+            assert!(
+                took < budget,
+                "{:?} took {took:?}",
+                &src[..src.len().min(40)]
+            );
+        }
+    }
+}
+
+#[test]
+fn snapshots() {
+    insta::assert_snapshot!("across", svg(FULL));
+    insta::assert_snapshot!("down", narrow(FULL).svg);
+}

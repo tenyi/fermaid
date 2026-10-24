@@ -90,3 +90,10 @@ path = "fuzz_targets/kanban.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "mindmap"
+path = "fuzz_targets/mindmap.rs"
+test = false
+doc = false
+bench = false

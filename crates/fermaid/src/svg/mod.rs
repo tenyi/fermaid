@@ -26,8 +26,18 @@ pub(crate) mod markers;
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "mindmap"
 ))]
+#[cfg_attr(
+    not(any(
+        feature = "flowchart",
+        feature = "state",
+        feature = "class",
+        feature = "er"
+    )),
+    allow(dead_code, reason = "mind maps use only part of it")
+)]
 pub(crate) mod shapes;
 mod theme;
 mod title;

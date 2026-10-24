@@ -1,7 +1,7 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [mindmap] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'kanban', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'kanban', 'mindmap', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [mindmap] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -57,6 +57,8 @@ const m = await loadPele(pele, {
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
   'src/diagrams/journey/db.ts': ['JourneyDb'],
   'src/diagrams/kanban/db.ts': ['KanbanDb'],
+  'src/diagrams/mindmap/db.ts': ['MindmapDb'],
+  'src/diagrams/common/outline.ts': ['NODE_TYPE'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
@@ -95,6 +97,7 @@ const erParser = m.buildParser(join(pele, 'tests/compat/er/upstream/erDiagram.ji
 const journeyParser = m.buildParser(join(pele, 'tests/compat/journey/upstream/journey.jison'));
 const timelineParser = m.buildParser(join(pele, 'tests/compat/timeline/upstream/timeline.jison'));
 const kanbanParser = m.buildParser(join(pele, 'tests/compat/kanban/upstream/kanban.jison'));
+const mindmapParser = m.buildParser(join(pele, 'tests/compat/mindmap/upstream/mindmap.jison'));
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 
 const TYPES = {
@@ -199,6 +202,16 @@ const TYPES = {
       kanbanParser.yy = asYy(db, { getType: db.getType, getLogger: () => quiet });
       kanbanParser.parse(src);
       return kanbanSummary(db);
+    },
+  },
+  mindmap: {
+    keyword: /(^|\n)\s*mindmap/,
+    fragments: ['mindmap', '\n', '  ', '    ', ' ', 'root', 'a', 'id1', '[', ']', '(', ')', '((', '))', '{{', '}}', ')', '(', '"', '`', ':::c', '::icon(fa)', '%%', '<br>', '**', '@{ shape: rect }', 'é'],
+    async reference(src) {
+      const db = new m.MindmapDb();
+      mindmapParser.yy = asYy(db, { getType: db.getType, nodeType: m.NODE_TYPE, getLogger: () => quiet });
+      mindmapParser.parse(src);
+      return mindmapSummary(db);
     },
   },
   url: {

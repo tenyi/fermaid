@@ -14,11 +14,16 @@ pub(crate) mod literal;
     feature = "requirement"
 ))]
 pub(crate) mod ordered;
-#[cfg(feature = "kanban")]
+#[cfg(any(feature = "kanban", feature = "mindmap"))]
 pub(crate) mod outline;
 #[cfg(any(feature = "timeline", feature = "journey"))]
 pub(crate) mod plain;
-#[cfg(any(feature = "timeline", feature = "journey", feature = "kanban"))]
+#[cfg(any(
+    feature = "timeline",
+    feature = "journey",
+    feature = "kanban",
+    feature = "mindmap"
+))]
 #[cfg_attr(
     not(any(feature = "timeline", feature = "journey")),
     allow(dead_code, reason = "outlines use only part of it")

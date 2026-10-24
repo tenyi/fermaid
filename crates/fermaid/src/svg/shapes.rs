@@ -6,6 +6,12 @@ use std::fmt::Write;
 
 use super::num;
 use super::theme::rounded;
+#[cfg(any(
+    feature = "flowchart",
+    feature = "state",
+    feature = "class",
+    feature = "er"
+))]
 use crate::layout::compound::CNode;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -956,6 +962,12 @@ pub(crate) fn shape_has_label(shape: &str) -> bool {
 
 /// The side of a node's layout box that a route end lies on: 0 top, 1 right, 2 bottom, 3 left,
 /// or `None`.
+#[cfg(any(
+    feature = "flowchart",
+    feature = "state",
+    feature = "class",
+    feature = "er"
+))]
 pub(crate) fn end_side(route: &[f64], at: usize, c: &CNode) -> Option<u8> {
     let dx = route[at] - c.x;
     let dy = route[at + 1] - c.y;
@@ -969,6 +981,12 @@ pub(crate) fn end_side(route: &[f64], at: usize, c: &CNode) -> Option<u8> {
 }
 
 /// Moves a route end from a node's layout box onto the outline of the shape drawn in it.
+#[cfg(any(
+    feature = "flowchart",
+    feature = "state",
+    feature = "class",
+    feature = "er"
+))]
 pub(crate) fn inset_route(route: &mut [f64], at: usize, shape: &str, w: f64, h: f64, c: &CNode) {
     if c.is_group {
         return;
