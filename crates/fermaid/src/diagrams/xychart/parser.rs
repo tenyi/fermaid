@@ -39,7 +39,7 @@ struct Parser<'a> {
     i: usize,
 }
 
-impl<'a> Parser<'a> {
+impl Parser<'_> {
     fn t(&self) -> T {
         self.types.get(self.i).copied().unwrap_or(T::End)
     }
