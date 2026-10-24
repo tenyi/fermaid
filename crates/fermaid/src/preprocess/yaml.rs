@@ -862,9 +862,7 @@ mod tests {
     fn limits_nesting() {
         let deep = "[".repeat(200) + &"]".repeat(200);
         assert_eq!(parse_yaml(&deep), Err("YAML: nesting is too deep"));
-        let nested: String = (0..100)
-            .map(|i| format!("{}k:\n", "  ".repeat(i)))
-            .collect();
+        let nested: String = (0..100).map(|i| "  ".repeat(i) + "k:\n").collect();
         assert_eq!(parse_yaml(&nested), Err("YAML: nesting is too deep"));
     }
 }
