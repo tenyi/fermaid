@@ -2,6 +2,8 @@
 //! it. It reads UTF-16 code units, as the jison lexer does, so that what counts as one
 //! character is the same.
 
+use crate::diagrams::common::chars::{is_digit, is_letter, is_space, is_word, word_at};
+
 /// The tokens of the xychart grammar.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum T {
@@ -134,49 +136,6 @@ const BROKEN_RULE: &str = concat!(
     "                  ",
     "{ return md_str; }\n<md_string>(?:`"
 );
-
-/// Whitespace as `\s` sees it, on a UTF-16 code unit.
-fn is_space(c: u16) -> bool {
-    if c < 128 {
-        return c == 32 || (9..=13).contains(&c);
-    }
-    c == 0xa0
-        || c == 0x1680
-        || (0x2000..=0x200a).contains(&c)
-        || c == 0x2028
-        || c == 0x2029
-        || c == 0x202f
-        || c == 0x205f
-        || c == 0x3000
-        || c == 0xfeff
-}
-
-fn is_digit(c: u16) -> bool {
-    (48..=57).contains(&c)
-}
-
-fn is_letter(c: u16) -> bool {
-    (65..=90).contains(&c) || (97..=122).contains(&c)
-}
-
-/// A character of `\w`.
-fn is_word(c: u16) -> bool {
-    is_digit(c) || is_letter(c) || c == 95
-}
-
-/// Whether `word`, written in lower case, is at `at`. Only ASCII letters match in either case,
-/// as with the `i` flag on a regular expression without the `u` flag.
-fn word_at(units: &[u16], at: usize, word: &str) -> bool {
-    for (k, w) in word.bytes().enumerate() {
-        let Some(&c) = units.get(at + k) else {
-            return false;
-        };
-        if c != u16::from(w) && !(w.is_ascii_lowercase() && c == u16::from(w) - 32) {
-            return false;
-        }
-    }
-    true
-}
 
 /// The token of a character that stands for itself, as Mermaid's grammar lists them.
 fn single(c: u16) -> Option<T> {

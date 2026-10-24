@@ -1,5 +1,7 @@
 //! Parts shared by several diagram types.
 
+#[cfg(feature = "xychart")]
+pub(crate) mod chars;
 pub(crate) mod fit;
 #[cfg(any(feature = "class", feature = "er"))]
 pub(crate) mod generics;
