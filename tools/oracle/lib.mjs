@@ -143,6 +143,14 @@ export function erSummary(db, buildErGraph) {
   return out.join('\n');
 }
 
+export function timelineSummary(db) {
+  const out = [`dir:${q(db.direction)}`];
+  for (const s of db.sections) out.push(`section:${q(s)}`);
+  for (const p of db.periods) out.push(`period:${q(p.text)}|${p.sectionIndex}|${list(p.events)}`);
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
+
 export function requirementSummary(db, buildRequirementGraph) {
   const out = [`dir:${q(db.direction)}`];
   for (const [name, r] of db.requirements) {

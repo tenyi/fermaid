@@ -36,6 +36,7 @@ jobs:
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features class -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features er -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features requirement -- -D warnings
+      - run: cargo clippy -p fermaid --all-targets --no-default-features --features timeline -- -D warnings
       - run: cargo test
       - run: cargo test -p fermaid --no-default-features
 

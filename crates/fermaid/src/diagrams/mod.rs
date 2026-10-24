@@ -9,7 +9,8 @@ pub(crate) mod class;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "requirement"
+    feature = "requirement",
+    feature = "timeline"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -24,3 +25,5 @@ pub(crate) mod requirement;
 pub(crate) mod sequence;
 #[cfg(feature = "state")]
 pub(crate) mod state;
+#[cfg(feature = "timeline")]
+pub(crate) mod timeline;

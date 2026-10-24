@@ -18,7 +18,8 @@ pub(crate) mod edges;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "requirement"
+    feature = "requirement",
+    feature = "timeline"
 ))]
 pub(crate) mod markers;
 #[cfg(any(
