@@ -264,3 +264,23 @@ export function sankeySummary(db) {
   out.push(`title:${q(db.title)}`);
   return out.join('\n');
 }
+
+// An XY chart: its axes, then its series.
+export function xychartSummary(db) {
+  const out = [];
+  const x = db.xAxis;
+  if (x.type === 'band') {
+    out.push(`xaxis:band|${q(x.title)}|${list(x.categories)}`);
+  } else {
+    out.push(`xaxis:linear|${q(x.title)}|${x.min}|${x.max}`);
+  }
+  out.push(`yaxis:linear|${q(db.yAxis.title)}|${db.yAxis.min}|${db.yAxis.max}`);
+  out.push(`hasx:${db.hasSetXAxis}|hasy:${db.hasSetYAxis}`);
+  out.push(`orientation:${q(db.orientation)}`);
+  for (const p of db.plots) {
+    const data = p.data.map(([k, v]) => `${q(k)}=${v === undefined ? '-' : v}`).join(',');
+    out.push(`plot:${p.type}|${q(p.title)}|${data}|${p.pointLabels ? list(p.pointLabels) : '-'}`);
+  }
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}

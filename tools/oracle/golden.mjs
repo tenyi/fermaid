@@ -8,17 +8,17 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, ganttSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary, sankeySummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary, sankeySummary, xychartSummary } from './lib.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid.
 process.env.TZ = 'UTC';
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['class', 'er', 'flowchart', 'gantt', 'journey', 'kanban', 'mindmap', 'requirement', 'sankey', 'sequence', 'state', 'timeline'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|gantt|journey|kanban|mindmap|requirement|sankey|sequence|state|timeline');
+if (!peleDir || !['class', 'er', 'flowchart', 'gantt', 'journey', 'kanban', 'mindmap', 'requirement', 'sankey', 'sequence', 'state', 'timeline', 'xychart'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|gantt|journey|kanban|mindmap|requirement|sankey|sequence|state|timeline|xychart');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, GanttDb, parseGantt, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, SankeyDb, parseSankey, prepareTextForParsing, encodeEntities } = await loadPele(peleDir, {
+const { XyChartDb, parseXyChart, ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, GanttDb, parseGantt, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, SankeyDb, parseSankey, prepareTextForParsing, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
@@ -47,6 +47,8 @@ const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr,
   'src/diagrams/state/parser.ts': ['parseState'],
   'src/diagrams/sankey/db.ts': ['SankeyDb'],
   'src/diagrams/sankey/parser.ts': ['parseSankey', 'prepareTextForParsing'],
+  'src/diagrams/xychart/db.ts': ['XyChartDb'],
+  'src/diagrams/xychart/parser.ts': ['parseXyChart'],
   'src/preprocess.ts': ['encodeEntities'],
 });
 
@@ -136,6 +138,12 @@ for (const { name, src } of cases) {
         const db = new SankeyDb();
         parseSankey(prepareTextForParsing(encodeEntities(src) + '\n'), db);
         result = sankeySummary(db);
+      } else if (type === 'xychart') {
+        // Mermaid's diagram parses the text as Mermaid prepares it first, and Mermaid encodes
+        // the entities of the whole diagram before any parser sees it.
+        const db = new XyChartDb();
+        parseXyChart(encodeEntities(src) + '\n', db);
+        result = xychartSummary(db);
       } else {
         // As pele's spec adapter does: the text as given, with entities encoded.
         const db = new SeqDb();

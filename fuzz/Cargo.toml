@@ -111,3 +111,10 @@ path = "fuzz_targets/sankey.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "xychart"
+path = "fuzz_targets/xychart.rs"
+test = false
+doc = false
+bench = false

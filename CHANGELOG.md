@@ -9,6 +9,11 @@ before 1.0, a minor version may break the API.
   record per line, with the fields quoted as RFC 4180 says; and the `sankey` config keys
   `width`, `height`, `nodeWidth`, `nodePadding`, `nodeAlignment`, `nodeColors`, `linkColor`,
   `showValues`, `prefix`, `suffix` and `labelStyle`.
+- XY charts, behind the `xychart` feature: `title`, `x-axis` with categories or a range,
+  `y-axis` with a range, `line` and `bar` series with point labels, `accTitle` and `accDescr`,
+  the `horizontal` and `vertical` orientation, and the `xyChart` config keys `width`, `height`,
+  `chartOrientation`, `showTitle`, `showLegend` and `showDataLabel`, with the `showTitle`,
+  `showTick`, `showLabel` and `showAxisLine` keys of `xAxis` and `yAxis`.
 
 ## 0.2.0 - 2026-10-24
 

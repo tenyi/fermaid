@@ -37,7 +37,7 @@ pub(crate) fn fit_width(
 
 /// For a chart that is drawn to a set width: its own, or the host's when that is smaller, but
 /// not under `least`.
-#[cfg_attr(not(feature = "gantt"), allow(dead_code))]
+#[cfg_attr(not(any(feature = "gantt", feature = "xychart")), allow(dead_code))]
 pub(crate) fn cap_width(options: &RenderOptions, natural: f64, least: f64) -> f64 {
     available(options).map_or(natural, |a| least.min(natural).max(natural.min(a)))
 }

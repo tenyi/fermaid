@@ -15,7 +15,8 @@ pub(crate) mod class;
     feature = "kanban",
     feature = "mindmap",
     feature = "gantt",
-    feature = "sankey"
+    feature = "sankey",
+    feature = "xychart"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -42,3 +43,5 @@ pub(crate) mod sequence;
 pub(crate) mod state;
 #[cfg(feature = "timeline")]
 pub(crate) mod timeline;
+#[cfg(feature = "xychart")]
+pub(crate) mod xychart;

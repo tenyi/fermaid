@@ -20,7 +20,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary } from './lib.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
 // as tools/oracle/golden.mjs does.
@@ -37,10 +37,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -66,6 +66,7 @@ const m = await loadPele(pele, {
   'src/diagrams/mindmap/db.ts': ['MindmapDb'],
   'src/diagrams/sankey/db.ts': ['SankeyDb'],
   'src/diagrams/sankey/parser.ts': ['prepareTextForParsing'],
+  'src/diagrams/xychart/db.ts': ['XyChartDb'],
   'src/diagrams/common/outline.ts': ['NODE_TYPE'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
@@ -109,6 +110,7 @@ const mindmapParser = m.buildParser(join(pele, 'tests/compat/mindmap/upstream/mi
 const ganttParser = m.buildParser(join(pele, 'tests/compat/gantt/upstream/gantt.jison'));
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 const sankeyParser = m.buildParser(join(pele, 'tests/compat/sankey/upstream/sankey.jison'));
+const xychartParser = m.buildParser(join(pele, 'tests/compat/xychart/upstream/xychart.jison'));
 
 const TYPES = {
   pie: {
@@ -204,6 +206,17 @@ const TYPES = {
       // Mermaid encodes the entities of the whole diagram before any parser sees it.
       sankeyParser.parse(m.prepareTextForParsing(m.encodeEntities(src) + '\n'));
       return sankeySummary(db);
+    },
+  },
+  xychart: {
+    keyword: /(^|\n)\s*xychart(-beta)?\b/,
+    fragments: ['xychart', 'xychart-beta', 'horizontal', 'vertical', 'title ', 'x-axis ', 'y-axis ', '[', ']', '{', '}', '-->', ',', '"', '1', '-1', '1.5', '.5', '0', 'line ', 'bar ', 'accTitle: ', 'accDescr: ', 'accDescr {', '\n', ';', '%%', '---\n', 'é', 'A'],
+    async reference(src) {
+      const db = new m.XyChartDb();
+      xychartParser.yy = asYy(db);
+      // Mermaid's Diagram.fromText encodes entities and adds a line break.
+      xychartParser.parse(m.encodeEntities(src) + '\n');
+      return xychartSummary(db);
     },
   },
   timeline: {
