@@ -22,14 +22,17 @@ The development plan and all settled design decisions are in `docs/ROADMAP.md`. 
 
 ## Architecture
 
-M0 (foundation) is done; no diagram type exists yet, so `render` always returns `ErrorCode::Unsupported`.
+M0 (foundation) and M1 (pie) are done; every other type returns `ErrorCode::Unsupported`.
 
 - `crates/fermaid` — the library. `render` checks the source limit, runs `preprocess`, detects the type (`detect.rs`), looks it up (`diagram.rs`, an internal `Diagram` trait; one module per type, feature-gated), renders it and checks the output limit.
+  - `diagrams/` — one module per type behind its feature (`pie/`: `parser.rs`, `model.rs`, `render.rs`, and `compat.rs`, which checks the generated Mermaid spec cases). `common/tokens.rs` is the tokenizer and `Reader` for Langium-defined types (pele's regex token types as hand-written matchers); `common/fit.rs` fits a chart to `RenderOptions::max_width`.
   - `preprocess/` — `%%` comments, front matter (`yaml.rs`, a YAML subset), `%%{init}%%` (`json.rs`, strict JSON).
   - `text/` — `Style`, `TextMeasurer`, `MetricsMeasurer` (pele's Arial tables decoded at compile time), `entities.rs` (entity codes), `label.rs` (label parsing, measuring and wrapping; a port of pele's `text/label.ts` without math and icons).
   - `svg/` — escaping, number formatting, label `<text>` output, theme CSS variables, the document root and titles.
   - `error.rs` (`Error` with code, kind, line, column, snippet), `options.rs` (`RenderOptions`, `Limits`, `Rendered`, `Link`), `util.rs` (JavaScript-compatible whitespace, trimming and rounding).
+  - `tests/` — `pie.rs` (render, security, speed, insta snapshots in `snapshots/`), `support/mod.rs` (inert-output check, hostile payloads, mutator; shared by the type tests), `compat/<type>/` (generated `cases.rs` and a hand-written `SKIPPED.md`).
 - `crates/fermaid-cli` — the `fermaid` binary, hand-rolled argument parsing.
+- `xtask/` — `cargo xtask compat <type> --pele <DIR>` converts pele's `tests/compat/<type>` specs into `cases.rs`.
 - `fuzz/` — cargo-fuzz targets (nightly, outside the workspace).
 - `.github/workflows/ci.yml` — fmt, clippy, tests on stable and 1.85; fuzz smoke run.
 
@@ -44,7 +47,8 @@ cargo test <name_substring>      # single test / filter
 cargo test -- --nocapture        # show println! output
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60
+cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60   # also: pie
+cargo xtask compat pie --pele ../pele   # regenerate spec cases from a pele checkout
 ```
 
 Rust edition is 2024.

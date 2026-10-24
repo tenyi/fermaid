@@ -4,7 +4,12 @@
 
 fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，不需要 JavaScript 執行環境、無頭瀏覽器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一個小巧、無相依套件的 TypeScript 渲染器），支援 Mermaid 12.1.0 語法，並採用 pele 自己的版面配置與視覺風格。
 
-> **狀態：** pre-alpha。基礎架構已完成（前處理、文字量測與換行、SVG 輸出、錯誤與限制），但尚未支援任何圖表類型：目前所有圖表都會回傳 `Unsupported` 錯誤。圓餅圖會最先支援，接著是流程圖與循序圖。請參閱[開發路線圖](docs/ROADMAP.md)。
+> **狀態：** pre-alpha。已支援圓餅圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。接下來是流程圖，然後是循序圖。請參閱[開發路線圖](docs/ROADMAP.md)。
+
+| 圖表類型 | 狀態 |
+|---|---|
+| 圓餅圖（`pie`） | 已支援：`showData`、`title`、`accTitle`、`accDescr`，以及 `pie` 設定項 `textPosition`、`donutHole` 與 `legendPosition` |
+| 流程圖、循序圖及其他 | 規劃中 |
 
 ## 目標
 
@@ -27,14 +32,14 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` 會回傳 SVG 及其尺寸與連結，或回傳一個 `Error`，其中包含錯誤代碼（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行號與欄號，以及指出問題位置的程式碼片段。`detect_type` 不需渲染即可判斷圖表類型。每種圖表類型都是一個 Cargo feature；預設的 `all` feature 包含所有類型。
+`render` 會回傳 SVG 及其尺寸與連結，或回傳一個 `Error`，其中包含錯誤代碼（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行號與欄號，以及指出問題位置的程式碼片段。`detect_type` 不需渲染即可判斷圖表類型。將 `max_width` 設為宿主可用的寬度，能畫得更窄的圖表就會縮窄（圓餅圖會把圖例移到圖的下方）。每種圖表類型都是一個 Cargo feature（`pie`、…）；預設的 `all` feature 包含所有類型。
 
 ## 命令列
 
 ```sh
 cargo install --path crates/fermaid-cli
 fermaid diagram.mmd -o diagram.svg
-cat diagram.mmd | fermaid --font-size 14 --id-prefix fig1 > diagram.svg
+cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 ```
 
 ## 主題
@@ -51,7 +56,7 @@ svg {
 }
 ```
 
-可用的變數：`--fermaid-bg`、`--fermaid-fg`、`--fermaid-muted`、`--fermaid-line`、`--fermaid-surface`、`--fermaid-surface-alt`、`--fermaid-border`、`--fermaid-accent`、`--fermaid-radius`、`--fermaid-font`、`--fermaid-font-mono`。圖表類型會再加入 `--fermaid-series-1` 到 `--fermaid-series-8`。
+可用的變數：`--fermaid-bg`、`--fermaid-fg`、`--fermaid-muted`、`--fermaid-line`、`--fermaid-surface`、`--fermaid-surface-alt`、`--fermaid-border`、`--fermaid-accent`、`--fermaid-radius`、`--fermaid-font`、`--fermaid-font-mono`，以及用於圓餅圖扇形等資料序列顏色的 `--fermaid-series-1` 到 `--fermaid-series-8`。
 
 ## 開發
 
@@ -60,7 +65,8 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie` 目標
+cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 ```
 
 最低支援的 Rust 版本為 1.85。

@@ -4,13 +4,14 @@ use std::io::{self, Read, Write};
 use std::process::ExitCode;
 
 const USAGE: &str = "\
-Usage: fermaid [INPUT|-] [-o OUTPUT] [--font-size N] [--id-prefix PREFIX]
+Usage: fermaid [INPUT|-] [-o OUTPUT] [--font-size N] [--max-width N] [--id-prefix PREFIX]
 
 Renders the Mermaid diagram in INPUT (or standard input) to SVG.
 
 Options:
   -o, --output OUTPUT    Write the SVG to OUTPUT instead of standard output
       --font-size N      Font size in pixels
+      --max-width N      The width the diagram should fit, in pixels
       --id-prefix PREFIX Prefix of the ids in the SVG (default: fermaid)
   -h, --help             Show this help
   -V, --version          Show the version";
@@ -44,15 +45,8 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
                 )));
             }
             "-o" | "--output" => parsed.output = Some(value(&arg)?),
-            "--font-size" => {
-                let size = value(&arg)?;
-                let size: f64 = size
-                    .parse()
-                    .ok()
-                    .filter(|s: &f64| s.is_finite() && *s > 0.0)
-                    .ok_or(format!("invalid font size: {size}"))?;
-                parsed.options.font_size = Some(size);
-            }
+            "--font-size" => parsed.options.font_size = Some(pixels(&value(&arg)?, "font size")?),
+            "--max-width" => parsed.options.max_width = Some(pixels(&value(&arg)?, "width")?),
             "--id-prefix" => parsed.options.id_prefix = value(&arg)?,
             "-" => parsed.input = None,
             flag if flag.starts_with('-') => return Err(format!("unknown option: {flag}")),
@@ -61,6 +55,13 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
         }
     }
     Ok(Parsed::Run(parsed))
+}
+
+fn pixels(text: &str, what: &str) -> Result<f64, String> {
+    text.parse()
+        .ok()
+        .filter(|n: &f64| n.is_finite() && *n > 0.0)
+        .ok_or(format!("invalid {what}: {text}"))
 }
 
 fn read_input(path: Option<&str>) -> io::Result<String> {
@@ -132,6 +133,8 @@ mod tests {
             "out.svg",
             "--font-size",
             "14",
+            "--max-width",
+            "320",
             "--id-prefix",
             "d1",
         ]) else {
@@ -140,6 +143,7 @@ mod tests {
         assert_eq!(args.input.as_deref(), Some("in.mmd"));
         assert_eq!(args.output.as_deref(), Some("out.svg"));
         assert_eq!(args.options.font_size, Some(14.0));
+        assert_eq!(args.options.max_width, Some(320.0));
         assert_eq!(args.options.id_prefix, "d1");
     }
 
@@ -147,6 +151,7 @@ mod tests {
     fn rejects_bad_arguments() {
         assert!(parse(&["--font-size", "-1"]).is_err());
         assert!(parse(&["--font-size"]).is_err());
+        assert!(parse(&["--max-width", "wide"]).is_err());
         assert!(parse(&["--bogus"]).is_err());
         assert!(parse(&["a", "b"]).is_err());
         assert!(matches!(

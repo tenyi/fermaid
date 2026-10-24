@@ -4,7 +4,12 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** pre-alpha. The foundation is in place (preprocessing, text measurement and wrapping, SVG output, errors and limits), but no diagram type is supported yet: every diagram currently returns an `Unsupported` error. Pie charts come first, then flowcharts and sequence diagrams. See the [roadmap](docs/ROADMAP.md).
+> **Status:** pre-alpha. Pie charts are supported; every other diagram type returns an `Unsupported` error for now. Flowcharts come next, then sequence diagrams. See the [roadmap](docs/ROADMAP.md).
+
+| Diagram type | Status |
+|---|---|
+| Pie (`pie`) | Supported: `showData`, `title`, `accTitle`, `accDescr`, and the `pie` config keys `textPosition`, `donutHole` and `legendPosition` |
+| Flowchart, sequence, and the rest | Planned |
 
 ## Goals
 
@@ -27,14 +32,14 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 }
 ```
 
-`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Each diagram type is a Cargo feature; the default feature `all` includes every type.
+`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Each diagram type is a Cargo feature (`pie`, …); the default feature `all` includes every type.
 
 ## Command line
 
 ```sh
 cargo install --path crates/fermaid-cli
 fermaid diagram.mmd -o diagram.svg
-cat diagram.mmd | fermaid --font-size 14 --id-prefix fig1 > diagram.svg
+cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 ```
 
 ## Theming
@@ -51,7 +56,7 @@ svg {
 }
 ```
 
-Available variables: `--fermaid-bg`, `--fermaid-fg`, `--fermaid-muted`, `--fermaid-line`, `--fermaid-surface`, `--fermaid-surface-alt`, `--fermaid-border`, `--fermaid-accent`, `--fermaid-radius`, `--fermaid-font`, `--fermaid-font-mono`. Chart types will add `--fermaid-series-1` to `--fermaid-series-8`.
+Available variables: `--fermaid-bg`, `--fermaid-fg`, `--fermaid-muted`, `--fermaid-line`, `--fermaid-surface`, `--fermaid-surface-alt`, `--fermaid-border`, `--fermaid-accent`, `--fermaid-radius`, `--fermaid-font`, `--fermaid-font-mono`, and `--fermaid-series-1` to `--fermaid-series-8` for the colors of chart series such as pie slices.
 
 ## Development
 
@@ -60,7 +65,8 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz
+cargo +nightly fuzz run render    # needs cargo-fuzz; `pie` is another target
+cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 ```
 
 The minimum supported Rust version is 1.85.

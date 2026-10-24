@@ -57,7 +57,7 @@ pub struct Error {
 }
 
 // RenderOptions: Default; fields font_family, font_family_mono,
-// font_size: Option<f64>, id_prefix, padding: Option<f64>, responsive,
+// font_size: Option<f64>, id_prefix, max_width: Option<f64> (M1), padding: Option<f64>, responsive,
 // limits { source, output, max_edges, max_depth },
 // measurer: Option<Box<dyn TextMeasurer>>.
 // link_schemes is added in M2 together with URL sanitizing.
@@ -93,13 +93,23 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 
 ## M1 — Pie (end-to-end pipeline)
 
-0. `xtask`: convert pele's `tests/compat/<type>` cases into Rust test data.
-1. Pie lexer, parser and model (`showData`, `title`, `accTitle`, `accDescr`).
-2. Layout and emitter using `--fermaid-series-*`.
-3. Port the Mermaid spec cases from pele's `tests/compat/pie` and add `SKIPPED.md`.
-4. insta snapshots, security tests (escaping, limits, depth), a fuzz target.
-5. First version of the CLI: `fermaid [INPUT|-] [-o OUT] [--font-size N] [--id-prefix P]`.
-6. Publish `0.0.1`.
+0. [x] `xtask`: convert pele's `tests/compat/<type>` cases into Rust test data
+   (`cargo xtask compat <type> --pele <DIR>` writes `crates/fermaid/tests/compat/<type>/cases.rs`).
+1. [x] Pie lexer, parser and model (`showData`, `title`, `accTitle`, `accDescr`), on a shared
+   tokenizer for Langium-defined types (`diagrams/common/tokens.rs`).
+2. [x] Layout and emitter using `--fermaid-series-*`, with `RenderOptions::max_width`
+   (pele's `fitWidth`).
+3. [x] Port the Mermaid spec cases from pele's `tests/compat/pie` and add `SKIPPED.md`.
+4. [x] insta snapshots, security tests (escaping, limits; pie has no nesting), a fuzz target.
+5. [x] First version of the CLI: `fermaid [INPUT|-] [-o OUT] [--font-size N] [--max-width N] [--id-prefix P]`.
+6. [ ] Publish `0.0.1` (needs the owner's crates.io token).
+
+Notes:
+- Output was compared byte for byte with pele 1.9.0 (after renaming `pele` to `fermaid`) on
+  pele's pie corpus, its hostile payloads and 3,000 mutated inputs: identical, errors and their
+  positions included.
+- As in pele, pie errors are positioned in the text after preprocessing (comment lines and
+  front matter removed), so a line number can be off when comments precede the error.
 
 **Done when**
 - Compat tests pass; every skipped case is listed in `SKIPPED.md`.
