@@ -2,20 +2,56 @@
 
 **English** | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js.
+fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** early development. There is no usable API yet.
+> **Status:** pre-alpha. The foundation is in place (preprocessing, text measurement and wrapping, SVG output, errors and limits), but no diagram type is supported yet: every diagram currently returns an `Unsupported` error. Pie charts come first, then flowcharts and sequence diagrams. See the [roadmap](docs/ROADMAP.md).
 
 ## Goals
 
-- Pure Rust, synchronous, minimal dependencies.
+- Pure Rust, synchronous, no runtime dependencies, no I/O in the library.
 - Mermaid syntax compatibility, with its own clean layout and visual style.
-- Themeable output: colors and fonts exposed as CSS variables in the SVG.
-- Safe for untrusted input: escaped text, filtered links and styles, size limits.
+- Deterministic output: the same input and options give byte-identical SVG.
+- Themeable output: colors and fonts are CSS variables in the SVG.
+- Safe for untrusted input: escaped text, filtered links and styles, size and nesting limits.
 
-## Inspiration
+## Library
 
-fermaid is inspired by [Pele](https://github.com/obsidianmd/pele) from the Obsidian team, a small, dependency-free TypeScript library that renders Mermaid diagrams to SVG. fermaid aims to bring the same approach to the Rust ecosystem.
+```rust
+let options = fermaid::RenderOptions {
+    font_size: Some(14.0),
+    ..Default::default()
+};
+match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
+    Ok(rendered) => println!("{}", rendered.svg),
+    Err(e) => eprintln!("{}:{}: {}\n{}", e.line, e.column, e.message, e.snippet),
+}
+```
+
+`render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Each diagram type is a Cargo feature; the default feature `all` includes every type.
+
+## Command line
+
+```sh
+cargo install --path crates/fermaid-cli
+fermaid diagram.mmd -o diagram.svg
+cat diagram.mmd | fermaid --font-size 14 --id-prefix fig1 > diagram.svg
+```
+
+## Theming
+
+The SVG takes its colors and fonts from CSS custom properties, with built-in fallbacks, so a page can re-theme a diagram without rendering it again:
+
+```css
+svg {
+  --fermaid-bg: #1e1e1e;
+  --fermaid-fg: #dcddde;
+  --fermaid-line: #999;
+  --fermaid-accent: #7f6df2;
+  --fermaid-font: "Inter", sans-serif;
+}
+```
+
+Available variables: `--fermaid-bg`, `--fermaid-fg`, `--fermaid-muted`, `--fermaid-line`, `--fermaid-surface`, `--fermaid-surface-alt`, `--fermaid-border`, `--fermaid-accent`, `--fermaid-radius`, `--fermaid-font`, `--fermaid-font-mono`. Chart types will add `--fermaid-series-1` to `--fermaid-series-8`.
 
 ## Development
 
@@ -24,7 +60,14 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
+cargo +nightly fuzz run render    # needs cargo-fuzz
 ```
+
+The minimum supported Rust version is 1.85.
+
+## Credits
+
+fermaid's algorithms, text metrics and limits are ported from [pele](https://github.com/obsidianmd/pele) by kepano (MIT), from the Obsidian team. The diagram syntax and the parser specifications used as tests come from [Mermaid](https://github.com/mermaid-js/mermaid) (MIT). See [NOTICE](NOTICE).
 
 ## License
 
