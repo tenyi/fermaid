@@ -322,11 +322,29 @@ fn lower(value: &str) -> String {
     value.to_ascii_lowercase()
 }
 
-/// `url\s*\(`
+/// `url\s*\(` that points at something outside the document. A fragment reference points at an
+/// element of the same document, which can neither load nor run anything.
 fn has_url(value: &str) -> bool {
     let v = lower(value);
-    v.match_indices("url")
-        .any(|(i, _)| v[i + 3..].trim_start().starts_with('('))
+    v.match_indices("url").any(|(i, _)| {
+        let rest = v[i + 3..].trim_start();
+        let Some(rest) = rest.strip_prefix('(') else {
+            return false;
+        };
+        let end = rest.find(')').unwrap_or(rest.len());
+        !is_fragment(&rest[..end])
+    })
+}
+
+/// A local reference: `#` and an id.
+fn is_fragment(target: &str) -> bool {
+    let Some(id) = target.trim().strip_prefix('#') else {
+        return false;
+    };
+    !id.is_empty()
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
 }
 
 fn unsafe_style(value: &str) -> bool {
@@ -518,7 +536,10 @@ fn finds_problems() {
     assert!(inert_problem("<svg><a href=\"//evil\"/></svg>").is_some());
     assert_eq!(inert_problem("<svg><a href=\"https://x\"/></svg>"), None);
     assert!(inert_problem("<svg><g style=\"background:url (x)\"/></svg>").is_some());
-    assert!(inert_problem("<svg><g fill=\"url(#x)\"/></svg>").is_some());
+    // A fragment reference points at an element of the same document, which is inert.
+    assert_eq!(inert_problem("<svg><g fill=\"url(#x)\"/></svg>"), None);
+    assert!(inert_problem("<svg><g fill=\"url(https://evil.example/x)\"/></svg>").is_some());
+    assert!(inert_problem("<svg><g fill=\"url(#x y)\"/></svg>").is_some());
     assert_eq!(
         inert_problem("<svg style=\"font:16px sans-serif;--_x:1\"><text>&amp;&#35;</text></svg>"),
         None
