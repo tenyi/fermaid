@@ -40,7 +40,7 @@ pub(crate) fn skipped(text: &'static str) -> Vec<&'static str> {
 }
 
 /// The name of an error code, as pele's errors carry it.
-#[cfg(any(feature = "flowchart", feature = "sequence"))]
+#[cfg(any(feature = "flowchart", feature = "sequence", feature = "state"))]
 pub(crate) fn error_code(code: crate::error::ErrorCode) -> &'static str {
     use crate::error::ErrorCode;
     match code {

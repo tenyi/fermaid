@@ -36,6 +36,10 @@ pub(crate) fn fit_width(
 }
 
 /// The width a title may take before it wraps.
+#[cfg_attr(
+    not(any(feature = "pie", feature = "flowchart", feature = "sequence")),
+    allow(dead_code)
+)]
 pub(crate) fn title_room(options: &RenderOptions) -> f64 {
     available(options).map_or(4000.0, |a| {
         80f64.max(a - 2.0 * options.padding.unwrap_or(8.0))

@@ -2,25 +2,27 @@
 // compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
 // which fermaid's model matches pele's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> flowchart|sequence
+//   node tools/oracle/golden.mjs <pele checkout> flowchart|sequence|state
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { flowSummary, loadPele, seqSummary } from './lib.mjs';
+import { flowSummary, loadPele, seqSummary, stateSummary } from './lib.mjs';
 
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['flowchart', 'sequence'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> flowchart|sequence');
+if (!peleDir || !['flowchart', 'sequence', 'state'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> flowchart|sequence|state');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { FlowDb, parseFlowchart, SeqDb, parseSequence, encodeEntities } = await loadPele(peleDir, {
+const { FlowDb, parseFlowchart, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/flowchart/db.ts': ['FlowDb'],
   'src/diagrams/flowchart/parser.ts': ['parseFlowchart'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
   'src/diagrams/sequence/parser.ts': ['parseSequence'],
+  'src/diagrams/state/db.ts': ['StateDb'],
+  'src/diagrams/state/parser.ts': ['parseState'],
   'src/preprocess.ts': ['encodeEntities'],
 });
 
@@ -62,6 +64,10 @@ for (const { name, src } of cases) {
         const db = new FlowDb({ maxEdges: 500 });
         parseFlowchart(src, db);
         result = flowSummary(db);
+      } else if (type === 'state') {
+        const db = new StateDb();
+        parseState(src, db);
+        result = stateSummary(db);
       } else {
         // As pele's spec adapter does: the text as given, with entities encoded.
         const db = new SeqDb();

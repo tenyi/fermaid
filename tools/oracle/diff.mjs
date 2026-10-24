@@ -1,12 +1,12 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
 // parser Mermaid uses: `@mermaid-js/parser` for pie, and the parsers jison generates from
-// Mermaid's flowchart and sequence grammars, which pele vendors, driving pele's port of
+// Mermaid's flowchart, sequence and state grammars, which pele vendors, driving pele's port of
 // Mermaid's model. `url` checks the link sanitizer against `@braintree/sanitize-url`, which
 // Mermaid applies to click targets, on addresses mutated from a list below. fermaid's side runs as the ignored `oracle_dump` test of each type. Both
 // sides are reduced to the summaries in `lib.mjs`, and errors to just "error".
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { flowSummary, loadPele, pieSummary, seqSummary } from './lib.mjs';
+import { flowSummary, loadPele, pieSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -47,6 +47,7 @@ const m = await loadPele(pele, {
   'tests/support/sequence-constants.ts': ['LINETYPE', 'PLACEMENT'],
   'src/diagrams/flowchart/db.ts': ['FlowDb'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
+  'src/diagrams/state/db.ts': ['StateDb'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
@@ -77,6 +78,7 @@ function asYy(db, extra) {
 
 const flowParser = m.buildParser(join(pele, 'tests/compat/flowchart/upstream/flow.jison'));
 const seqParser = m.buildParser(join(pele, 'tests/compat/sequence/upstream/sequenceDiagram.jison'));
+const stateParser = m.buildParser(join(pele, 'tests/compat/state/upstream/stateDiagram.jison'));
 
 const TYPES = {
   pie: {
@@ -107,6 +109,16 @@ const TYPES = {
       // Mermaid's Diagram.fromText encodes entities and adds a line break.
       seqParser.parse(m.encodeEntities(src) + '\n');
       return seqSummary(db);
+    },
+  },
+  state: {
+    keyword: /(^|\n)\s*stateDiagram/,
+    fragments: ['-->', '[*]', 'state ', '{', '}', '--', '\n', 'note left of A : x', 'note right of A\nmore\nend note', '<<fork>>', '<<join>>', '<<choice>>', '[[fork]]', 'classDef c fill:red', 'class A c', 'style A fill:blue', ':::c', ': label', 'direction LR', 'click A "https://x" "tip"', 'click A href "https://y"', 'hide empty description', 'scale 100 width', ' as ', '"', '%%', 'A', 'é', ' '],
+    async reference(src) {
+      const db = new m.StateDb();
+      stateParser.yy = asYy(db);
+      stateParser.parse(src);
+      return stateSummary(db);
     },
   },
   url: {

@@ -41,3 +41,10 @@ path = "fuzz_targets/sequence.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "state"
+path = "fuzz_targets/state.rs"
+test = false
+doc = false
+bench = false

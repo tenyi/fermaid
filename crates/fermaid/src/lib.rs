@@ -15,7 +15,7 @@ mod detect;
 mod diagram;
 mod diagrams;
 mod error;
-#[cfg(feature = "flowchart")]
+#[cfg(any(feature = "flowchart", feature = "state"))]
 #[allow(
     dead_code,
     reason = "parts are used by diagram types that are not written yet"
@@ -32,7 +32,7 @@ mod svg;
 mod text;
 #[cfg(feature = "flowchart")]
 mod unicode;
-#[cfg(feature = "flowchart")]
+#[cfg(any(feature = "flowchart", feature = "state"))]
 #[allow(
     dead_code,
     reason = "parts are used by diagram types that are not written yet"

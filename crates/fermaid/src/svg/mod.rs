@@ -4,11 +4,11 @@
 #[cfg(feature = "flowchart")]
 pub(crate) mod cluster;
 mod document;
-#[cfg(feature = "flowchart")]
+#[cfg(any(feature = "flowchart", feature = "state"))]
 pub(crate) mod edges;
-#[cfg(any(feature = "flowchart", feature = "sequence"))]
+#[cfg(any(feature = "flowchart", feature = "sequence", feature = "state"))]
 pub(crate) mod markers;
-#[cfg(feature = "flowchart")]
+#[cfg(any(feature = "flowchart", feature = "state"))]
 pub(crate) mod shapes;
 mod theme;
 mod title;

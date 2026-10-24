@@ -93,3 +93,24 @@ export function pieSummary(ast) {
   for (const s of ast.sections ?? []) out.push(`section:${q(s.label)}|${s.value}`);
   return out.join('\n');
 }
+
+const opt = (v) => (v === undefined || v === null ? '-' : String(v));
+export function stateSummary(db) {
+  const out = [`dir:${q(db.direction)}`];
+  for (const [id, st] of db.states) {
+    const note = st.note ? `${q(st.note.position)}:${q(st.note.text)}` : '-';
+    out.push(`state:${q(id)}|${list(st.descriptions)}|${q(st.type)}|doc=${st.doc ? 1 : 0}|n=${note}|c=${list(st.classes)}|s=${list(st.styles)}`);
+  }
+  for (const r of db.relations) out.push(`rel:${q(r.id1)}|${q(r.id2)}|${q(r.relationTitle)}`);
+  for (const [id, c] of db.classes) out.push(`class:${q(id)}|s=${list(c.styles)}|t=${list(c.textStyles)}`);
+  for (const [id, l] of db.links) out.push(`link:${q(id)}|${q(l.url)}|${q(l.tooltip)}`);
+  for (const n of db.graph.nodes) {
+    out.push(
+      `node:${q(n.id)}|${q(n.shape)}|${q(n.label)}|${list(n.description)}|${q(n.cssClasses)}|cs=${list(n.cssCompiledStyles)}|` +
+        `s=${list(n.cssStyles)}|${q(n.type)}|${n.isGroup}|p=${q(n.parentId)}|d=${q(n.dir)}|${q(n.position)}|${q(n.noteFor)}|${opt(n.colorIndex)}`
+    );
+  }
+  for (const e of db.graph.edges) out.push(`edge:${q(e.id)}|${q(e.start)}|${q(e.end)}|${q(e.label)}|${e.pattern === 'dashed'}`);
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
