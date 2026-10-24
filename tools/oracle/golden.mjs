@@ -2,25 +2,28 @@
 // compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
 // which fermaid's model matches pele's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> class|flowchart|sequence|state
+//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|sequence|state
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, flowSummary, memberSummary, loadPele, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, memberSummary, loadPele, seqSummary, stateSummary } from './lib.mjs';
 
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['class', 'flowchart', 'sequence', 'state'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|flowchart|sequence|state');
+if (!peleDir || !['class', 'er', 'flowchart', 'sequence', 'state'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|sequence|state');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, FlowDb, parseFlowchart, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
+const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
   'src/diagrams/class/members.ts': ['ClassMember'],
+  'src/diagrams/er/db.ts': ['ErDb'],
+  'src/diagrams/er/parser.ts': ['parseEr'],
+  'src/diagrams/er/graph.ts': ['buildErGraph'],
   'src/diagrams/flowchart/db.ts': ['FlowDb'],
   'src/diagrams/flowchart/parser.ts': ['parseFlowchart'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
@@ -78,6 +81,10 @@ for (const { name, src } of cases) {
         } catch (e) {
           result = `error:${e.code ?? 'internal'}\n${members}`;
         }
+      } else if (type === 'er') {
+        const db = new ErDb();
+        parseEr(src, db);
+        result = erSummary(db, buildErGraph);
       } else if (type === 'state') {
         const db = new StateDb();
         parseState(src, db);

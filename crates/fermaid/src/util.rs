@@ -30,7 +30,10 @@ pub(crate) fn is_line_end(c: char) -> bool {
 }
 
 /// `text.replace(/\n\s+/g, '\n')`.
-#[cfg_attr(not(any(feature = "state", feature = "class")), allow(dead_code))]
+#[cfg_attr(
+    not(any(feature = "state", feature = "class", feature = "er")),
+    allow(dead_code)
+)]
 pub(crate) fn collapse_indent(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();

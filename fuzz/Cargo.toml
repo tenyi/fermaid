@@ -55,3 +55,10 @@ path = "fuzz_targets/class.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "er"
+path = "fuzz_targets/er.rs"
+test = false
+doc = false
+bench = false

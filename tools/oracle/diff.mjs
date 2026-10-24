@@ -1,12 +1,12 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
 // parser Mermaid uses: `@mermaid-js/parser` for pie, and the parsers jison generates from
-// Mermaid's flowchart, sequence, state and class grammars, which pele vendors, driving pele's port of
+// Mermaid's flowchart, sequence, state, class and ER grammars, which pele vendors, driving pele's port of
 // Mermaid's model. `url` checks the link sanitizer against `@braintree/sanitize-url`, which
 // Mermaid applies to click targets, on addresses mutated from a list below. fermaid's side runs as the ignored `oracle_dump` test of each type. Both
 // sides are reduced to the summaries in `lib.mjs`, and errors to just "error".
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, flowSummary, loadPele, pieSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, loadPele, pieSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -50,6 +50,8 @@ const m = await loadPele(pele, {
   'src/diagrams/state/db.ts': ['StateDb'],
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
+  'src/diagrams/er/db.ts': ['ErDb'],
+  'src/diagrams/er/graph.ts': ['buildErGraph'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
@@ -82,6 +84,7 @@ const flowParser = m.buildParser(join(pele, 'tests/compat/flowchart/upstream/flo
 const seqParser = m.buildParser(join(pele, 'tests/compat/sequence/upstream/sequenceDiagram.jison'));
 const stateParser = m.buildParser(join(pele, 'tests/compat/state/upstream/stateDiagram.jison'));
 const classParser = m.buildParser(join(pele, 'tests/compat/class/upstream/classDiagram.jison'));
+const erParser = m.buildParser(join(pele, 'tests/compat/er/upstream/erDiagram.jison'));
 
 const TYPES = {
   pie: {
@@ -132,6 +135,19 @@ const TYPES = {
       classParser.yy = asYy(db, { relationType: db.relationType, lineType: db.lineType });
       classParser.parse(src);
       return classSummary(db, m.buildClassGraph);
+    },
+  },
+  er: {
+    keyword: /(^|\n)\s*erDiagram/,
+    fragments: ['||--o{', '}|..|{', '|o--|{', 'u--o{', '}o', '|{', 'one or more', 'zero or one', 'only one', 'many(0)', 'to', 'optionally to', '1+', '0+', ' : ', '"a b"', '{', '}', 'string name PK, FK "comment"', 'int~T~ x', '`a b`', '?', '[alias]', ':::c', 'classDef c fill:red', 'class A c', 'style A fill:blue', 'subgraph x\n', 'subgraph y [t]\n', 'end\n', 'direction LR', 'accTitle: t', 'accDescr { d }', '%%', 'A', 'é', '1', '1.5', '\n', ' '],
+    async reference(src) {
+      const db = new m.ErDb();
+      erParser.yy = asYy(db, {
+        Cardinality: { ZERO_OR_ONE: 'ZERO_OR_ONE', ZERO_OR_MORE: 'ZERO_OR_MORE', ONE_OR_MORE: 'ONE_OR_MORE', ONLY_ONE: 'ONLY_ONE', MD_PARENT: 'MD_PARENT' },
+        Identification: { NON_IDENTIFYING: 'NON_IDENTIFYING', IDENTIFYING: 'IDENTIFYING' },
+      });
+      erParser.parse(src);
+      return erSummary(db, m.buildErGraph);
     },
   },
   url: {

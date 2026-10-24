@@ -117,6 +117,32 @@ export function stateSummary(db) {
 
 export const memberSummary = (m) =>
   `${m.memberType}:${q(m.visibility)}|${q(m.id)}|${q(m.classifier)}|${q(m.parameters)}|${q(m.returnType)}|${q(m.getDisplayDetails().displayText)}`;
+export function erSummary(db, buildErGraph) {
+  const out = [`dir:${q(db.direction)}`];
+  for (const [name, e] of db.entities) {
+    out.push(`entity:${q(name)}|${q(e.id)}|${q(e.label)}|${q(e.alias)}|${q(e.cssClasses)}|s=${list(e.cssStyles)}`);
+    for (const a of e.attributes) out.push(`  attr:${q(a.type)}|${q(a.name)}|${list(a.keys)}|${q(a.comment)}`);
+  }
+  for (const r of db.relationships) {
+    out.push(`rel:${q(r.entityA)}|${q(r.roleA)}|${q(r.entityB)}|${r.relSpec.cardA}|${r.relSpec.relType}|${r.relSpec.cardB}`);
+  }
+  for (const [id, c] of db.classes) out.push(`class:${q(id)}|s=${list(c.styles)}|t=${list(c.textStyles)}`);
+  for (const g of db.subgraphs) {
+    out.push(`subgraph:${q(g.id)}|${list(g.nodes)}|${q(g.title)}|c=${list(g.classes)}|s=${list(g.cssStyles)}|${q(g.dir)}`);
+  }
+  const graph = buildErGraph(db);
+  for (const n of graph.nodes) {
+    out.push(
+      `node:${q(n.id)}|${q(n.label)}|${q(n.alias)}|${n.isGroup}|p=${q(n.parentId)}|${list(n.cssCompiledStyles)}|${q(n.cssClasses)}|${q(n.dir)}`
+    );
+  }
+  for (const e of graph.edges) {
+    out.push(`edge:${q(e.id)}|${q(e.start)}|${q(e.end)}|${q(e.label)}|${e.arrowTypeStart}|${e.arrowTypeEnd}|${e.pattern}`);
+  }
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
+
 export function classSummary(db, buildClassGraph) {
   const out = [`dir:${q(db.direction)}`];
   for (const [id, c] of db.classes) {

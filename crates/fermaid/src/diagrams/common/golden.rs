@@ -44,7 +44,8 @@ pub(crate) fn skipped(text: &'static str) -> Vec<&'static str> {
     feature = "flowchart",
     feature = "sequence",
     feature = "state",
-    feature = "class"
+    feature = "class",
+    feature = "er"
 ))]
 pub(crate) fn error_code(code: crate::error::ErrorCode) -> &'static str {
     use crate::error::ErrorCode;

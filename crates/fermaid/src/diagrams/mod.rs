@@ -7,9 +7,12 @@ pub(crate) mod class;
     feature = "flowchart",
     feature = "sequence",
     feature = "state",
-    feature = "class"
+    feature = "class",
+    feature = "er"
 ))]
 pub(crate) mod common;
+#[cfg(feature = "er")]
+pub(crate) mod er;
 #[cfg(feature = "flowchart")]
 pub(crate) mod flowchart;
 #[cfg(feature = "pie")]

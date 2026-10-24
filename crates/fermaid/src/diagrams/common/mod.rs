@@ -1,13 +1,13 @@
 //! Parts shared by several diagram types.
 
 pub(crate) mod fit;
-#[cfg(feature = "class")]
+#[cfg(any(feature = "class", feature = "er"))]
 pub(crate) mod generics;
 #[cfg(test)]
 pub(crate) mod golden;
 #[cfg(feature = "sequence")]
 pub(crate) mod literal;
-#[cfg(any(feature = "state", feature = "class"))]
+#[cfg(any(feature = "state", feature = "class", feature = "er"))]
 pub(crate) mod ordered;
 #[cfg(feature = "pie")]
 pub(crate) mod tokens;
