@@ -6,7 +6,7 @@ mod theme;
 mod title;
 
 pub(crate) use document::{Accessible, svg_document};
-pub(crate) use theme::{FONT_MONO, ROOT_STYLE, font_style};
+pub(crate) use theme::{FONT_MONO, ROOT_STYLE, font_style, series_color};
 pub(crate) use title::{title_label, with_title};
 
 use std::fmt::Write;

@@ -9,6 +9,16 @@ pub(crate) const ROOT_STYLE: &str = concat!(
     "--_b:var(--fermaid-border,#8a8a8a);--_c:var(--fermaid-accent,#5b7bd5);color:var(--_fg)",
 );
 
+const SERIES: [&str; 8] = [
+    "#4c78a8", "#f58518", "#54a24b", "#e45756", "#72b7b2", "#eeca3b", "#b279a2", "#9d755d",
+];
+
+/// The color of the nth data series in a chart, cycling through eight tokens.
+pub(crate) fn series_color(index: usize) -> String {
+    let k = index % 8;
+    format!("var(--fermaid-series-{},{})", k + 1, SERIES[k])
+}
+
 pub(crate) const FONT_MONO: &str = "var(--_fm)";
 pub(crate) const RADIUS: &str = "var(--fermaid-radius,4px)";
 

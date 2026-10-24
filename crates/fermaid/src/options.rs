@@ -47,6 +47,9 @@ pub struct RenderOptions {
     pub font_size: Option<f64>,
     /// Prefix of the ids in the SVG, so that several diagrams can share a page.
     pub id_prefix: String,
+    /// The width the host has for the diagram, in pixels. A type that can draw itself narrower
+    /// does, so that its text is not shrunk with it.
+    pub max_width: Option<f64>,
     /// Space around the drawing in pixels. Each diagram type has its own default.
     pub padding: Option<f64>,
     /// Whether the SVG scales down to fit its container.
@@ -63,6 +66,7 @@ impl Default for RenderOptions {
             font_family_mono: None,
             font_size: None,
             id_prefix: "fermaid".to_string(),
+            max_width: None,
             padding: None,
             responsive: true,
             limits: Limits::default(),

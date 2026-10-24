@@ -5,12 +5,18 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+repository.workspace = true
+readme = "../../README.md"
 keywords = ["mermaid", "svg", "diagram"]
 categories = ["visualization", "rendering"]
 
 [features]
 default = ["all"]
 # Every diagram type. Each type gets its own feature as it lands.
-all = []
+all = ["pie"]
+pie = []
 
 [dependencies]
+
+[dev-dependencies]
+insta = "1"

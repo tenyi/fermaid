@@ -3,7 +3,7 @@
 pub(crate) mod entities;
 #[allow(
     dead_code,
-    reason = "used by the diagram types, the first of which lands in M1"
+    reason = "parts are used only by diagram types that are not compiled in or not written yet"
 )]
 pub(crate) mod label;
 

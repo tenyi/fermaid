@@ -13,13 +13,14 @@
 
 mod detect;
 mod diagram;
+mod diagrams;
 mod error;
 mod options;
 mod preprocess;
 #[allow(
     dead_code,
     unused_imports,
-    reason = "used by the diagram types, the first of which lands in M1"
+    reason = "parts are used only by diagram types that are not compiled in or not written yet"
 )]
 mod svg;
 mod text;
@@ -142,10 +143,10 @@ mod tests {
 
     #[test]
     fn reports_types_not_compiled_in() {
-        let err = render("pie\n\"a\": 1", &RenderOptions::default()).unwrap_err();
+        let err = render("gantt\n", &RenderOptions::default()).unwrap_err();
         assert_eq!(err.code, ErrorCode::Unsupported);
-        assert_eq!(err.kind, Some(DiagramKind::Pie));
-        assert_eq!(err.message, "Diagram type \"pie\" is not supported yet.");
+        assert_eq!(err.kind, Some(DiagramKind::Gantt));
+        assert_eq!(err.message, "Diagram type \"gantt\" is not supported yet.");
         assert_eq!((err.line, err.column), (1, 1));
     }
 
@@ -166,13 +167,10 @@ mod tests {
             ..RenderOptions::default()
         };
         assert_eq!(
-            render("pie", &options).unwrap_err().code,
+            render("abc", &options).unwrap_err().code,
             ErrorCode::Unsupported
         );
-        assert_eq!(
-            render("pie\n", &options).unwrap_err().code,
-            ErrorCode::Limit
-        );
+        assert_eq!(render("abcd", &options).unwrap_err().code, ErrorCode::Limit);
         assert_eq!(
             render("圓餅圖", &options).unwrap_err().code,
             ErrorCode::Unsupported

@@ -7,9 +7,12 @@ use crate::text::TextMeasurer;
 use crate::{DiagramKind, Link, RenderOptions};
 
 /// What a diagram type is given to render.
-#[allow(
-    dead_code,
-    reason = "read by the diagram types, the first of which lands in M1"
+#[cfg_attr(
+    not(feature = "pie"),
+    allow(
+        dead_code,
+        reason = "read by the diagram types, none of which is compiled in"
+    )
 )]
 pub(crate) struct Input<'a> {
     /// The text after preprocessing and entity encoding. It ends with a line break, as
@@ -19,6 +22,10 @@ pub(crate) struct Input<'a> {
     /// The title from front matter.
     pub title: Option<&'a str>,
     /// The number of front matter lines removed before `source`, for error positions.
+    #[allow(
+        dead_code,
+        reason = "read by the types that keep comments, none of which is written yet"
+    )]
     pub line_offset: usize,
     pub options: &'a RenderOptions,
     pub measurer: &'a dyn TextMeasurer,
@@ -43,6 +50,9 @@ pub(crate) trait Diagram: Sync {
 
 /// The implementation of a diagram type, when its feature is enabled.
 pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
-    let _ = kind;
-    None
+    match kind {
+        #[cfg(feature = "pie")]
+        DiagramKind::Pie => Some(&crate::diagrams::pie::Pie),
+        _ => None,
+    }
 }
