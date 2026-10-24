@@ -134,7 +134,11 @@ fn comment_at(text: &str, pos: usize) -> Result<usize, usize> {
         return fail;
     }
     let end = text.len() - body.len() + len;
-    Ok(if text[end..].starts_with('\n') { end + 1 } else { end })
+    Ok(if text[end..].starts_with('\n') {
+        end + 1
+    } else {
+        end
+    })
 }
 
 fn is_line_break(c: Option<&char>) -> bool {
@@ -207,8 +211,8 @@ fn match_front_matter(text: &[char]) -> Option<FrontMatter> {
     let opening_end = opening_ends
         .iter()
         .copied()
-        .filter(|&c| c < last_fence)
-        .last()
+        .rev()
+        .find(|&c| c < last_fence)
         .unwrap_or(first_opening);
 
     let body_start = opening_end + 1;
@@ -453,7 +457,10 @@ mod tests {
     fn removes_comments_and_leading_space() {
         let p = pre("\n%% a comment\n\n  %% indented\npie\n%% end\n  \"A\": 1\n");
         assert_eq!(p.text, "pie\n  \"A\": 1\n");
-        assert_eq!(p.with_comments, "\n%% a comment\n\n  %% indented\npie\n%% end\n  \"A\": 1\n");
+        assert_eq!(
+            p.with_comments,
+            "\n%% a comment\n\n  %% indented\npie\n%% end\n  \"A\": 1\n"
+        );
     }
 
     #[test]
@@ -505,7 +512,9 @@ mod tests {
 
     #[test]
     fn front_matter_config_comes_before_directives() {
-        let p = pre("---\nconfig:\n  theme: base\n  pie: {a: 1}\n---\n%%{init: {\"theme\": \"dark\", \"pie\": {\"b\": 2}}}%%\npie");
+        let p = pre(
+            "---\nconfig:\n  theme: base\n  pie: {a: 1}\n---\n%%{init: {\"theme\": \"dark\", \"pie\": {\"b\": 2}}}%%\npie",
+        );
         assert_eq!(p.config.get("theme"), Some(&Value::String("dark".into())));
         let Some(Value::Map(pie)) = p.config.get("pie") else {
             panic!("no pie config");
@@ -528,6 +537,9 @@ mod tests {
         let Some(Value::Map(gantt)) = p.config.get("gantt") else {
             panic!("no gantt config");
         };
-        assert_eq!(gantt.get("displayMode"), Some(&Value::String("compact".into())));
+        assert_eq!(
+            gantt.get("displayMode"),
+            Some(&Value::String("compact".into()))
+        );
     }
 }

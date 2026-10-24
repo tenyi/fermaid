@@ -198,18 +198,35 @@ mod tests {
 
     #[test]
     fn escapes_markup_and_controls() {
-        assert_eq!(esc("<a href=\"x\">&\u{1}\t\n</a>"), "&lt;a href=&quot;x&quot;&gt;&amp;\t\n&lt;/a&gt;");
+        assert_eq!(
+            esc("<a href=\"x\">&\u{1}\t\n</a>"),
+            "&lt;a href=&quot;x&quot;&gt;&amp;\t\n&lt;/a&gt;"
+        );
         assert_eq!(esc_text("#35;&lt;"), "#35;&lt;");
     }
 
     #[test]
     fn writes_labels() {
-        let plain = layout_label(Some("A<B"), false, &MetricsMeasurer, 16.0, 1000.0, Style::NONE);
+        let plain = layout_label(
+            Some("A<B"),
+            false,
+            &MetricsMeasurer,
+            16.0,
+            1000.0,
+            Style::NONE,
+        );
         assert_eq!(
             label_svg(&plain, 50.0, 20.0, " class=\"t\""),
             "<text class=\"t\" x=\"50\" y=\"25.6\" text-anchor=\"middle\">A&lt;B</text>"
         );
-        let styled = layout_label(Some("<b>x</b><br><b><i>y</i></b>"), false, &MetricsMeasurer, 16.0, 1000.0, Style::NONE);
+        let styled = layout_label(
+            Some("<b>x</b><br><b><i>y</i></b>"),
+            false,
+            &MetricsMeasurer,
+            16.0,
+            1000.0,
+            Style::NONE,
+        );
         assert_eq!(
             label_svg(&styled, 0.0, 0.0, ""),
             "<text font-weight=\"var(--_w)\" text-anchor=\"middle\" xml:space=\"preserve\">\

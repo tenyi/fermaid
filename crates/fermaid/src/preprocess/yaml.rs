@@ -164,9 +164,9 @@ fn is_float(s: &str) -> bool {
 }
 
 fn radix_value(digits: &str, radix: u32) -> f64 {
-    digits
-        .chars()
-        .fold(0.0, |acc, c| acc * f64::from(radix) + f64::from(c.to_digit(radix).unwrap_or(0)))
+    digits.chars().fold(0.0, |acc, c| {
+        acc * f64::from(radix) + f64::from(c.to_digit(radix).unwrap_or(0))
+    })
 }
 
 fn scalar(raw: &[char]) -> Value {
@@ -192,7 +192,11 @@ fn scalar(raw: &[char]) -> Value {
         }
     }
     if matches!(body, ".inf" | ".Inf" | ".INF") {
-        return Value::Number(if neg { f64::NEG_INFINITY } else { f64::INFINITY });
+        return Value::Number(if neg {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        });
     }
     if matches!(s.as_str(), ".nan" | ".NaN" | ".NAN") {
         return Value::Number(f64::NAN);
@@ -234,7 +238,11 @@ fn fold(text: &[char]) -> Vec<char> {
     let mut joined = Vec::with_capacity(text.len());
     for (i, line) in lines.iter().enumerate() {
         let blank = |c: &&char| **c == ' ' || **c == '\t';
-        let from = if i > 0 { line.iter().take_while(blank).count() } else { 0 };
+        let from = if i > 0 {
+            line.iter().take_while(blank).count()
+        } else {
+            0
+        };
         let to = if i < last {
             line.len() - line[from..].iter().rev().take_while(blank).count()
         } else {
@@ -299,7 +307,10 @@ fn unquote_double(body: &[char]) -> Res<String> {
             Some('u') => 4,
             Some('U') => 8,
             _ => {
-                out.push(e.and_then(escape).ok_or(Fail::Invalid("YAML: unknown escape sequence"))?);
+                out.push(
+                    e.and_then(escape)
+                        .ok_or(Fail::Invalid("YAML: unknown escape sequence"))?,
+                );
                 continue;
             }
         };
@@ -331,10 +342,14 @@ fn skip(s: &[char], mut pos: usize, commas: bool) -> usize {
 /// Entries of a flow collection are separated by exactly one comma, as js-yaml requires.
 fn entry_start(ch: char, separated: bool) -> Res<()> {
     if !separated {
-        return Err(Fail::Invalid("YAML: missed comma between flow collection entries"));
+        return Err(Fail::Invalid(
+            "YAML: missed comma between flow collection entries",
+        ));
     }
     if ch == ',' {
-        return Err(Fail::Invalid("YAML: expected the node content, but found ','"));
+        return Err(Fail::Invalid(
+            "YAML: expected the node content, but found ','",
+        ));
     }
     Ok(())
 }
@@ -481,7 +496,9 @@ fn block_scalar(r: &mut Reader, header: &[char], parent_indent: isize) -> String
     } else {
         ' '
     };
-    let explicit = header.iter().find_map(|c| c.to_digit(10).filter(|&d| d > 0));
+    let explicit = header
+        .iter()
+        .find_map(|c| c.to_digit(10).filter(|&d| d > 0));
     let mut indent: isize = explicit.map_or(-1, |d| parent_indent + d as isize);
     let mut out: Vec<Vec<char>> = Vec::new();
     while r.i < r.lines.len() {
@@ -510,7 +527,11 @@ fn block_scalar(r: &mut Reader, header: &[char], parent_indent: isize) -> String
         trailing += 1;
     }
     if out.is_empty() {
-        return if chomp == '+' { "\n".repeat(trailing) } else { String::new() };
+        return if chomp == '+' {
+            "\n".repeat(trailing)
+        } else {
+            String::new()
+        };
     }
     let mut text = String::new();
     for (i, cur) in out.iter().enumerate() {
@@ -523,7 +544,11 @@ fn block_scalar(r: &mut Reader, header: &[char], parent_indent: isize) -> String
                 if cur.is_empty() {
                     text.push('\n');
                 } else if !prev.is_empty() {
-                    text.push(if indented(prev) || indented(cur) { '\n' } else { ' ' });
+                    text.push(if indented(prev) || indented(cur) {
+                        '\n'
+                    } else {
+                        ' '
+                    });
                 }
             }
         }
@@ -724,7 +749,12 @@ mod tests {
     use super::*;
 
     fn map(pairs: &[(&str, Value)]) -> Value {
-        Value::Map(pairs.iter().map(|(k, v)| (k.to_string(), v.clone())).collect())
+        Value::Map(
+            pairs
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.clone()))
+                .collect(),
+        )
     }
 
     fn s(text: &str) -> Value {
@@ -733,7 +763,10 @@ mod tests {
 
     #[test]
     fn reads_block_mappings() {
-        let value = parse_yaml("title: Hello world\nconfig:\n  theme: dark\n  pie:\n    textPosition: 0.5\n").unwrap();
+        let value = parse_yaml(
+            "title: Hello world\nconfig:\n  theme: dark\n  pie:\n    textPosition: 0.5\n",
+        )
+        .unwrap();
         assert_eq!(
             value,
             map(&[
@@ -751,7 +784,9 @@ mod tests {
 
     #[test]
     fn reads_scalars() {
-        let value = parse_yaml("a: ~\nb: TRUE\nc: 0x1F\nd: -.inf\ne: '1'\nf: \"x\\ty\"\ng: 1e3\nh: 0o17").unwrap();
+        let value =
+            parse_yaml("a: ~\nb: TRUE\nc: 0x1F\nd: -.inf\ne: '1'\nf: \"x\\ty\"\ng: 1e3\nh: 0o17")
+                .unwrap();
         assert_eq!(
             value,
             map(&[
@@ -769,7 +804,8 @@ mod tests {
 
     #[test]
     fn reads_sequences_and_flow() {
-        let value = parse_yaml("list:\n  - one\n  - k: v\n    j: w\nflow: {a: [1, 2], b: x}").unwrap();
+        let value =
+            parse_yaml("list:\n  - one\n  - k: v\n    j: w\nflow: {a: [1, 2], b: x}").unwrap();
         assert_eq!(
             value,
             map(&[
@@ -780,7 +816,10 @@ mod tests {
                 (
                     "flow",
                     map(&[
-                        ("a", Value::Seq(vec![Value::Number(1.0), Value::Number(2.0)])),
+                        (
+                            "a",
+                            Value::Seq(vec![Value::Number(1.0), Value::Number(2.0)])
+                        ),
                         ("b", s("x")),
                     ])
                 ),
@@ -790,13 +829,18 @@ mod tests {
 
     #[test]
     fn reads_multiline_values() {
-        let value = parse_yaml("a: |\n  one\n  two\nb: >-\n  x\n  y\nc: [1,\n  2]\nd: plain\n  more # c").unwrap();
+        let value =
+            parse_yaml("a: |\n  one\n  two\nb: >-\n  x\n  y\nc: [1,\n  2]\nd: plain\n  more # c")
+                .unwrap();
         assert_eq!(
             value,
             map(&[
                 ("a", s("one\ntwo\n")),
                 ("b", s("x y")),
-                ("c", Value::Seq(vec![Value::Number(1.0), Value::Number(2.0)])),
+                (
+                    "c",
+                    Value::Seq(vec![Value::Number(1.0), Value::Number(2.0)])
+                ),
                 ("d", s("plain more")),
             ])
         );
@@ -818,7 +862,9 @@ mod tests {
     fn limits_nesting() {
         let deep = "[".repeat(200) + &"]".repeat(200);
         assert_eq!(parse_yaml(&deep), Err("YAML: nesting is too deep"));
-        let nested: String = (0..100).map(|i| format!("{}k:\n", "  ".repeat(i))).collect();
+        let nested: String = (0..100)
+            .map(|i| format!("{}k:\n", "  ".repeat(i)))
+            .collect();
         assert_eq!(parse_yaml(&nested), Err("YAML: nesting is too deep"));
     }
 }

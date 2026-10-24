@@ -89,7 +89,9 @@ pub(crate) mod chars {
     /// `lastIndexOf(pat, from)`: the last match that starts at or before `from`.
     pub(crate) fn rfind(s: &[char], pat: &[char], from: usize) -> Option<usize> {
         let last = s.len().checked_sub(pat.len())?;
-        (0..=from.min(last)).rev().find(|&i| s[i..].starts_with(pat))
+        (0..=from.min(last))
+            .rev()
+            .find(|&i| s[i..].starts_with(pat))
     }
 
     pub(crate) fn string(s: &[char]) -> String {

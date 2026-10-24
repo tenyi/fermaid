@@ -38,7 +38,10 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
         match arg.as_str() {
             "-h" | "--help" => return Ok(Parsed::Exit(USAGE.to_string())),
             "-V" | "--version" => {
-                return Ok(Parsed::Exit(format!("fermaid {}", env!("CARGO_PKG_VERSION"))));
+                return Ok(Parsed::Exit(format!(
+                    "fermaid {}",
+                    env!("CARGO_PKG_VERSION")
+                )));
             }
             "-o" | "--output" => parsed.output = Some(value(&arg)?),
             "--font-size" => {
@@ -75,7 +78,7 @@ fn run(args: Args) -> Result<(), String> {
     let name = args.input.as_deref().unwrap_or("<stdin>");
     let text = read_input(args.input.as_deref()).map_err(|e| format!("{name}: {e}"))?;
     let rendered = fermaid::render(&text, &args.options).map_err(|e| {
-        let mut message = format!("{name}");
+        let mut message = name.to_string();
         if e.line > 0 {
             message += &format!(":{}:{}", e.line, e.column);
         }
@@ -123,7 +126,15 @@ mod tests {
 
     #[test]
     fn parses_options() {
-        let Ok(Parsed::Run(args)) = parse(&["in.mmd", "-o", "out.svg", "--font-size", "14", "--id-prefix", "d1"]) else {
+        let Ok(Parsed::Run(args)) = parse(&[
+            "in.mmd",
+            "-o",
+            "out.svg",
+            "--font-size",
+            "14",
+            "--id-prefix",
+            "d1",
+        ]) else {
             panic!("expected arguments");
         };
         assert_eq!(args.input.as_deref(), Some("in.mmd"));
@@ -138,7 +149,10 @@ mod tests {
         assert!(parse(&["--font-size"]).is_err());
         assert!(parse(&["--bogus"]).is_err());
         assert!(parse(&["a", "b"]).is_err());
-        assert!(matches!(parse(&["-"]), Ok(Parsed::Run(Args { input: None, .. }))));
+        assert!(matches!(
+            parse(&["-"]),
+            Ok(Parsed::Run(Args { input: None, .. }))
+        ));
         assert!(matches!(parse(&["-h"]), Ok(Parsed::Exit(_))));
     }
 }

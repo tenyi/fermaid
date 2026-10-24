@@ -16,7 +16,11 @@ mod diagram;
 mod error;
 mod options;
 mod preprocess;
-#[allow(dead_code, unused_imports, reason = "used by the diagram types, the first of which lands in M1")]
+#[allow(
+    dead_code,
+    unused_imports,
+    reason = "used by the diagram types, the first of which lands in M1"
+)]
 mod svg;
 mod text;
 mod util;
@@ -161,15 +165,30 @@ mod tests {
             },
             ..RenderOptions::default()
         };
-        assert_eq!(render("pie", &options).unwrap_err().code, ErrorCode::Unsupported);
-        assert_eq!(render("pie\n", &options).unwrap_err().code, ErrorCode::Limit);
-        assert_eq!(render("圓餅圖", &options).unwrap_err().code, ErrorCode::Unsupported);
+        assert_eq!(
+            render("pie", &options).unwrap_err().code,
+            ErrorCode::Unsupported
+        );
+        assert_eq!(
+            render("pie\n", &options).unwrap_err().code,
+            ErrorCode::Limit
+        );
+        assert_eq!(
+            render("圓餅圖", &options).unwrap_err().code,
+            ErrorCode::Unsupported
+        );
     }
 
     #[test]
     fn detects_types() {
-        assert_eq!(detect_type("%%{init: {}}%%\ngraph TD"), Some(DiagramKind::Flowchart));
-        assert_eq!(detect_type("---\ntitle: t\n---\nsequenceDiagram"), Some(DiagramKind::Sequence));
+        assert_eq!(
+            detect_type("%%{init: {}}%%\ngraph TD"),
+            Some(DiagramKind::Flowchart)
+        );
+        assert_eq!(
+            detect_type("---\ntitle: t\n---\nsequenceDiagram"),
+            Some(DiagramKind::Sequence)
+        );
         assert_eq!(detect_type("nothing"), None);
     }
 }

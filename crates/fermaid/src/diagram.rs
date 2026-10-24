@@ -7,7 +7,10 @@ use crate::text::TextMeasurer;
 use crate::{DiagramKind, Link, RenderOptions};
 
 /// What a diagram type is given to render.
-#[allow(dead_code, reason = "read by the diagram types, the first of which lands in M1")]
+#[allow(
+    dead_code,
+    reason = "read by the diagram types, the first of which lands in M1"
+)]
 pub(crate) struct Input<'a> {
     /// The text after preprocessing and entity encoding. It ends with a line break, as
     /// Mermaid's parsers expect.

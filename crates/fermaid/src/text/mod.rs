@@ -1,7 +1,10 @@
 //! Text measurement and label layout.
 
 pub(crate) mod entities;
-#[allow(dead_code, reason = "used by the diagram types, the first of which lands in M1")]
+#[allow(
+    dead_code,
+    reason = "used by the diagram types, the first of which lands in M1"
+)]
 pub(crate) mod label;
 
 use std::ops::{BitAnd, BitOr, BitOrAssign, Not};
@@ -140,7 +143,11 @@ impl TextMeasurer for MetricsMeasurer {
                 continue;
             }
             units += if c < 127 {
-                if mono { 600 } else { u32::from(table[c as usize - 32]) }
+                if mono {
+                    600
+                } else {
+                    u32::from(table[c as usize - 32])
+                }
             } else if is_wide(c) {
                 if mono { 1200 } else { 1000 }
             } else if mono {

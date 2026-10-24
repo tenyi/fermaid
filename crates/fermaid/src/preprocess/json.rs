@@ -18,11 +18,16 @@ impl Parser<'_> {
     }
 
     fn eat(&mut self, lit: &[u8]) -> Option<()> {
-        self.s[self.pos..].starts_with(lit).then(|| self.pos += lit.len())
+        self.s[self.pos..]
+            .starts_with(lit)
+            .then(|| self.pos += lit.len())
     }
 
     fn digits(&mut self) -> usize {
-        let n = self.s[self.pos..].iter().take_while(|b| b.is_ascii_digit()).count();
+        let n = self.s[self.pos..]
+            .iter()
+            .take_while(|b| b.is_ascii_digit())
+            .count();
         self.pos += n;
         n
     }
@@ -173,7 +178,8 @@ mod tests {
 
     #[test]
     fn parses_json() {
-        let value = parse_json(r#" {"theme": "dark", "n": -1.5e2, "a": [true, null], "s": "é😀"} "#);
+        let value =
+            parse_json(r#" {"theme": "dark", "n": -1.5e2, "a": [true, null], "s": "é😀"} "#);
         let Some(Value::Map(map)) = value else {
             panic!("expected a map");
         };
@@ -185,7 +191,16 @@ mod tests {
 
     #[test]
     fn rejects_what_json_parse_rejects() {
-        for bad in ["{a: 1}", "[1,]", "01", "1.", "'x'", "{\"a\":1} x", "\"\t\"", ""] {
+        for bad in [
+            "{a: 1}",
+            "[1,]",
+            "01",
+            "1.",
+            "'x'",
+            "{\"a\":1} x",
+            "\"\t\"",
+            "",
+        ] {
             assert_eq!(parse_json(bad), None, "{bad}");
         }
         assert_eq!(parse_json(&("[".repeat(100) + &"]".repeat(100))), None);

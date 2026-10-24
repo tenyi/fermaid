@@ -45,16 +45,115 @@ const TAG_STYLES: &[(&str, Style)] = &[
 ];
 
 const HTML_TAGS: &[&str] = &[
-    "a", "abbr", "address", "article", "aside", "audio", "b", "bdi", "bdo", "big", "blockquote",
-    "body", "br", "button", "caption", "center", "cite", "code", "col", "colgroup", "data", "dd",
-    "del", "details", "dfn", "dialog", "div", "dl", "dt", "em", "embed", "fieldset",
-    "figcaption", "figure", "font", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "head",
-    "header", "hr", "html", "i", "iframe", "img", "input", "ins", "kbd", "label", "legend", "li",
-    "link", "main", "map", "mark", "meta", "meter", "nav", "noscript", "object", "ol",
-    "optgroup", "option", "output", "p", "picture", "pre", "progress", "q", "rp", "rt", "ruby",
-    "s", "samp", "script", "section", "select", "small", "source", "span", "strike", "strong",
-    "style", "sub", "summary", "sup", "table", "tbody", "td", "template", "textarea", "tfoot",
-    "th", "thead", "time", "title", "tr", "track", "tt", "u", "ul", "var", "video", "wbr",
+    "a",
+    "abbr",
+    "address",
+    "article",
+    "aside",
+    "audio",
+    "b",
+    "bdi",
+    "bdo",
+    "big",
+    "blockquote",
+    "body",
+    "br",
+    "button",
+    "caption",
+    "center",
+    "cite",
+    "code",
+    "col",
+    "colgroup",
+    "data",
+    "dd",
+    "del",
+    "details",
+    "dfn",
+    "dialog",
+    "div",
+    "dl",
+    "dt",
+    "em",
+    "embed",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "font",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "head",
+    "header",
+    "hr",
+    "html",
+    "i",
+    "iframe",
+    "img",
+    "input",
+    "ins",
+    "kbd",
+    "label",
+    "legend",
+    "li",
+    "link",
+    "main",
+    "map",
+    "mark",
+    "meta",
+    "meter",
+    "nav",
+    "noscript",
+    "object",
+    "ol",
+    "optgroup",
+    "option",
+    "output",
+    "p",
+    "picture",
+    "pre",
+    "progress",
+    "q",
+    "rp",
+    "rt",
+    "ruby",
+    "s",
+    "samp",
+    "script",
+    "section",
+    "select",
+    "small",
+    "source",
+    "span",
+    "strike",
+    "strong",
+    "style",
+    "sub",
+    "summary",
+    "sup",
+    "table",
+    "tbody",
+    "td",
+    "template",
+    "textarea",
+    "tfoot",
+    "th",
+    "thead",
+    "time",
+    "title",
+    "tr",
+    "track",
+    "tt",
+    "u",
+    "ul",
+    "var",
+    "video",
+    "wbr",
 ];
 
 /// Break between any two Chinese or Japanese characters. Hangul is left out: Korean puts
@@ -169,7 +268,12 @@ fn match_tag(s: &[char], i: usize) -> Option<(String, usize)> {
     }
     let name = chars::string(&s[start..j]).to_ascii_lowercase();
     if s.get(j).is_some_and(|&c| is_space(c)) {
-        let k = j + 1 + s[j + 1..].iter().take_while(|&&c| c != '<' && c != '>').count();
+        let k = j
+            + 1
+            + s[j + 1..]
+                .iter()
+                .take_while(|&&c| c != '<' && c != '>')
+                .count();
         return (s.get(k) == Some(&'>')).then(|| (name, k + 1 - i));
     }
     if s.get(j) == Some(&'/') {
@@ -240,7 +344,8 @@ fn inline(line: &mut Vec<Span>, source: &[char], markdown: bool, base: Style, op
             let prev = if i > 0 { source[i - 1] } else { ' ' };
             let next = source.get(i + len).copied().unwrap_or(' ');
             let marker: &[char] = if double { &[ch, ch] } else { &[ch] };
-            let can_open = opening && !is_space(next) && chars::find(source, marker, i + len).is_some();
+            let can_open =
+                opening && !is_space(next) && chars::find(source, marker, i + len).is_some();
             let can_close = !opening && !is_space(prev);
             let wordy = ch == '_' && is_word(prev) && is_word(next);
             if (can_open || can_close) && !wordy {
@@ -384,13 +489,21 @@ fn wrap(
             // A soft hyphen before a space is no break of its own: the space is.
             let shy = pieces[q].ends_with(SOFT_HYPHEN);
             let end = trim_end(&pieces[q]);
-            let end = if shy { &end[..end.len() - SOFT_HYPHEN.len_utf8()] } else { end };
+            let end = if shy {
+                &end[..end.len() - SOFT_HYPHEN.len_utf8()]
+            } else {
+                end
+            };
             own[q] = w.measure(end, span.style);
             // Word width beyond this span is unknown.
             rest[q] = if !shy {
                 own[q]
             } else if q == n - 1 {
-                if index == line.len() - 1 { own[q] } else { f64::INFINITY }
+                if index == line.len() - 1 {
+                    own[q]
+                } else {
+                    f64::INFINITY
+                }
             } else {
                 own[q] + rest[q + 1]
             };
@@ -521,7 +634,10 @@ fn dedent(text: &str) -> String {
         .map(|line| {
             let cut = min.min(indent(line));
             // Indents are counted in bytes; a shared width may end inside a wide space.
-            let cut = (0..=cut).rev().find(|&i| line.is_char_boundary(i)).unwrap_or(0);
+            let cut = (0..=cut)
+                .rev()
+                .find(|&i| line.is_char_boundary(i))
+                .unwrap_or(0);
             &line[cut..]
         })
         .collect::<Vec<_>>()
@@ -538,7 +654,10 @@ fn split_breaks(source: &str) -> Vec<&str> {
         let len = match bytes[i] {
             b'\n' => 1,
             b'\\' if bytes.get(i + 1) == Some(&b'n') => 2,
-            b'<' if source[i + 1..].get(..2).is_some_and(|s| s.eq_ignore_ascii_case("br")) => {
+            b'<' if source[i + 1..]
+                .get(..2)
+                .is_some_and(|s| s.eq_ignore_ascii_case("br")) =>
+            {
                 let after = trim_start(&source[i + 3..]);
                 let after = after.strip_prefix('/').unwrap_or(after);
                 if after.starts_with('>') {
@@ -613,7 +732,14 @@ mod tests {
     }
 
     fn layout(raw: &str, markdown: bool, max: f64) -> Label {
-        layout_label(Some(raw), markdown, &MetricsMeasurer, 16.0, max, Style::NONE)
+        layout_label(
+            Some(raw),
+            markdown,
+            &MetricsMeasurer,
+            16.0,
+            max,
+            Style::NONE,
+        )
     }
 
     #[test]
@@ -707,36 +833,139 @@ mod tests {
     #[test]
     fn matches_pele() {
         let cases: &[(&str, bool, f64, f64, u8, &str)] = &[
-            ("The quick brown fox jumps over the lazy dog", false, 16.0, 100.0, 0, "[The quick]0:69.36 | [brown fox]0:69.36 | [jumps over]0:78.24 | [the lazy dog]0:86.272 w=86.272 h=84 lh=21"),
-            ("Supercalifragilisticexpialidocious", false, 16.0, 80.0, 0, "[Supercalifragilisticexpialidocious]0:229.392 w=229.392 h=24 lh=24"),
-            ("這是一個很長的中文標籤，需要換行顯示。", false, 16.0, 80.0, 0, "[這是一個很]0:80 | [長的中文標]0:80 | [籤，需要換]0:80 | [行顯示。]0:64 w=80 h=84 lh=21"),
-            ("Rust 語言渲染 Mermaid 圖表", false, 16.0, 70.0, 0, "[Rust 語言]0:69.344 | [渲染]0:32 | [Mermaid]0:62.224 | [圖表]0:32 w=69.344 h=84 lh=21"),
-            ("「引號」測試（括號）文字", false, 16.0, 40.0, 0, "[「引]0:32 | [號」]0:32 | [測試]0:32 | [（括]0:32 | [號）]0:32 | [文字]0:32 w=32 h=126 lh=21"),
-            ("inter\u{ad}national\u{ad}ization", false, 16.0, 70.0, 0, "[inter-]0:36.448 | [national-]0:61.36 | [ization]0:46.24 w=61.36 h=63 lh=21"),
-            ("**Bold** text with `code` and _italic_ words", true, 16.0, 120.0, 0, "[Bold]1:35.552 [ text with]0:63.136 | [`code` and ]0:80.928 [italic]2:32 | [words]0:42.672 w=112.928 h=63 lh=21"),
-            ("Line one\nline *two* is longer than the first", true, 14.0, 100.0, 0, "[Line one]0:53.704 | [line ]0:25.676 [two]2:21.784 [ is]0:14 | [longer than the]0:93.394 | [first]0:22.554 w=93.394 h=72 lh=18"),
-            ("<b>bold</b> <i>it</i> <u>u</u> H<sub>2</sub>O x<sup>2</sup>", false, 16.0, 1000.0, 0, "[bold]1:33.776 [ ]0:4.448 [it]2:8 [ ]0:4.448 [u]32:8.896 [ H]0:16 [2]8:7.413333333333334 [O x]0:24.896 [2]16:7.413333333333334 w=115.29066666666668 h=24 lh=24"),
-            ("Header title text", false, 16.0, 60.0, 1, "[Header]1:54.24 | [title]1:28.448 | [text]1:28.448 w=54.24 h=63 lh=21"),
-            ("a   b    c", false, 16.0, 1000.0, 0, "[a   b    c]0:56.928 w=56.928 h=24 lh=24"),
-            ("path/to/some-long-file_name.rs", false, 12.0, 60.0, 0, "[path/to/some-long-file_name.rs]0:165.396 w=165.396 h=18 lh=18"),
+            (
+                "The quick brown fox jumps over the lazy dog",
+                false,
+                16.0,
+                100.0,
+                0,
+                "[The quick]0:69.36 | [brown fox]0:69.36 | [jumps over]0:78.24 | [the lazy dog]0:86.272 w=86.272 h=84 lh=21",
+            ),
+            (
+                "Supercalifragilisticexpialidocious",
+                false,
+                16.0,
+                80.0,
+                0,
+                "[Supercalifragilisticexpialidocious]0:229.392 w=229.392 h=24 lh=24",
+            ),
+            (
+                "這是一個很長的中文標籤，需要換行顯示。",
+                false,
+                16.0,
+                80.0,
+                0,
+                "[這是一個很]0:80 | [長的中文標]0:80 | [籤，需要換]0:80 | [行顯示。]0:64 w=80 h=84 lh=21",
+            ),
+            (
+                "Rust 語言渲染 Mermaid 圖表",
+                false,
+                16.0,
+                70.0,
+                0,
+                "[Rust 語言]0:69.344 | [渲染]0:32 | [Mermaid]0:62.224 | [圖表]0:32 w=69.344 h=84 lh=21",
+            ),
+            (
+                "「引號」測試（括號）文字",
+                false,
+                16.0,
+                40.0,
+                0,
+                "[「引]0:32 | [號」]0:32 | [測試]0:32 | [（括]0:32 | [號）]0:32 | [文字]0:32 w=32 h=126 lh=21",
+            ),
+            (
+                "inter\u{ad}national\u{ad}ization",
+                false,
+                16.0,
+                70.0,
+                0,
+                "[inter-]0:36.448 | [national-]0:61.36 | [ization]0:46.24 w=61.36 h=63 lh=21",
+            ),
+            (
+                "**Bold** text with `code` and _italic_ words",
+                true,
+                16.0,
+                120.0,
+                0,
+                "[Bold]1:35.552 [ text with]0:63.136 | [`code` and ]0:80.928 [italic]2:32 | [words]0:42.672 w=112.928 h=63 lh=21",
+            ),
+            (
+                "Line one\nline *two* is longer than the first",
+                true,
+                14.0,
+                100.0,
+                0,
+                "[Line one]0:53.704 | [line ]0:25.676 [two]2:21.784 [ is]0:14 | [longer than the]0:93.394 | [first]0:22.554 w=93.394 h=72 lh=18",
+            ),
+            (
+                "<b>bold</b> <i>it</i> <u>u</u> H<sub>2</sub>O x<sup>2</sup>",
+                false,
+                16.0,
+                1000.0,
+                0,
+                "[bold]1:33.776 [ ]0:4.448 [it]2:8 [ ]0:4.448 [u]32:8.896 [ H]0:16 [2]8:7.413333333333334 [O x]0:24.896 [2]16:7.413333333333334 w=115.29066666666668 h=24 lh=24",
+            ),
+            (
+                "Header title text",
+                false,
+                16.0,
+                60.0,
+                1,
+                "[Header]1:54.24 | [title]1:28.448 | [text]1:28.448 w=54.24 h=63 lh=21",
+            ),
+            (
+                "a   b    c",
+                false,
+                16.0,
+                1000.0,
+                0,
+                "[a   b    c]0:56.928 w=56.928 h=24 lh=24",
+            ),
+            (
+                "path/to/some-long-file_name.rs",
+                false,
+                12.0,
+                60.0,
+                0,
+                "[path/to/some-long-file_name.rs]0:165.396 w=165.396 h=18 lh=18",
+            ),
         ];
         for &(raw, markdown, size, max, base, expected) in cases {
-            let label = layout_label(Some(raw), markdown, &MetricsMeasurer, size, max, Style(base));
+            let label = layout_label(
+                Some(raw),
+                markdown,
+                &MetricsMeasurer,
+                size,
+                max,
+                Style(base),
+            );
             let lines: Vec<String> = label
                 .lines
                 .iter()
                 .map(|line| {
-                    let spans: Vec<String> = line.iter().map(|s| format!("[{}]{}:{}", s.text, s.style.0, s.width)).collect();
+                    let spans: Vec<String> = line
+                        .iter()
+                        .map(|s| format!("[{}]{}:{}", s.text, s.style.0, s.width))
+                        .collect();
                     spans.join(" ")
                 })
                 .collect();
-            let got = format!("{} w={} h={} lh={}", lines.join(" | "), label.width, label.height, label.line_height);
+            let got = format!(
+                "{} w={} h={} lh={}",
+                lines.join(" | "),
+                label.width,
+                label.height,
+                label.line_height
+            );
             assert_eq!(got, expected, "{raw:?}");
         }
     }
 
     #[test]
     fn empty_label() {
-        assert_eq!(layout_label(None, false, &MetricsMeasurer, 16.0, 100.0, Style::NONE), Label::default());
+        assert_eq!(
+            layout_label(None, false, &MetricsMeasurer, 16.0, 100.0, Style::NONE),
+            Label::default()
+        );
     }
 }

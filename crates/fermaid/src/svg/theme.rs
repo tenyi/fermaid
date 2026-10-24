@@ -71,7 +71,9 @@ mod tests {
     #[test]
     fn accepts_font_lists() {
         assert!(is_family_list("Inter"));
-        assert!(is_family_list(" \"Noto Sans TC\", 'PingFang TC' , sans-serif "));
+        assert!(is_family_list(
+            " \"Noto Sans TC\", 'PingFang TC' , sans-serif "
+        ));
         assert!(is_family_list("Font 1.5, x"));
         assert!(is_family_list("\"a, b\""));
     }

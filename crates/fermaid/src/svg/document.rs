@@ -78,7 +78,15 @@ mod tests {
             title: Some("A & B".to_string()),
             descr: None,
         };
-        let svg = svg_document(DiagramKind::Pie, 100.0, 50.5, 16.0, &options, &acc, "<g font-weight=\"var(--_tw)\"/>");
+        let svg = svg_document(
+            DiagramKind::Pie,
+            100.0,
+            50.5,
+            16.0,
+            &options,
+            &acc,
+            "<g font-weight=\"var(--_tw)\"/>",
+        );
         assert!(svg.starts_with("<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"fermaid fermaid-pie\" viewBox=\"0 0 100 50.5\""));
         assert!(svg.contains("<title id=\"d&quot;1-title\">A &amp; B</title><g"));
         assert!(svg.contains(" aria-labelledby=\"d&quot;1-title\">"));
