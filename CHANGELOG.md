@@ -20,6 +20,11 @@ before 1.0, a minor version may break the API.
   `quadrantChart` config keys `chartWidth`, `chartHeight`, `titlePadding`,
   `xAxisLabelPadding`, `yAxisLabelPadding`, `xAxisPosition`, `yAxisPosition`,
   `quadrantPadding`, `quadrantTextTopPadding`, `pointRadius` and `pointTextPadding`.
+- Git graphs, behind the `git` feature: `title`, `accTitle` and `accDescr`, `commit` with an
+  `id`, a `msg`, `tag`s and a `type` of `NORMAL`, `REVERSE` or `HIGHLIGHT`, `branch` with an
+  `order`, `checkout` and `switch`, `merge` and `cherry-pick` with a `parent`, the `LR`, `TB`
+  and `BT` directions, and the `gitGraph` config keys `mainBranchName`, `mainBranchOrder`,
+  `showCommitLabel`, `showBranches`, `rotateCommitLabel` and `parallelCommits`.
 
 ## 0.2.0 - 2026-10-24
 

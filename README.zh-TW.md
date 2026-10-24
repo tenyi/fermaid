@@ -27,6 +27,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 桑基圖（`sankey`、`sankey-beta`） | 已支援：Mermaid 的 CSV 形式，每行一組 `source,target,value`，欄位可加引號；以及 `sankey` 的設定鍵 `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix` 與 `labelStyle` |
 | XY 圖（`xychart`、`xychart-beta`） | 已支援：`title`、以類別或範圍表示的 `x-axis`、以範圍表示的 `y-axis`、可帶點標籤的 `line` 與 `bar` 系列、`accTitle` 與 `accDescr`、`horizontal` 與 `vertical` 方向；以及 `xyChart` 的設定鍵 `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`，以及 `yAxis` 底下同樣的四個 |
 | 象限圖（`quadrantChart`） | 已支援：`title`、以 `-->` 連接的 `x-axis` 與 `y-axis`、`quadrant-1` 到 `quadrant-4`、可帶 `radius`、`color`、`stroke-color` 與 `stroke-width` 的點、`classDef` 與點的類別、`accTitle` 與 `accDescr`；以及 `quadrantChart` 的設定鍵 `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius` 與 `pointTextPadding` |
+| Git 圖（`gitGraph`） | 已支援：`title`、`accTitle` 與 `accDescr`、可帶 `id`、`msg`、`tag` 與 `NORMAL`、`REVERSE` 或 `HIGHLIGHT` 類型的 `commit`、可帶 `order` 的 `branch`、`checkout` 與 `switch`、`merge` 與可帶 `parent` 的 `cherry-pick`；以及 `gitGraph` 的設定鍵 `mainBranchName`、`mainBranchOrder`、`showCommitLabel`、`showBranches`、`rotateCommitLabel` 與 `parallelCommits` |
 | 其他 | 規劃中 |
 
 ## 目標
@@ -85,7 +86,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart` 與 `quadrantchart` 目標
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart`、`quadrantchart` 與 `git` 目標
 cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新產生 pele 對這些案例的解析結果
 node tools/oracle/diff.mjs ../pele   # 與 Mermaid 自身的解析器做差異模糊測試

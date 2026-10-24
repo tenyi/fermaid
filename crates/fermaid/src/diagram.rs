@@ -93,6 +93,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::XyChart => Some(&crate::diagrams::xychart::XyChart),
         #[cfg(feature = "quadrantchart")]
         DiagramKind::QuadrantChart => Some(&crate::diagrams::quadrantchart::QuadrantChart),
+        #[cfg(feature = "git")]
+        DiagramKind::GitGraph => Some(&crate::diagrams::git::GitGraph),
         _ => None,
     }
 }

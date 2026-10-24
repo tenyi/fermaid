@@ -20,7 +20,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, gitSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
 // as tools/oracle/golden.mjs does.
@@ -37,7 +37,7 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'git', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
   console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [quadrantchart] [url]');
@@ -66,6 +66,7 @@ const m = await loadPele(pele, {
   'src/diagrams/mindmap/db.ts': ['MindmapDb'],
   'src/diagrams/sankey/db.ts': ['SankeyDb'],
   'src/diagrams/sankey/parser.ts': ['prepareTextForParsing'],
+  'src/diagrams/git/db.ts': ['buildGit'],
   'src/diagrams/xychart/db.ts': ['XyChartDb'],
   'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
   'src/diagrams/common/outline.ts': ['NODE_TYPE'],
@@ -84,6 +85,18 @@ function plain(node) {
   for (const [key, value] of Object.entries(node)) {
     if (key.startsWith('$')) continue;
     if (value !== undefined) out[key] = plain(value);
+  }
+  return out;
+}
+
+// A Langium tree without its bookkeeping, but with the kind of every node.
+function plainWithType(node) {
+  if (Array.isArray(node)) return node.map(plainWithType);
+  if (node === null || typeof node !== 'object') return node;
+  const out = {};
+  for (const [key, value] of Object.entries(node)) {
+    if (key.startsWith('$') && key !== '$type') continue;
+    if (value !== undefined) out[key] = plainWithType(value);
   }
   return out;
 }
@@ -232,6 +245,16 @@ const TYPES = {
       // Mermaid's Diagram.fromText encodes entities and adds a line break.
       quadrantParser.parse(m.encodeEntities(src) + '\n');
       return quadrantSummary(db);
+    },
+  },
+  git: {
+    keyword: /(^|\n)\s*gitGraph\b/,
+    fragments: ['gitGraph', 'gitGraph:', 'LR', 'TB', 'BT', 'commit', 'branch', 'merge', 'checkout', 'switch', 'cherry-pick', 'id:', 'msg:', 'tag:', 'type:', 'order:', 'parent:', 'NORMAL', 'REVERSE', 'HIGHLIGHT', '"', "'", '\n', ' ', '%%', '---\n', 'é', 'A'],
+    async reference(src) {
+      // Mermaid's git graph is parsed with Langium; the model is filled by pele's port of
+      // Mermaid's git graph database.
+      const ast = plainWithType(await m.langiumParse('gitGraph', src));
+      return gitSummary(m.buildGit(ast, {}, undefined));
     },
   },
   timeline: {

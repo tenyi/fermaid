@@ -17,7 +17,8 @@ pub(crate) mod class;
     feature = "gantt",
     feature = "sankey",
     feature = "xychart",
-    feature = "quadrantchart"
+    feature = "quadrantchart",
+    feature = "git"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -26,6 +27,8 @@ pub(crate) mod er;
 pub(crate) mod flowchart;
 #[cfg(feature = "gantt")]
 pub(crate) mod gantt;
+#[cfg(feature = "git")]
+pub(crate) mod git;
 #[cfg(feature = "journey")]
 pub(crate) mod journey;
 #[cfg(feature = "kanban")]

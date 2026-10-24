@@ -125,3 +125,10 @@ path = "fuzz_targets/quadrantchart.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "git"
+path = "fuzz_targets/git.rs"
+test = false
+doc = false
+bench = false

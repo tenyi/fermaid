@@ -81,6 +81,7 @@ pub(crate) const PIE_TOKENS: &[TokenType] = &[
         name: "NUMBER_PIE",
         pattern: Pattern::Scanner(number_scanner),
         hidden: false,
+        longer: &[],
     },
     ACC_DESCR,
     ACC_TITLE,

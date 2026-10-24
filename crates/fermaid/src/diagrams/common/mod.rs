@@ -15,12 +15,13 @@ pub(crate) mod literal;
     feature = "er",
     feature = "requirement",
     feature = "sankey",
-    feature = "quadrantchart"
+    feature = "quadrantchart",
+    feature = "git"
 ))]
 pub(crate) mod ordered;
 #[cfg(any(feature = "kanban", feature = "mindmap"))]
 pub(crate) mod outline;
-#[cfg(any(feature = "timeline", feature = "journey"))]
+#[cfg(any(feature = "timeline", feature = "journey", feature = "git"))]
 pub(crate) mod plain;
 #[cfg(any(
     feature = "timeline",
@@ -34,5 +35,5 @@ pub(crate) mod plain;
     allow(dead_code, reason = "outlines and gantt charts use only part of it")
 )]
 pub(crate) mod scan;
-#[cfg(feature = "pie")]
+#[cfg(any(feature = "pie", feature = "git"))]
 pub(crate) mod tokens;

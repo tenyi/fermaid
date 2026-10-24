@@ -58,7 +58,7 @@ const BREAKPOINT: f64 = 640.0;
 /// For a diagram that can run across or down: draws it across, and down instead when the host
 /// allows it, the width it has is under the breakpoint, across does not fit, and down is
 /// narrower.
-#[cfg_attr(not(feature = "flowchart"), allow(dead_code))]
+#[cfg_attr(not(any(feature = "flowchart", feature = "git")), allow(dead_code))]
 pub(crate) fn turn_to_fit(options: &RenderOptions, mut draw: impl FnMut(bool) -> Output) -> Output {
     let across = draw(false);
     let Some(available) = available(options) else {

@@ -38,6 +38,32 @@ export async function loadPele(peleDir, exports) {
 
 export const q = (s) => (s === undefined || s === null ? '-' : JSON.stringify(String(s)));
 export const list = (a) => (a && a.length ? JSON.stringify(a.join('\u0001')) : '-');
+export function gitSummary(model) {
+  const out = [`dir:${q(model.direction)}`];
+  const commits = [...model.commits.values()].sort((a, b) => a.seq - b.seq);
+  for (const c of commits) {
+    // Mermaid ends the id of a commit it made up with seven random digits; fermaid derives them,
+    // so only the number of the commit is compared.
+    const id = c.id.startsWith(`${c.seq}-`) ? `${c.seq}-*` : c.id;
+    const parents = c.parents.map((p) => {
+      const parent = model.commits.get(p);
+      return parent ? String(parent.seq) : p === '' ? '-' : '?';
+    });
+    out.push(
+      `commit:${c.seq}|${q(id)}|${q(c.message)}|${c.type}|${list(c.tags)}|p=${parents.join(',')}|b=${q(c.branch)}|ct=${c.customType ?? '-'}|ci=${c.customId === true}`
+    );
+  }
+  for (const [name, head] of model.branches) {
+    const commit = head ? model.commits.get(head) : undefined;
+    out.push(`branch:${q(name)}|${commit ? commit.seq : '-'}`);
+  }
+  out.push(`lanes:${list(model.lanes)}`);
+  out.push(`current:${q(model.currentBranch)}`);
+  out.push(`head:${model.head ? model.head.seq : '-'}`);
+  out.push(`title:${q(model.title)}|acc:${q(model.accTitle)}|${q(model.accDescr)}`);
+  out.push(`warnings:${model.warnings.length}`);
+  return out.join('\n');
+}
 export function flowSummary(db) {
   const out = [`dir:${q(db.direction)}`];
   for (const n of db.nodes.values()) {

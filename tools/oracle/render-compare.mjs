@@ -100,6 +100,93 @@ const TYPES = {
       ],
     },
   },
+  git: {
+    modules: {
+      'src/diagrams/git/db.ts': ['buildGit'],
+      'src/diagrams/git/parser.ts': ['parseGit'],
+      'src/diagrams/git/render.ts': ['renderGit'],
+    },
+    names: [
+      ['pele-branches', 'fermaid-branches'],
+      ['pele-branch', 'fermaid-branch'],
+      ['pele-lane', 'fermaid-lane'],
+      ['pele-edges', 'fermaid-edges'],
+      ['pele-edge-merge', 'fermaid-edge-merge'],
+      ['pele-edge-cherry-pick', 'fermaid-edge-cherry-pick'],
+      ['pele-edge', 'fermaid-edge'],
+      ['pele-commits', 'fermaid-commits'],
+      ['pele-commit-cherry-pick', 'fermaid-commit-cherry-pick'],
+      ['pele-commit-highlight', 'fermaid-commit-highlight'],
+      ['pele-commit-reverse', 'fermaid-commit-reverse'],
+      ['pele-commit-normal', 'fermaid-commit-normal'],
+      ['pele-commit-merge', 'fermaid-commit-merge'],
+      ['pele-commit-label', 'fermaid-commit-label'],
+      ['pele-commit', 'fermaid-commit'],
+      ['pele-tag', 'fermaid-tag'],
+      ['pele-label', 'fermaid-label'],
+      ['pele-title', 'fermaid-title'],
+    ],
+    cases: {
+      history: [
+        `gitGraph
+    commit
+    commit
+    commit
+`,
+        {},
+      ],
+      branches: [
+        `gitGraph
+    commit
+    branch develop
+    commit
+    checkout main
+    merge develop
+    commit
+`,
+        {},
+      ],
+      tags: [
+        `gitGraph
+    commit id:"one" tag:"v1.0" msg:"first"
+    commit id:"two" type:HIGHLIGHT tag:"v1.1"
+    branch release
+    commit id:"three" type:REVERSE
+`,
+        {},
+      ],
+      down: [`gitGraph TB:\n    commit\n    branch other\n    commit\n`, {}],
+      up: [`gitGraph BT:\n    commit\n    commit\n`, {}],
+      titled: [
+        `gitGraph
+    title The history of a project
+    commit
+    commit
+`,
+        {},
+      ],
+      plain: [
+        `gitGraph
+    commit
+    branch feature
+    commit
+    checkout main
+    merge feature
+`,
+        { gitGraph: { showBranches: false } },
+      ],
+      parallel: [
+        `gitGraph
+    commit
+    branch a
+    commit
+    branch b
+    commit
+`,
+        { gitGraph: { parallelCommits: true } },
+      ],
+    },
+  },
   quadrantchart: {
     modules: {
       'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
@@ -197,7 +284,7 @@ if (!spec) {
   process.exit(2);
 }
 
-const { XyChartDb, parseXyChart, renderXyChart, QuadrantDb, parseQuadrant, renderQuadrant } =
+const { XyChartDb, parseXyChart, renderXyChart, QuadrantDb, parseQuadrant, renderQuadrant, buildGit, parseGit, renderGit } =
   await loadPele(resolve(peleDir), spec.modules);
 
 function draw(src, config) {
@@ -205,6 +292,10 @@ function draw(src, config) {
     const db = new XyChartDb();
     parseXyChart(src, db);
     return renderXyChart(db, config, {}).svg;
+  }
+  if (type === 'git') {
+    const model = buildGit(parseGit(src), config, undefined);
+    return renderGit(model, config, {}).svg;
   }
   const db = new QuadrantDb();
   parseQuadrant(src, db);

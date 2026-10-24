@@ -92,6 +92,10 @@ fn unit(s: &str) -> (usize, bool) {
 
 /// `layout_label` wraps at spaces only. For a box of fixed width, this also cuts any word too
 /// long to fit.
+#[cfg_attr(
+    not(any(feature = "timeline", feature = "journey")),
+    allow(dead_code, reason = "read by the timeline and journey diagrams")
+)]
 pub(crate) fn fit_label(
     raw: Option<&str>,
     measurer: &dyn TextMeasurer,

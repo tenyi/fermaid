@@ -28,6 +28,10 @@ pub(crate) enum Pattern {
     Keyword(&'static str),
     Match(fn(&str, usize) -> Found),
     /// Makes a new scanner for each text.
+    #[cfg_attr(
+        not(feature = "pie"),
+        allow(dead_code, reason = "read by the pie diagram")
+    )]
     Scanner(fn() -> Box<dyn Scanner>),
 }
 
@@ -35,6 +39,9 @@ pub(crate) struct TokenType {
     pub name: &'static str,
     pub pattern: Pattern,
     pub hidden: bool,
+    /// The kinds of the token types that may match a longer text than this one does, as
+    /// Chevrotain's `LONGER_ALT`. When one of them matches more, that one becomes the token.
+    pub longer: &'static [usize],
 }
 
 pub(crate) struct Tokens<'a> {
@@ -65,30 +72,25 @@ pub(crate) fn tokenize<'a>(src: &'a str, types: &[TokenType]) -> Result<Tokens<'
     let mut scanners: Vec<Option<Box<dyn Scanner>>> = types.iter().map(|_| None).collect();
     let mut p = 0;
     'scan: while p < bytes.len() {
-        for (k, kind) in types.iter().enumerate() {
-            if dead[k] {
+        for k in 0..types.len() {
+            let Some(end) = match_at(types, &mut dead, &mut scanners, k, src, p) else {
                 continue;
-            }
-            let end = match kind.pattern {
-                Pattern::Literal(text) => bytes[p..]
-                    .starts_with(text.as_bytes())
-                    .then_some(p + text.len()),
-                Pattern::Keyword(word) => keyword(word, src, p),
-                Pattern::Match(f) => match f(src, p) {
-                    Found::End(end) => Some(end),
-                    Found::No => None,
-                    Found::Never => {
-                        dead[k] = true;
-                        None
+            };
+            // The longer alternatives, as Chevrotain's `LONGER_ALT`: the first one that matches
+            // more text than the keyword does becomes the token.
+            let mut kind = k;
+            let mut end = end;
+            for &alt in types[k].longer {
+                if let Some(alt_end) = match_at(types, &mut dead, &mut scanners, alt, src, p) {
+                    if alt_end > end {
+                        kind = alt;
+                        end = alt_end;
+                        break;
                     }
-                },
-                Pattern::Scanner(make) => scanners[k].get_or_insert_with(make).scan(src, p),
-            };
-            let Some(end) = end.filter(|&end| end > p) else {
-                continue;
-            };
-            if !kind.hidden {
-                tokens.kinds.push(k);
+                }
+            }
+            if !types[kind].hidden {
+                tokens.kinds.push(kind);
                 tokens.starts.push(p);
                 tokens.ends.push(end);
             }
@@ -101,6 +103,37 @@ pub(crate) fn tokenize<'a>(src: &'a str, types: &[TokenType]) -> Result<Tokens<'
     tokens.starts.push(bytes.len());
     tokens.ends.push(bytes.len());
     Ok(tokens)
+}
+
+/// The end of the match of a token type at a place, or nothing when it does not match there.
+fn match_at(
+    types: &[TokenType],
+    dead: &mut [bool],
+    scanners: &mut [Option<Box<dyn Scanner>>],
+    k: usize,
+    src: &str,
+    p: usize,
+) -> Option<usize> {
+    if dead[k] {
+        return None;
+    }
+    let kind = &types[k];
+    let end = match kind.pattern {
+        Pattern::Literal(text) => src.as_bytes()[p..]
+            .starts_with(text.as_bytes())
+            .then_some(p + text.len()),
+        Pattern::Keyword(word) => keyword(word, src, p),
+        Pattern::Match(f) => match f(src, p) {
+            Found::End(end) => Some(end),
+            Found::No => None,
+            Found::Never => {
+                dead[k] = true;
+                None
+            }
+        },
+        Pattern::Scanner(make) => scanners[k].get_or_insert_with(make).scan(src, p),
+    };
+    end.filter(|&end| end > p)
 }
 
 fn spaces_tabs(src: &str, mut at: usize) -> usize {
@@ -269,6 +302,7 @@ const fn token(name: &'static str, pattern: Pattern) -> TokenType {
         name,
         pattern,
         hidden: false,
+        longer: &[],
     }
 }
 
@@ -277,6 +311,51 @@ const fn hidden(name: &'static str, pattern: Pattern) -> TokenType {
         name,
         pattern,
         hidden: true,
+        longer: &[],
+    }
+}
+
+/// A token type that matches with a function.
+#[cfg_attr(
+    not(feature = "git"),
+    allow(dead_code, reason = "read by the git diagram")
+)]
+pub(crate) const fn match_token(name: &'static str, f: fn(&str, usize) -> Found) -> TokenType {
+    TokenType {
+        name,
+        pattern: Pattern::Match(f),
+        hidden: false,
+        longer: &[],
+    }
+}
+
+/// A word that ends only at the end of a name: `commits` is a name, not the word `commit`. The
+/// kinds that may match a longer text than the word does are the alternatives of `LONGER_ALT`.
+#[cfg_attr(
+    not(feature = "git"),
+    allow(dead_code, reason = "read by the git diagram")
+)]
+pub(crate) const fn word_token(word: &'static str, longer: &'static [usize]) -> TokenType {
+    TokenType {
+        name: word,
+        pattern: Pattern::Literal(word),
+        hidden: false,
+        longer,
+    }
+}
+
+/// A keyword that Mermaid ends only at whitespace, a comment, or the end of input, with the
+/// alternatives of `LONGER_ALT`.
+#[cfg_attr(
+    not(feature = "git"),
+    allow(dead_code, reason = "read by the git diagram")
+)]
+pub(crate) const fn keyword_token_with(word: &'static str, longer: &'static [usize]) -> TokenType {
+    TokenType {
+        name: word,
+        pattern: Pattern::Keyword(word),
+        hidden: false,
+        longer,
     }
 }
 
@@ -291,6 +370,10 @@ pub(crate) const DIRECTIVE: TokenType = hidden("DIRECTIVE", Pattern::Match(direc
 pub(crate) const SINGLE_LINE_COMMENT: TokenType =
     hidden("SINGLE_LINE_COMMENT", Pattern::Match(single_line_comment));
 
+#[cfg_attr(
+    not(feature = "pie"),
+    allow(dead_code, reason = "read by the pie diagram")
+)]
 pub(crate) const fn keyword_token(word: &'static str) -> TokenType {
     token(word, Pattern::Keyword(word))
 }
