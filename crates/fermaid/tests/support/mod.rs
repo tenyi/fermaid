@@ -8,10 +8,25 @@ use std::collections::HashSet;
 /// fermaid's output is inserted into pages as markup, so it must be inert whatever the diagram
 /// says: only drawing elements, only presentation attributes, no script-capable URLs, no way to
 /// load a stylesheet. A new diagram type that needs another element or attribute adds it here,
-/// with care.
+/// with care. The `defs`, `linearGradient` and `stop` elements are the gradient of the bands of
+/// a sankey chart.
 const ELEMENTS: &[&str] = &[
-    "svg", "g", "rect", "circle", "ellipse", "polygon", "path", "text", "tspan", "a", "title",
-    "desc", "image",
+    "svg",
+    "g",
+    "rect",
+    "circle",
+    "ellipse",
+    "polygon",
+    "path",
+    "text",
+    "tspan",
+    "a",
+    "title",
+    "desc",
+    "image",
+    "defs",
+    "linearGradient",
+    "stop",
 ];
 const ATTRIBUTES: &[&str] = &[
     "xmlns",
@@ -58,6 +73,11 @@ const ATTRIBUTES: &[&str] = &[
     "preserveAspectRatio",
     "baseline-shift",
     "text-decoration",
+    "gradientUnits",
+    "x1",
+    "x2",
+    "offset",
+    "stop-color",
 ];
 const STYLE_PROPERTIES: &[&str] = &[
     "fill",
@@ -87,7 +107,9 @@ const ROOT_STYLES: &[&str] = &[
     "text-transform:none",
     "direction:ltr",
 ];
-const NUMERIC: &[&str] = &["x", "y", "width", "height", "r", "cx", "cy", "rx", "ry"];
+const NUMERIC: &[&str] = &[
+    "x", "y", "width", "height", "r", "cx", "cy", "rx", "ry", "x1", "x2", "offset",
+];
 
 /// Text an attacker might put anywhere a diagram accepts a string.
 pub const PAYLOADS: &[&str] = &[

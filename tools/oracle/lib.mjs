@@ -256,3 +256,11 @@ export function classSummary(db, buildClassGraph) {
   out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
   return out.join('\n');
 }
+
+// A sankey chart: its nodes in the order they were named, then its bands.
+export function sankeySummary(db) {
+  const out = db.nodes.map((n) => `node:${q(n.id)}|${n.index}`);
+  for (const l of db.links) out.push(`link:${q(l.source.id)}|${q(l.target.id)}|${q(l.value)}`);
+  out.push(`title:${q(db.title)}`);
+  return out.join('\n');
+}

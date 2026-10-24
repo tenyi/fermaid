@@ -8,7 +8,7 @@
 
 fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，不需要 JavaScript 執行環境、無頭瀏覽器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一個小巧、無相依套件的 TypeScript 渲染器），支援 Mermaid 12.1.0 語法，並採用 pele 自己的版面配置與視覺風格。
 
-> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
+> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、桑基圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
 
 | 圖表類型 | 狀態 |
 |---|---|
@@ -24,6 +24,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 使用者旅程（`journey`） | 已支援：標題、區段、含分數與參與者的任務 |
 | 看板（`kanban`） | 已支援：欄與卡片（含形狀）、`@{ … }` 中繼資料（`assigned`、`ticket`、`priority`、`label`）、class，以及透過 `ticketBaseUrl` 的票證連結 |
 | 心智圖（`mindmap`） | 已支援：所有節點形狀、圖示、class 與分支顏色；橫向排列，宿主較窄時改為縱向 |
+| 桑基圖（`sankey`、`sankey-beta`） | 已支援：Mermaid 的 CSV 形式，每行一組 `source,target,value`，欄位可加引號；以及 `sankey` 的設定鍵 `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix` 與 `labelStyle` |
 | 其他 | 規劃中 |
 
 ## 目標
@@ -82,7 +83,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap` 與 `gantt` 目標
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt` 與 `sankey` 目標
 cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新產生 pele 對這些案例的解析結果
 node tools/oracle/diff.mjs ../pele   # 與 Mermaid 自身的解析器做差異模糊測試

@@ -41,6 +41,7 @@ jobs:
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features kanban -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features mindmap -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features gantt -- -D warnings
+      - run: cargo clippy -p fermaid --all-targets --no-default-features --features sankey -- -D warnings
       - run: cargo test
       - run: cargo test -p fermaid --no-default-features
 

@@ -5,8 +5,8 @@ algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
 **v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
 
-Milestones M0–M5 are planned to task level and done. M6 is scoped only and will be refined
-next.
+Milestones M0–M5 are planned to task level and done. M6 is planned to milestone level and in
+progress.
 
 ## Decisions
 
@@ -270,6 +270,60 @@ Notes:
 - The library is `fermaid` and the command line tool is `fermaid-cli`; the tool depends on
   the library, so the library goes first.
 
+## M6 — The remaining types ✅ (in progress)
+
+Mermaid 12.1.0 builds 32 diagram types. M0–M5 cover twelve of them; M6 covers the rest, in
+three batches, ordered by how much the types are used. The niche types come last, as the
+roadmap says they should.
+
+Each type is a self-contained unit, as in M2–M5: a lexer, a parser, a model, a layout and an
+emitter behind its own Cargo feature, with the Mermaid spec cases from pele's
+`tests/compat/<type>`, a golden file that says what pele makes of them, a snapshot, security
+and speed tests, a fuzz target, and a place in `tools/oracle/diff.mjs`. A type that pele
+draws differently from Mermaid follows Mermaid, and the difference is recorded in
+`tools/oracle/KNOWN.md`.
+
+### M6a — The charts people reach for
+
+- [x] Sankey charts, behind the `sankey` feature.
+- [ ] XY charts, behind the `xychart` feature.
+- [ ] Quadrant charts, behind the `quadrant` feature.
+- [ ] Git graphs, behind the `git` feature.
+
+Notes:
+- A sankey chart is written as CSV, as Mermaid's grammar reads it: a `source,target,value`
+  record per line, with the fields quoted as RFC 4180 says. The layout, the settling of the
+  columns and the labels are ported from pele.
+- Mermaid's grammar lists only the printable ASCII characters as the text of a field, so a name
+  with a letter outside that range is a parse error in Mermaid. pele reads it; fermaid follows
+  Mermaid, and a test pins that.
+- The gradient of the bands is a `url(#…)` reference to an element of the same document, which
+  the inertness check allows; a `url()` that points outside the document is still refused.
+
+### M6b — The structural diagrams
+
+- [ ] Block diagrams, behind the `block` feature.
+- [ ] Architecture diagrams, behind the `architecture` feature.
+- [ ] Packet diagrams, behind the `packet` feature.
+- [ ] Radar charts, behind the `radar` feature.
+- [ ] Treemaps, behind the `treemap` feature.
+
+### M6c — The rest
+
+- [ ] C4 diagrams, behind the `c4` feature.
+- [ ] Use case diagrams, behind the `usecase` feature.
+- [ ] Info diagrams, behind the `info` feature.
+- [ ] Venn diagrams, behind the `venn` feature.
+- [ ] Tree views, behind the `treeview` feature.
+- [ ] Cynefin diagrams, behind the `cynefin` feature.
+- [ ] Ishikawa diagrams, behind the `ishikawa` feature.
+- [ ] Event modeling diagrams, behind the `eventmodeling` feature.
+- [ ] Wardley maps, behind the `wardley` feature.
+- [ ] Railroad diagrams, behind the `railroad` feature.
+- [ ] Swimlane diagrams, behind the `swimlane` feature.
+- [ ] Agent flows, behind the `agentflow` feature.
+
 ## Later milestones (scope only)
 
-- **M6** — remaining types by usage; niche types (agentflow, wardley, …) last.
+- **M7** — the diagrams Mermaid itself has not built in yet, if it ever does: the remaining
+  plugins, and the rendering of the syntax Mermaid accepts but does not draw.

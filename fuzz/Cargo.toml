@@ -104,3 +104,10 @@ path = "fuzz_targets/gantt.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "sankey"
+path = "fuzz_targets/sankey.rs"
+test = false
+doc = false
+bench = false

@@ -11,7 +11,8 @@ pub(crate) mod literal;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "requirement"
+    feature = "requirement",
+    feature = "sankey"
 ))]
 pub(crate) mod ordered;
 #[cfg(any(feature = "kanban", feature = "mindmap"))]

@@ -195,6 +195,72 @@ pub(crate) fn js_to_number(text: &str) -> f64 {
     s.parse().unwrap_or(f64::NAN)
 }
 
+/// `parseFloat`, as JavaScript reads it: the longest prefix that is a number, and whatever
+/// follows it ignored. Unlike `Number()`, `"12abc"` is 12 and `"abc"` is NaN.
+#[allow(
+    dead_code,
+    reason = "used by the types that read a number as Mermaid's model does"
+)]
+pub(crate) fn js_parse_float(text: &str) -> f64 {
+    let s = trim(text);
+    let b = s.as_bytes();
+    let mut i = 0;
+    let negative = match b.first() {
+        Some(b'-') => {
+            i = 1;
+            true
+        }
+        Some(b'+') => {
+            i = 1;
+            false
+        }
+        _ => false,
+    };
+    if s[i..].starts_with("Infinity") {
+        return if negative {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        };
+    }
+    let whole_from = i;
+    while i < b.len() && b[i].is_ascii_digit() {
+        i += 1;
+    }
+    let whole = i > whole_from;
+    let mut fraction = false;
+    if i < b.len() && b[i] == b'.' {
+        let mark = i;
+        i += 1;
+        let from = i;
+        while i < b.len() && b[i].is_ascii_digit() {
+            i += 1;
+        }
+        fraction = i > from;
+        // The dot belongs to the number only when digits sit on one side of it.
+        if !whole && !fraction {
+            i = mark;
+        }
+    }
+    if !whole && !fraction {
+        return f64::NAN;
+    }
+    // The exponent, when it is well formed.
+    if i < b.len() && (b[i] | 32) == b'e' {
+        let mark = i;
+        let mut j = i + 1;
+        if j < b.len() && (b[j] == b'+' || b[j] == b'-') {
+            j += 1;
+        }
+        let from = j;
+        while j < b.len() && b[j].is_ascii_digit() {
+            j += 1;
+        }
+        i = if j > from { j } else { mark };
+    }
+    s[..i].parse().unwrap_or(f64::NAN)
+}
+
 /// Text slices kept as `char`s, so that ported index arithmetic never lands inside a character.
 pub(crate) mod chars {
     use super::is_space;

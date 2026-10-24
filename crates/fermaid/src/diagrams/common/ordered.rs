@@ -22,6 +22,10 @@ impl<V> Ordered<V> {
         self.index.get(key).map(|&i| &self.items[i].1)
     }
 
+    #[cfg_attr(
+        not(any(feature = "class", feature = "er")),
+        allow(dead_code, reason = "used by the types that change a value in place")
+    )]
     pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut V> {
         self.index.get(key).map(|&i| &mut self.items[i].1)
     }
@@ -42,6 +46,13 @@ impl<V> Ordered<V> {
         self.index.get(key).copied()
     }
 
+    #[cfg_attr(
+        not(any(feature = "class", feature = "er", feature = "requirement")),
+        allow(
+            dead_code,
+            reason = "used by the types that ask whether a key is there"
+        )
+    )]
     pub(crate) fn contains(&self, key: &str) -> bool {
         self.index.contains_key(key)
     }

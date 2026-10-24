@@ -14,7 +14,8 @@ pub(crate) mod class;
     feature = "journey",
     feature = "kanban",
     feature = "mindmap",
-    feature = "gantt"
+    feature = "gantt",
+    feature = "sankey"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -33,6 +34,8 @@ pub(crate) mod mindmap;
 pub(crate) mod pie;
 #[cfg(feature = "requirement")]
 pub(crate) mod requirement;
+#[cfg(feature = "sankey")]
+pub(crate) mod sankey;
 #[cfg(feature = "sequence")]
 pub(crate) mod sequence;
 #[cfg(feature = "state")]

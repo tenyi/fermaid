@@ -5,6 +5,11 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- Sankey charts, behind the `sankey` feature: the CSV form of Mermaid, a `source,target,value`
+  record per line, with the fields quoted as RFC 4180 says; and the `sankey` config keys
+  `width`, `height`, `nodeWidth`, `nodePadding`, `nodeAlignment`, `nodeColors`, `linkColor`,
+  `showValues`, `prefix`, `suffix` and `labelStyle`.
+
 ## 0.2.0 - 2026-10-24
 
 The first published release. It covers milestones M0 to M5: the foundation, pie charts,
