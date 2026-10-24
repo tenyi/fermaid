@@ -299,6 +299,9 @@ Notes:
   Mermaid, and a test pins that.
 - The gradient of the bands is a `url(#…)` reference to an element of the same document, which
   the inertness check allows; a `url()` that points outside the document is still refused.
+- The differential run against Mermaid's own grammar reports no difference over 2,775 inputs,
+  the golden file of the Mermaid specs regenerates byte for byte from pele, and ten minutes of
+  fuzzing (1,072,313 runs) found no panic.
 
 ### M6b — The structural diagrams
 
