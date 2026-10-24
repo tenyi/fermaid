@@ -4,6 +4,16 @@
 //! across the types — the nesting limit, the fonts, the fitting, the link allowlist — are
 //! covered here, once.
 
+// The file draws a pie chart, a flowchart, a state diagram, a class diagram and a sequence
+// diagram, so it needs all five.
+#![cfg(all(
+    feature = "pie",
+    feature = "flowchart",
+    feature = "state",
+    feature = "class",
+    feature = "sequence"
+))]
+
 use fermaid::{ErrorCode, Limits, RenderOptions, Style, TextMeasurer};
 
 fn render(src: &str, options: &RenderOptions) -> fermaid::Rendered {

@@ -3,6 +3,7 @@
 
 mod support;
 
+use std::fmt::Write;
 use std::time::{Duration, Instant};
 
 use fermaid::{DiagramKind, ErrorCode, Limits, RenderOptions};
@@ -94,8 +95,10 @@ fn runs_down_in_a_narrow_host() {
 
 #[test]
 fn colors_wrap_after_eleven_branches() {
-    let src: String =
-        "mindmap\n root\n".to_string() + &(0..13).map(|i| format!("  b{i}\n")).collect::<String>();
+    let mut src = String::from("mindmap\n root\n");
+    for i in 0..13 {
+        writeln!(src, "  b{i}").unwrap();
+    }
     let svg = svg(&src);
     assert!(svg.contains("fermaid-section-10\""));
     assert!(!svg.contains("fermaid-section-11\""));
