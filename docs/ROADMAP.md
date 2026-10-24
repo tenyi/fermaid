@@ -262,7 +262,7 @@ Notes:
 The first published version.
 
 1. [x] Publish `fermaid` 0.2.0 to crates.io, then `fermaid-cli` 0.2.0, which depends on it.
-2. [ ] Tag `v0.2.0`, push the tag and publish the GitHub release.
+2. [x] Tag `v0.2.0`, push the tag and publish the GitHub release.
 
 Notes:
 - The crates.io names `fermaid` and `fermaid-cli` were free, and `0.0.1` and `0.1.0` were
