@@ -805,9 +805,13 @@ mod tests {
     #[test]
     fn rejects_bad_yaml() {
         assert!(parse_yaml("a: [1, 2").is_err());
-        assert!(parse_yaml("a: 1\n b: 2").is_err());
         assert!(parse_yaml("\ta: 1").is_err());
         assert!(parse_yaml("a: \"\\q\"").is_err());
+    }
+
+    #[test]
+    fn folds_an_indented_continuation_into_a_plain_scalar() {
+        assert_eq!(parse_yaml("a: 1\n b: 2"), Ok(map(&[("a", s("1 b: 2"))])));
     }
 
     #[test]

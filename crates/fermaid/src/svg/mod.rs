@@ -186,9 +186,13 @@ mod tests {
         assert_eq!(num(1.5), "1.5");
         assert_eq!(num(1.25), "1.25");
         assert_eq!(num(1.05), "1.05");
-        assert_eq!(num(-2.345), "-2.34");
+        // -2.345 * 100 is -234.50000000000003 in binary floating point, as in pele.
+        assert_eq!(num(-2.345), "-2.35");
+        assert_eq!(num(0.005), "0.01");
+        assert_eq!(num(-0.005), "0");
         assert_eq!(num(-0.5), "-0.5");
         assert_eq!(num(123456.789), "123456.79");
+        // pele writes "NaN" here; fermaid writes a valid coordinate instead.
         assert_eq!(num(f64::NAN), "0");
     }
 

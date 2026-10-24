@@ -635,9 +635,11 @@ mod tests {
     #[test]
     fn wraps_at_spaces() {
         let label = layout("alpha beta gamma delta", false, 60.0);
-        assert_eq!(label.lines.len(), 3);
+        let lines: Vec<&str> = label.lines.iter().map(|l| l[0].text.as_str()).collect();
+        assert_eq!(lines, ["alpha", "beta", "gamma", "delta"]);
+        assert_eq!(label.widths, [39.136, 31.136, 53.344, 34.688]);
         assert_eq!(label.line_height, 21.0);
-        assert_eq!(label.lines[0][0].text, "alpha beta");
+        assert_eq!(label.height, 84.0);
     }
 
     #[test]

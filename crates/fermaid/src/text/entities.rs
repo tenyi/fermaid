@@ -233,7 +233,8 @@ mod tests {
     fn drops_semicolons_after_colors() {
         assert_eq!(encode_entities("style A fill:#f9f;"), "style A fill:#f9f");
         assert_eq!(encode_entities("classDef c fill:#f00;\nA;"), "classDef c fill:#f00\nA;");
-        assert_eq!(encode_entities("style A fill: #f9f;"), "style A fill: #f9f;");
+        // Only a color glued to the colon is protected, as in pele.
+        assert_eq!(encode_entities("style A fill: #f9f;"), "style A fill: ﬂ°f9f¶ß");
     }
 
     #[test]
