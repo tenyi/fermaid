@@ -14,9 +14,9 @@ pub(crate) mod literal;
     feature = "requirement"
 ))]
 pub(crate) mod ordered;
-#[cfg(feature = "timeline")]
+#[cfg(any(feature = "timeline", feature = "journey"))]
 pub(crate) mod plain;
-#[cfg(feature = "timeline")]
+#[cfg(any(feature = "timeline", feature = "journey"))]
 pub(crate) mod scan;
 #[cfg(feature = "pie")]
 pub(crate) mod tokens;

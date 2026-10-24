@@ -75,6 +75,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Requirement => Some(&crate::diagrams::requirement::Requirement),
         #[cfg(feature = "timeline")]
         DiagramKind::Timeline => Some(&crate::diagrams::timeline::Timeline),
+        #[cfg(feature = "journey")]
+        DiagramKind::Journey => Some(&crate::diagrams::journey::Journey),
         _ => None,
     }
 }

@@ -2,21 +2,21 @@
 // compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
 // which fermaid's model matches pele's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|requirement|sequence|state|timeline
+//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|journey|requirement|sequence|state|timeline
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, memberSummary, loadPele, requirementSummary, timelineSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, memberSummary, loadPele, journeySummary, requirementSummary, timelineSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['class', 'er', 'flowchart', 'requirement', 'sequence', 'state', 'timeline'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|requirement|sequence|state|timeline');
+if (!peleDir || !['class', 'er', 'flowchart', 'journey', 'requirement', 'sequence', 'state', 'timeline'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|journey|requirement|sequence|state|timeline');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
+const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
@@ -30,6 +30,8 @@ const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr,
   'src/diagrams/requirement/parser.ts': ['parseRequirement'],
   'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
+  'src/diagrams/journey/db.ts': ['JourneyDb'],
+  'src/diagrams/journey/parser.ts': ['parseJourney'],
   'src/diagrams/timeline/parser.ts': ['parseTimeline'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
   'src/diagrams/sequence/parser.ts': ['parseSequence'],
@@ -94,6 +96,10 @@ for (const { name, src } of cases) {
         const db = new RequirementDb();
         parseRequirement(src, db);
         result = requirementSummary(db, buildRequirementGraph);
+      } else if (type === 'journey') {
+        const db = new JourneyDb();
+        parseJourney(src, db);
+        result = journeySummary(db);
       } else if (type === 'timeline') {
         const db = new TimelineDb();
         parseTimeline(src, db);

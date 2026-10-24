@@ -10,13 +10,16 @@ pub(crate) mod class;
     feature = "class",
     feature = "er",
     feature = "requirement",
-    feature = "timeline"
+    feature = "timeline",
+    feature = "journey"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
 pub(crate) mod er;
 #[cfg(feature = "flowchart")]
 pub(crate) mod flowchart;
+#[cfg(feature = "journey")]
+pub(crate) mod journey;
 #[cfg(feature = "pie")]
 pub(crate) mod pie;
 #[cfg(feature = "requirement")]

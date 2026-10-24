@@ -121,6 +121,80 @@ pub(crate) fn to_fixed0(n: f64) -> String {
     }
 }
 
+/// JavaScript's `Number(text)` for a string: decimal, `0x`, `0o` and `0b` literals, and
+/// `Infinity`, with surrounding whitespace; empty text is 0, anything else NaN.
+#[allow(
+    dead_code,
+    reason = "used by the types that read numbers as Mermaid's model does"
+)]
+pub(crate) fn js_to_number(text: &str) -> f64 {
+    let s = trim(text);
+    if s.is_empty() {
+        return 0.0;
+    }
+    let radix = match s.get(..2) {
+        Some("0x" | "0X") => 16,
+        Some("0o" | "0O") => 8,
+        Some("0b" | "0B") => 2,
+        _ => 10,
+    };
+    if radix != 10 {
+        let digits = &s[2..];
+        if digits.is_empty() {
+            return f64::NAN;
+        }
+        let mut value = 0.0;
+        for c in digits.chars() {
+            match c.to_digit(radix) {
+                Some(d) => value = value * f64::from(radix) + f64::from(d),
+                None => return f64::NAN,
+            }
+        }
+        return value;
+    }
+    let unsigned = s.strip_prefix(['+', '-']).unwrap_or(s);
+    if unsigned == "Infinity" {
+        return if s.starts_with('-') {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        };
+    }
+    // StrDecimalLiteral: digits with an optional fraction, or a fraction alone, then an
+    // optional exponent.
+    let b = unsigned.as_bytes();
+    let mut i = 0;
+    let digits = |i: &mut usize| {
+        let from = *i;
+        while *i < b.len() && b[*i].is_ascii_digit() {
+            *i += 1;
+        }
+        *i > from
+    };
+    let whole = digits(&mut i);
+    let mut fraction = false;
+    if i < b.len() && b[i] == b'.' {
+        i += 1;
+        fraction = digits(&mut i);
+    }
+    if !whole && !fraction {
+        return f64::NAN;
+    }
+    if i < b.len() && (b[i] | 32) == b'e' {
+        i += 1;
+        if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
+            i += 1;
+        }
+        if !digits(&mut i) {
+            return f64::NAN;
+        }
+    }
+    if i != b.len() {
+        return f64::NAN;
+    }
+    s.parse().unwrap_or(f64::NAN)
+}
+
 /// Text slices kept as `char`s, so that ported index arithmetic never lands inside a character.
 pub(crate) mod chars {
     use super::is_space;
@@ -164,6 +238,28 @@ pub(crate) mod chars {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn converts_text_to_numbers_as_javascript() {
+        for (text, want) in [
+            ("", 0.0),
+            (" 5 ", 5.0),
+            ("+5", 5.0),
+            ("-2.5", -2.5),
+            (".5", 0.5),
+            ("5.", 5.0),
+            ("1e3", 1000.0),
+            ("0x1F", 31.0),
+            ("0b101", 5.0),
+            ("0o17", 15.0),
+            ("-Infinity", f64::NEG_INFINITY),
+        ] {
+            assert_eq!(js_to_number(text), want, "{text:?}");
+        }
+        for text in ["x", "5x", ".", "1e", "-0x1", "inf", "NaN", "1_000", "0x"] {
+            assert!(js_to_number(text).is_nan(), "{text:?}");
+        }
+    }
 
     #[test]
     fn rounds_halves_up() {

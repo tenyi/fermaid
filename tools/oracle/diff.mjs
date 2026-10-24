@@ -1,7 +1,7 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, seqSummary, stateSummary } from './lib.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +32,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -55,6 +55,7 @@ const m = await loadPele(pele, {
   'src/diagrams/requirement/db.ts': ['RequirementDb', 'RequirementType', 'RiskLevel', 'VerifyType', 'Relationships'],
   'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
+  'src/diagrams/journey/db.ts': ['JourneyDb'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
   '@braintree/sanitize-url': ['sanitizeUrl'],
@@ -88,6 +89,7 @@ const seqParser = m.buildParser(join(pele, 'tests/compat/sequence/upstream/seque
 const stateParser = m.buildParser(join(pele, 'tests/compat/state/upstream/stateDiagram.jison'));
 const classParser = m.buildParser(join(pele, 'tests/compat/class/upstream/classDiagram.jison'));
 const erParser = m.buildParser(join(pele, 'tests/compat/er/upstream/erDiagram.jison'));
+const journeyParser = m.buildParser(join(pele, 'tests/compat/journey/upstream/journey.jison'));
 const timelineParser = m.buildParser(join(pele, 'tests/compat/timeline/upstream/timeline.jison'));
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 
@@ -173,6 +175,16 @@ const TYPES = {
       timelineParser.yy = asYy(db);
       timelineParser.parse(src);
       return timelineSummary(db);
+    },
+  },
+  journey: {
+    keyword: /(^|\n)\s*journey/,
+    fragments: ['journey', 'section ', 'title ', ': ', ':', '5', '1.5', '0x2', 'x', '\n', 'accTitle: t', 'accDescr: d', 'accDescr { d }', ',', '<br>', '%%', '#', ';', 'Me', 'é', ' '],
+    async reference(src) {
+      const db = new m.JourneyDb();
+      journeyParser.yy = asYy(db);
+      journeyParser.parse(src);
+      return journeySummary(db);
     },
   },
   url: {

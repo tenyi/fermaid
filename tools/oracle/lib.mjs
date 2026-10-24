@@ -143,6 +143,14 @@ export function erSummary(db, buildErGraph) {
   return out.join('\n');
 }
 
+export function journeySummary(db) {
+  const out = [];
+  for (const s of db.sections) out.push(`section:${q(s)}`);
+  for (const t of db.tasks) out.push(`task:${q(t.task)}|${t.score}|${list(t.people)}|${q(t.section)}`);
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
+
 export function timelineSummary(db) {
   const out = [`dir:${q(db.direction)}`];
   for (const s of db.sections) out.push(`section:${q(s)}`);
