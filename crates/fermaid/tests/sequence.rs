@@ -101,6 +101,22 @@ fn draws_every_participant_kind() {
             "sequenceDiagram\n participant A@{{ \"type\": \"{kind}\" }}\n A->>A: x\n"
         ));
         assert!(svg.contains(&format!("fermaid-actor-{kind}")), "{kind}");
+        // The class says which kind it is; the drawing has to be that shape.
+        match kind {
+            "participant" | "collections" => {
+                assert!(svg.contains("<rect"), "{kind}");
+                assert!(!svg.contains("<circle"), "{kind}");
+            }
+            "actor" | "boundary" | "control" | "entity" => {
+                assert!(svg.contains("<circle"), "{kind}");
+                assert!(!svg.contains("<rect"), "{kind}");
+            }
+            "database" | "queue" => {
+                assert!(!svg.contains("<circle"), "{kind}");
+                assert!(!svg.contains("<rect"), "{kind}");
+            }
+            _ => {}
+        }
         assert_inert(&svg, kind);
     }
 }
@@ -113,15 +129,24 @@ fn never_emits_links_for_participant_menus() {
     assert!(!out.svg.contains("javascript"));
     assert!(!out.svg.contains("<a"));
     assert!(out.links.is_empty());
+    // Not even a link the host would allow: the participant menus are not drawn at all.
+    let safe = render(
+        "sequenceDiagram\n participant A\n link A: Help @ https://example.com\n links A: {\"help\": \"https://example.com\"}\n A->>B: hi\n",
+    );
+    assert!(!safe.svg.contains("example.com"), "{}", safe.svg);
+    assert!(!safe.svg.contains("<a"), "{}", safe.svg);
+    assert!(safe.links.is_empty());
 }
 
 #[test]
 fn passes_colors_through_the_style_filter() {
-    let svg = svg(
+    let drawn = svg(
         "sequenceDiagram\n rect url(javascript:alert(1))\n A->>B: hi\n end\n rect red\n B->>A: yo\n end\n",
     );
-    assert!(!svg.contains("url("));
-    assert!(svg.contains("style=\"rx:var(--_r);fill:red;\""));
+    assert!(!drawn.contains("url("));
+    assert!(drawn.contains("style=\"rx:var(--_r);fill:red;\""));
+    let boxed = svg("sequenceDiagram\n box rgb(1, 2, 3) Team\n participant A\n end\n");
+    assert!(boxed.contains("rgb(1, 2, 3)"), "{boxed}");
 }
 
 #[test]
@@ -133,13 +158,15 @@ fn reports_errors_with_positions() {
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::Syntax);
     assert_eq!(err.kind, Some(DiagramKind::Sequence));
-    assert_eq!(err.line, 3);
+    assert_eq!((err.line, err.column), (3, 6));
     let err = fermaid::render(
         "sequenceDiagram\n A->>B: x\n deactivate B\n",
         &RenderOptions::default(),
     )
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::Semantic);
+    // A semantic error carries no position of its own.
+    assert_eq!((err.line, err.column), (0, 0));
 }
 
 #[test]
@@ -149,18 +176,20 @@ fn enforces_limits() {
         "loop\n".repeat(100),
         "end\n".repeat(100)
     );
-    assert_eq!(
-        fermaid::render(&deep, &RenderOptions::default())
-            .unwrap_err()
-            .code,
-        ErrorCode::Limit
+    let err = fermaid::render(&deep, &RenderOptions::default()).unwrap_err();
+    assert_eq!(err.code, ErrorCode::Limit);
+    assert!(
+        err.message.contains("nested deeper than the limit"),
+        "{}",
+        err.message
     );
     let long = format!("sequenceDiagram\n{}", "A->>B: hello\n".repeat(5000));
-    assert_eq!(
-        fermaid::render(&long, &RenderOptions::default())
-            .unwrap_err()
-            .code,
-        ErrorCode::Limit
+    let err = fermaid::render(&long, &RenderOptions::default()).unwrap_err();
+    assert_eq!(err.code, ErrorCode::Limit);
+    assert!(
+        err.message.contains("source is longer than the limit"),
+        "{}",
+        err.message
     );
 }
 
@@ -177,6 +206,8 @@ fn reads_the_sequence_config() {
         "%%{init: {\"sequence\": {\"hideUnusedParticipants\": true}}}%%\nsequenceDiagram\n participant Q\n A->>B: x\n",
     );
     assert!(!hidden.contains("data-id=\"Q\""));
+    // The participants that are used are still there.
+    assert_eq!(count(&hidden, "class=\"fermaid-lifeline\""), 2, "{hidden}");
 }
 
 #[test]
@@ -296,12 +327,16 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
         "wrap: ",
     ]);
     let mut rnd = Random::new(3);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 100, "only {rendered} of 1500 mutations rendered");
 }
 
 #[test]
@@ -421,16 +456,132 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}autonumber\n{}", "A()->>()B: x\n".repeat(3000)),
         format!("{head}{}", ">".repeat(N)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 25,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_every_block_kind() {
+    for (src, kind) in [
+        (
+            "sequenceDiagram\n par one\n A->>B: x\n and two\n B->>A: y\n end\n",
+            "par",
+        ),
+        ("sequenceDiagram\n opt maybe\n A->>B: x\n end\n", "opt"),
+        (
+            "sequenceDiagram\n critical go\n A->>B: x\n option retry\n B->>A: y\n end\n",
+            "critical",
+        ),
+        (
+            "sequenceDiagram\n break when done\n A->>B: x\n end\n",
+            "break",
+        ),
+    ] {
+        let svg = svg(src);
+        assert!(
+            svg.contains(&format!("fermaid-frame-{kind}")),
+            "{kind}: {svg}"
+        );
+        assert_inert(&svg, src);
+    }
+    // The `and` of a `par` and the `option` of a `critical` carry their own labels.
+    let par = svg("sequenceDiagram\n par one\n A->>B: x\n and two\n B->>A: y\n end\n");
+    assert!(par.contains(">[two]<"), "{par}");
+    let critical =
+        svg("sequenceDiagram\n critical go\n A->>B: x\n option retry\n B->>A: y\n end\n");
+    assert!(critical.contains(">[retry]<"), "{critical}");
+}
+
+#[test]
+fn activates_and_deactivates_a_participant() {
+    let svg = svg("sequenceDiagram\n participant A\n activate A\n A->>A: work\n deactivate A\n");
+    assert_eq!(count(&svg, "class=\"fermaid-activation\""), 1, "{svg}");
+    assert_inert(&svg, "activate");
+}
+
+#[test]
+fn numbers_messages_from_a_start_and_a_step() {
+    let numbered = svg("sequenceDiagram\n autonumber 10 10\n A->>B: x\n B->>A: y\n");
+    assert!(
+        numbered.contains(">10<") && numbered.contains(">20<"),
+        "{numbered}"
+    );
+    let dec = svg("sequenceDiagram\n autonumber 10.5 0.5\n A->>B: x\n B->>A: y\n");
+    assert!(dec.contains(">10.5<") && dec.contains(">11<"), "{dec}");
+}
+
+#[test]
+fn draws_right_angled_self_messages_when_asked() {
+    let curved = svg("sequenceDiagram\n A->>A: self\n");
+    let right =
+        svg("%%{init: {\"sequence\": {\"rightAngles\": true}}}%%\nsequenceDiagram\n A->>A: self\n");
+    assert!(curved.contains("A6,6"), "{curved}");
+    assert!(!right.contains("A6,6"), "{right}");
+}
+
+#[test]
+fn wraps_message_labels_when_asked() {
+    let src = "sequenceDiagram\n participant A\n participant B\n A->>B: one two three four five six seven eight\n";
+    assert!(!svg(src).contains("<tspan"), "the label is in one line");
+    let wrapped = svg(&format!(
+        "%%{{init: {{\"sequence\": {{\"wrap\": true}}}}}}%%\n{src}"
+    ));
+    assert!(wrapped.contains("<tspan"), "the label is wrapped");
+}
+
+#[test]
+fn writes_the_accessible_title_and_description() {
+    let svg = svg("sequenceDiagram\n accTitle: the title\n accDescr: the description\n A->>B: x\n");
+    assert!(
+        svg.contains("<title id=\"fermaid-title\">the title</title>"),
+        "{svg}"
+    );
+    assert!(
+        svg.contains("<desc id=\"fermaid-desc\">the description</desc>"),
+        "{svg}"
+    );
+    assert!(svg.contains("aria-labelledby=\"fermaid-title\""), "{svg}");
+    assert!(svg.contains("aria-describedby=\"fermaid-desc\""), "{svg}");
+}
+
+#[test]
+fn places_notes_left_and_right_of_a_participant() {
+    let left = svg("sequenceDiagram\n participant A\n participant B\n Note left of A: L\n");
+    let right = svg("sequenceDiagram\n participant B\n participant A\n Note right of B: R\n");
+    assert_eq!(count(&left, "class=\"fermaid-note\""), 1, "{left}");
+    assert!(left.contains(">L<") && right.contains(">R<"));
+    assert_ne!(left, right);
+}
+
+#[test]
+fn draws_a_created_participant_at_its_creation() {
+    let svg = svg("sequenceDiagram\n participant A\n create participant B\n A->>B: hi\n");
+    let actor = svg.find("fermaid-actor").expect("a participant is drawn");
+    let message = svg
+        .find("fermaid-edge fermaid-message")
+        .expect("a message is drawn");
+    assert!(
+        actor > message,
+        "the created participant is drawn at its creation, not at the top"
+    );
 }
 
 #[test]

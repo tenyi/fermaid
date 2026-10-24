@@ -10,8 +10,9 @@ pub struct Limits {
     /// The longest SVG returned, in characters. A source within its limit can still describe
     /// a drawing of many megabytes, which would stall the page it is put into.
     pub output: usize,
-    /// The most edges a diagram may have. `A & B --> C & D` multiplies, so a few kilobytes of
-    /// source can ask for millions.
+    /// The most edges a flowchart may have. `A & B --> C & D` multiplies, so a few kilobytes of
+    /// source can ask for millions. The other diagram types have no edge limit of their own, as
+    /// pele has none for them either.
     pub max_edges: usize,
     /// The deepest nesting accepted, such as subgraphs within subgraphs. A stack overflow
     /// aborts the process in Rust, so recursion is bounded explicitly.

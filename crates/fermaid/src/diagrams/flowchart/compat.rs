@@ -6,7 +6,9 @@
 
 use super::db::{FlowDb, LabelType};
 use super::parser::parse_flowchart;
-use crate::diagrams::common::golden::{dump, error_code, json, q, skipped};
+use crate::diagrams::common::golden::{
+    assert_skips_match_the_templates, dump, error_code, json, q, skipped,
+};
 
 struct Case {
     #[allow(
@@ -16,7 +18,9 @@ struct Case {
     file: &'static str,
     name: &'static str,
     src: &'static str,
-    #[allow(dead_code, reason = "todo cases are listed in SKIPPED.md")]
+    /// Mermaid's own `it.todo` spec. It is compared with pele's like any other case; the flag
+    /// only records that Mermaid does not test it either.
+    #[allow(dead_code)]
     todo: bool,
 }
 
@@ -172,6 +176,13 @@ fn skips_only_known_cases() {
             "SKIPPED.md lists {name}, which is not a case"
         );
     }
+    assert_skips_match_the_templates(
+        CASES
+            .iter()
+            .zip(EXPECTED)
+            .map(|(c, (_, expected))| (c.name, *expected)),
+        &skipped(SKIPPED),
+    );
 }
 
 /// Writes fermaid's model of the inputs of a differential run; see `tools/oracle/diff.mjs`.

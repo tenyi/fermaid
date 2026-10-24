@@ -39,6 +39,44 @@ fn try_render(src: &str) -> Option<String> {
         .map(|r| r.svg)
 }
 
+/// The drawing of the node with the given id, without the group that holds it.
+fn shape_of(svg: &str, id: &str) -> String {
+    let at = svg
+        .find(&format!("data-id=\"{id}\""))
+        .expect("the node is drawn");
+    let open = svg[at..].find('>').expect("the group is closed") + at + 1;
+    let end = svg[open..].find("</g>").expect("the group ends") + open;
+    svg[open..end].to_string()
+}
+
+/// The position of the node with the given id.
+fn at_of(svg: &str, id: &str) -> (f64, f64) {
+    let at = svg
+        .find(&format!("data-id=\"{id}\""))
+        .expect("the node is drawn");
+    let rest = &svg[at..];
+    let start = rest.find("translate(").expect("the node is placed") + "translate(".len();
+    let mut parts = rest[start..].split_terminator([',', ')']);
+    let x = parts.next().expect("an x").parse().expect("a number");
+    let y = parts.next().expect("a y").parse().expect("a number");
+    (x, y)
+}
+
+/// Whether a drawing is the plain rectangle a shape falls back to when it has no drawing of
+/// its own: one rectangle with nothing but the usual fill, stroke and corner radius.
+fn is_plain_rect(drawing: &str) -> bool {
+    let drawing = drawing.trim();
+    drawing.starts_with("<rect ")
+        && drawing.ends_with("/>")
+        && drawing.matches("<rect").count() == 1
+        && drawing.contains("style=\"rx:var(--_r)\"")
+        && !drawing.contains("rx=\"")
+        && !drawing.contains("<path")
+        && !drawing.contains("<circle")
+        && !drawing.contains("<ellipse")
+        && !drawing.contains("<polygon")
+}
+
 #[test]
 fn draws_nodes_edges_and_labels() {
     let out =
@@ -109,9 +147,13 @@ fn draws_every_documented_shape() {
         "tag-rect",
         "tag-doc",
         "lin-doc",
+        "odd",
     ] {
         let svg = svg(&format!("flowchart LR\n A@{{ shape: {shape} }} --> B\n"));
         assert!(svg.contains(&format!("fermaid-shape-{shape}")), "{shape}");
+        // The class says which shape it is; the drawing has to be that shape and not the
+        // rectangle a shape without a drawing of its own falls back to.
+        assert!(!is_plain_rect(&shape_of(&svg, "A")), "{shape}");
         assert_inert(&svg, shape);
     }
     let err = fermaid::render(
@@ -123,12 +165,47 @@ fn draws_every_documented_shape() {
 }
 
 #[test]
+fn resolves_the_shape_aliases() {
+    for (alias, canonical) in [
+        ("decision", "diam"),
+        ("db", "cyl"),
+        ("subprocess", "fr-rect"),
+        ("terminal", "stadium"),
+        ("start", "sm-circ"),
+        ("stop", "fr-circ"),
+        ("junction", "f-circ"),
+        ("document", "doc"),
+        ("disk", "lin-cyl"),
+    ] {
+        let alias_svg = svg(&format!("flowchart LR\n A@{{ shape: {alias} }} --> B\n"));
+        let canonical_svg = svg(&format!(
+            "flowchart LR\n A@{{ shape: {canonical} }} --> B\n"
+        ));
+        assert!(
+            shape_of(&alias_svg, "A") == shape_of(&canonical_svg, "A"),
+            "{alias} is not drawn as {canonical}"
+        );
+        assert!(
+            alias_svg.contains(&format!("fermaid-shape-{canonical}")),
+            "{alias}"
+        );
+    }
+}
+
+#[test]
 fn draws_subgraphs_with_their_own_direction() {
     let svg = svg(
         "flowchart TB\n c1-->a2\n subgraph one\n a1-->a2\n end\n subgraph two\n direction LR\n b1-->b2\n end\n one --> two\n",
     );
     assert_eq!(count(&svg, "class=\"fermaid-cluster\""), 2);
     assert!(svg.contains(">one<") && svg.contains(">two<"));
+    // The subgraph that sets a direction lays its own nodes out in it: the two nodes of `two`
+    // are in one row, the two nodes of `one` are not.
+    let (b1, b2) = (at_of(&svg, "b1"), at_of(&svg, "b2"));
+    assert_eq!(b1.1, b2.1, "the nodes of `two` are in one row");
+    assert_ne!(b1.0, b2.0, "the nodes of `two` are side by side");
+    let (a1, a2) = (at_of(&svg, "a1"), at_of(&svg, "a2"));
+    assert_ne!(a1.1, a2.1, "the nodes of `one` are stacked");
 }
 
 #[test]
@@ -140,7 +217,11 @@ fn applies_classes_and_styles_safely() {
     assert!(svg.contains("fermaid-node fermaid-shape-rect hot"));
     assert!(!svg.contains("javascript"));
     assert!(svg.contains("stroke:red;"));
-    assert!(svg.contains("fill=\"#0a0\""));
+    // The colour belongs to the edge, not to the arrowhead that happens to carry it as well.
+    assert!(
+        svg.contains("<g class=\"fermaid-edge\" data-id=\"L_A_B_0\" style=\"stroke:#0a0;\">"),
+        "{svg}"
+    );
 }
 
 #[test]
@@ -313,12 +394,16 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
         "&",
     ]);
     let mut rnd = Random::new(5);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused everything would make the loop above assert nothing at all.
+    assert!(rendered > 100, "only {rendered} of 1500 mutations rendered");
 }
 
 fn graph_with(edges: usize, nodes: usize, seed: u32) -> String {
@@ -340,41 +425,180 @@ fn stays_fast_on_large_and_hostile_input() {
         limits: Limits {
             source: usize::MAX,
             output: usize::MAX,
+            // The edge limit is a limit of its own; this test is about how long the layout takes.
+            max_edges: 100_000,
             ..Limits::default()
         },
         ..RenderOptions::default()
     };
-    let cases = [
-        graph_with(5000, 1000, 1),
-        format!(
-            "flowchart LR\n{}",
-            (0..2000).fold(String::new(), |mut s, i| {
-                let _ = writeln!(s, "a{i}-->a{}", i + 1);
-                s
-            })
+    // Whether each case is drawn: a case that is refused answers at once, so the timing
+    // assertion says nothing about it.
+    let cases: Vec<(String, bool)> = vec![
+        (graph_with(5000, 1000, 1), true),
+        (
+            format!(
+                "flowchart LR\n{}",
+                (0..2000).fold(String::new(), |mut s, i| {
+                    let _ = writeln!(s, "a{i}-->a{}", i + 1);
+                    s
+                })
+            ),
+            true,
         ),
-        format!(
-            "flowchart TD\n{} --> {}\n",
-            vec!["a"; 70].join(" & "),
-            vec!["b"; 70].join(" & ")
+        (
+            format!(
+                "flowchart TD\n{} --> {}\n",
+                vec!["a"; 70].join(" & "),
+                vec!["b"; 70].join(" & ")
+            ),
+            true,
         ),
-        format!("flowchart TD\nA[\"{}\"]", "x ".repeat(25000)),
-        format!("flowchart TD\n{}", "A-->".repeat(12000)),
-        format!("flowchart TD\n{}", "%%{\n".repeat(12000)),
-        format!("flowchart TD\n{}", "direction".repeat(5000)),
-        format!("flowchart TD\n{}", "@".repeat(50000)),
-        format!("flowchart TD\nA{}", " ".repeat(50000)),
+        (format!("flowchart TD\nA[\"{}\"]", "x ".repeat(25000)), true),
+        (format!("flowchart TD\n{}", "A-->".repeat(12000)), false),
+        (graph_with(12000, 1000, 2), true),
+        (format!("flowchart TD\n{}", "%%{\n".repeat(12000)), false),
+        (format!("flowchart TD\n{}", "direction".repeat(5000)), true),
+        (format!("flowchart TD\n{}", "@".repeat(50000)), false),
+        (format!("flowchart TD\nA{}", " ".repeat(50000)), true),
     ];
-    for src in &cases {
+    for (src, draws) in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        assert_eq!(out.is_ok(), *draws, "{:?}", &src[..src.len().min(40)]);
     }
+}
+
+#[test]
+fn draws_the_arrowhead_each_edge_kind_asks_for() {
+    let point = svg("flowchart LR\n A --> B\n");
+    assert!(point.contains("<path class=\"fermaid-marker\""), "{point}");
+    let cross = svg("flowchart LR\n A --x B\n");
+    assert!(
+        cross.contains("<path class=\"fermaid-marker\" d=\"M")
+            && !cross.contains("fill=\"var(--_l)\""),
+        "{cross}"
+    );
+    let circle = svg("flowchart LR\n A o--o B\n");
+    assert_eq!(
+        count(&circle, "<circle class=\"fermaid-marker\""),
+        2,
+        "{circle}"
+    );
+    let double = svg("flowchart LR\n A <--> B\n");
+    assert_eq!(
+        count(&double, "<path class=\"fermaid-marker\""),
+        2,
+        "{double}"
+    );
+    assert!(svg("flowchart LR\n A ==> B\n").contains("stroke-width=\"2.5\""));
+}
+
+#[test]
+fn an_invisible_link_takes_room_but_draws_nothing() {
+    let plain = render("flowchart LR\n A --> B\n");
+    let hidden = render("flowchart LR\n A ~~~ B\n");
+    assert!(
+        !hidden.svg.contains("class=\"fermaid-edge\""),
+        "{}",
+        hidden.svg
+    );
+    assert_eq!(hidden.width, plain.width, "the room is still taken");
+}
+
+#[test]
+fn styles_every_edge_with_linkstyle_default_and_keeps_only_known_properties() {
+    let styled = svg("flowchart LR\n A --> B\n B --> C\n linkStyle default stroke:#0a0\n");
+    assert_eq!(count(&styled, "style=\"stroke:#0a0;\""), 2, "{styled}");
+    assert!(svg("flowchart LR\n A --> B\n style A fill:red\n").contains("fill:red;"));
+    assert!(!svg("flowchart LR\n A --> B\n style A background:red\n").contains("background"));
+    assert!(!svg("flowchart LR\n A --> B\n style A fill:image-set\n").contains("image-set"));
+}
+
+#[test]
+fn applies_a_class_to_several_nodes() {
+    let svg = svg("flowchart LR\n A --> B\n classDef hot fill:#f96\n class A,B hot\n");
+    assert_eq!(
+        count(&svg, "fermaid-node fermaid-shape-rect hot"),
+        2,
+        "{svg}"
+    );
+}
+
+#[test]
+fn names_edges_and_marks_callback_clicks_without_a_link() {
+    let out = render("flowchart LR\n A e1@--> B\n click A callback\n");
+    assert!(out.svg.contains("data-id=\"e1\""), "{}", out.svg);
+    assert!(out.links.is_empty());
+    assert!(
+        out.svg
+            .contains("fermaid-node fermaid-shape-rect clickable"),
+        "{}",
+        out.svg
+    );
+}
+
+#[test]
+fn draws_markdown_and_decodes_entities_in_labels() {
+    let bold = svg("flowchart LR\n A[\"`**bold**`\"] --> B\n");
+    assert!(bold.contains("font-weight=\"var(--_w)\""), "{bold}");
+    let entity = svg("flowchart LR\n A[\"a &amp; b\"] --> B\n");
+    assert!(entity.contains(">a &amp; b<"), "{entity}");
+}
+
+#[test]
+fn reads_the_flowchart_config_from_an_init_directive() {
+    let plain = render("flowchart LR\n A --> B\n");
+    let spaced =
+        render("%%{init: {\"flowchart\": {\"rankSpacing\": 200}}}%%\nflowchart LR\n A --> B\n");
+    assert!(
+        spaced.width > plain.width,
+        "{} vs {}",
+        spaced.width,
+        plain.width
+    );
+    let wide = render("flowchart TD\n A[This is a very long label indeed] --> B\n");
+    let narrow = render(
+        "%%{init: {\"flowchart\": {\"wrappingWidth\": 40}}}%%\nflowchart TD\n A[This is a very long label indeed] --> B\n",
+    );
+    assert!(
+        narrow.width < wide.width,
+        "{} vs {}",
+        narrow.width,
+        wide.width
+    );
+}
+
+#[test]
+fn writes_the_accessible_title_and_description() {
+    let svg = svg("flowchart LR\n accTitle: the title\n accDescr: the description\n A --> B\n");
+    assert!(
+        svg.contains("<title id=\"fermaid-title\">the title</title>"),
+        "{svg}"
+    );
+    assert!(
+        svg.contains("<desc id=\"fermaid-desc\">the description</desc>"),
+        "{svg}"
+    );
+    assert!(svg.contains("aria-labelledby=\"fermaid-title\""), "{svg}");
+    assert!(svg.contains("aria-describedby=\"fermaid-desc\""), "{svg}");
+}
+
+#[test]
+fn draws_nested_subgraphs_and_stops_at_the_source_limit() {
+    let svg = svg("flowchart TB\n subgraph outer\n subgraph inner\n a-->b\n end\n end\n");
+    assert_eq!(count(&svg, "class=\"fermaid-cluster\""), 2, "{svg}");
+    let err = fermaid::render(
+        &format!("flowchart TD\n{}", "A".repeat(60_000)),
+        &RenderOptions::default(),
+    )
+    .unwrap_err();
+    assert_eq!(err.code, ErrorCode::Limit);
 }
 
 #[test]

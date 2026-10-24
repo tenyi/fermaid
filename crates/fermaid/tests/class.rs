@@ -84,6 +84,14 @@ fn draws_namespaces_notes_generics_and_interfaces() {
     ] {
         assert!(svg.contains(needle), "{needle}");
     }
+    // The note that names no class is drawn on its own; the one that names a class is joined to it.
+    assert_eq!(
+        count(&svg, "class=\"fermaid-node fermaid-note\""),
+        2,
+        "{svg}"
+    );
+    assert!(svg.contains(">loose<"), "the loose note is drawn");
+    assert_eq!(count(&svg, "fermaid-note-edge"), 1, "{svg}");
     assert_inert(&svg, "namespaces");
 }
 
@@ -219,7 +227,7 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
             rendered += 1;
         }
     }
-    assert!(rendered > 400, "only {rendered} hostile inputs rendered");
+    assert!(rendered > 700, "only {rendered} hostile inputs rendered");
     let mut fragments: Vec<&str> = PAYLOADS.to_vec();
     fragments.extend([
         "class ",
@@ -243,12 +251,16 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
         "\n",
     ]);
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 300, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -334,16 +346,110 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}class c\n{}", "link c \"u\" \"t\"\n".repeat(3000)),
         format!("{head}class c\nlink c \"&{}x\"\n", "#38;".repeat(N / 4)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 20,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_an_end_marker_for_every_relation_end() {
+    let drawn = svg(
+        "classDiagram\n Animal <|-- Duck\n Duck \"1\" *-- \"many\" Egg\n Fish o-- Fin\n Duck ..> Water\n Duck -- Pond\n",
+    );
+    assert_eq!(count(&drawn, "fermaid-relation"), 5, "{drawn}");
+    assert_eq!(count(&drawn, "fermaid-marker"), 4, "{drawn}");
+    let lollipop = svg("classDiagram\n A --() B\n");
+    assert!(
+        lollipop.contains("<circle class=\"fermaid-marker\""),
+        "{lollipop}"
+    );
+}
+
+#[test]
+fn draws_a_relation_without_an_end_marker() {
+    let svg = svg("classDiagram\n A -- B\n");
+    assert_eq!(count(&svg, "fermaid-relation"), 1, "{svg}");
+    assert_eq!(count(&svg, "fermaid-marker"), 0, "{svg}");
+}
+
+#[test]
+fn draws_class_labels_and_annotations() {
+    let svg = svg("classDiagram\n class A[\"My Label\"]\n <<interface>> B\n <<enumeration>> C\n");
+    assert!(svg.contains(">My Label<"), "{svg}");
+    assert!(svg.contains("«interface»"), "{svg}");
+    assert!(svg.contains("«enumeration»"), "{svg}");
+    assert_eq!(count(&svg, "fermaid-annotation"), 2, "{svg}");
+}
+
+#[test]
+fn draws_member_visibility_classifiers_and_generics() {
+    let svg = svg(
+        "classDiagram\n class A~T~ {\n -private\n #protected\n ~package\n +public\n +int age$\n +abs()* void\n +get() List~int~\n }\n",
+    );
+    for needle in [">-private<", ">#protected<", ">~package<", ">+public<"] {
+        assert!(svg.contains(needle), "{needle}");
+    }
+    assert_eq!(count(&svg, "fermaid-static"), 1, "{svg}");
+    assert_eq!(count(&svg, "fermaid-abstract"), 1, "{svg}");
+    assert!(svg.contains("List&lt;int&gt;"), "{svg}");
+}
+
+#[test]
+fn nests_namespaces() {
+    let svg = svg("classDiagram\n namespace A {\n namespace B {\n class C\n }\n }\n");
+    assert_eq!(count(&svg, "fermaid-namespace"), 2, "{svg}");
+    assert!(svg.contains("fermaid-node fermaid-class"), "{svg}");
+}
+
+#[test]
+fn applies_a_css_class_to_several_classes() {
+    let svg = svg("classDiagram\n class A\n class B\n cssClass \"A,B\" hot\n");
+    assert_eq!(count(&svg, "fermaid-node fermaid-class hot"), 2, "{svg}");
+}
+
+#[test]
+fn draws_a_link_with_its_tooltip_and_never_a_callback() {
+    let out = render("classDiagram\n class A\n link A \"https://example.com\" \"Docs\" _blank\n");
+    assert_eq!(out.links.len(), 1);
+    assert!(out.svg.contains("<title>Docs</title>"), "{}", out.svg);
+    assert!(out.svg.contains("target=\"_blank\""), "{}", out.svg);
+    // The callback is never run: its name is dropped and only its tooltip is drawn.
+    let cb = svg("classDiagram\n class A\n callback A \"alertFn\" \"the tooltip\"\n");
+    assert!(!cb.contains("alertFn"), "{cb}");
+    assert!(cb.contains("<title>the tooltip</title>"), "{cb}");
+    assert!(cb.contains("fermaid-node fermaid-class clickable"), "{cb}");
+}
+
+#[test]
+fn renders_accessibility_text() {
+    let svg = svg("classDiagram\n accTitle: My Title\n accDescr: My Description\n A --> B\n");
+    assert!(
+        svg.contains("<title id=\"fermaid-title\">My Title</title>"),
+        "{svg}"
+    );
+    assert!(
+        svg.contains("<desc id=\"fermaid-desc\">My Description</desc>"),
+        "{svg}"
+    );
+    assert!(svg.contains("aria-labelledby=\"fermaid-title\""), "{svg}");
+    assert!(svg.contains("aria-describedby=\"fermaid-desc\""), "{svg}");
 }
 
 #[test]

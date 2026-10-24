@@ -50,6 +50,7 @@ fn draws_requirements_elements_and_relationships() {
         assert!(out.svg.contains(needle), "{needle}");
     }
     assert!(out.links.is_empty());
+    assert_inert(&out.svg, FULL);
 }
 
 #[test]
@@ -109,7 +110,19 @@ fn fits_a_narrow_host() {
         ..RenderOptions::default()
     };
     let narrow = fermaid::render(src, &options).unwrap();
-    assert!(narrow.width < wide.width);
+    assert!(
+        wide.width > 320.0,
+        "the wide drawing is wider than the host"
+    );
+    assert!(
+        narrow.width <= 320.0,
+        "the narrow drawing fits: {}",
+        narrow.width
+    );
+    assert!(
+        narrow.height > wide.height,
+        "the narrow drawing is turned down"
+    );
 }
 
 #[test]
@@ -163,12 +176,16 @@ fn is_inert_for_hostile_and_mutated_inputs() {
     ]);
     let corpus = [FULL];
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 50, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -223,16 +240,135 @@ fn stays_fast_on_large_and_hostile_input() {
             "style c fill:red,stroke:blue\n".repeat(3000)
         ),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 8,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_every_relationship_kind() {
+    for kind in [
+        "contains",
+        "copies",
+        "derives",
+        "satisfies",
+        "verifies",
+        "refines",
+        "traces",
+    ] {
+        let src = format!(
+            "requirementDiagram\n requirement a {{\n }}\n requirement b {{\n }}\n a - {kind} -> b\n"
+        );
+        let out = render(&src);
+        assert!(out.svg.contains(&format!("\u{ab}{kind}\u{bb}")), "{kind}");
+        assert_eq!(
+            count(&out.svg, "fermaid-relationship-contains"),
+            usize::from(kind == "contains"),
+            "{kind}"
+        );
+        assert_eq!(
+            count(&out.svg, "fermaid-relationship-arrow"),
+            usize::from(kind != "contains"),
+            "{kind}"
+        );
+    }
+}
+
+#[test]
+fn draws_every_requirement_type() {
+    for (ty, stereotype) in [
+        ("requirement", "\u{ab}Requirement\u{bb}"),
+        (
+            "functionalRequirement",
+            "\u{ab}Functional Requirement\u{bb}",
+        ),
+        ("interfaceRequirement", "\u{ab}Interface Requirement\u{bb}"),
+        (
+            "performanceRequirement",
+            "\u{ab}Performance Requirement\u{bb}",
+        ),
+        ("physicalRequirement", "\u{ab}Physical Requirement\u{bb}"),
+        ("designConstraint", "\u{ab}Design Constraint\u{bb}"),
+    ] {
+        let out = render(&format!("requirementDiagram\n {ty} a {{\n id: 1\n }}\n"));
+        assert!(out.svg.contains(stereotype), "{ty}");
+    }
+}
+
+#[test]
+fn draws_every_risk_and_verification_method() {
+    for vm in ["analysis", "demonstration", "inspection", "test"] {
+        let out = render(&format!(
+            "requirementDiagram\n requirement a {{\n id: 1\n verifymethod: {vm}\n }}\n"
+        ));
+        let cap = format!(">{}<", vm[..1].to_uppercase() + &vm[1..]);
+        assert!(out.svg.contains(&cap), "{vm}");
+    }
+    for (risk, cap) in [("low", ">Low<"), ("medium", ">Medium<"), ("high", ">High<")] {
+        let out = render(&format!(
+            "requirementDiagram\n requirement a {{\n id: 1\n risk: {risk}\n }}\n"
+        ));
+        assert!(out.svg.contains(cap), "{risk}");
+    }
+}
+
+#[test]
+fn puts_a_class_on_an_element() {
+    let out = render(
+        "requirementDiagram\n element a:::hot {\n type: simulation\n }\n classDef hot fill:#f96\n",
+    );
+    assert!(out.svg.contains("fermaid-element hot"), "{}", out.svg);
+    assert!(out.svg.contains("fill:#f96"), "{}", out.svg);
+}
+
+#[test]
+fn draws_the_contains_marker_and_dashes_the_other_relationships() {
+    let out = render(
+        "requirementDiagram\n requirement a {\n }\n requirement b {\n }\n a - contains -> b\n a - traces -> b\n",
+    );
+    assert_eq!(
+        count(&out.svg, "<circle class=\"fermaid-marker\""),
+        1,
+        "{}",
+        out.svg
+    );
+    assert!(out.svg.contains("stroke-dasharray=\"5 4\""), "{}", out.svg);
+}
+
+#[test]
+fn draws_the_accessible_title_and_description() {
+    let out = render(
+        "requirementDiagram\n accTitle: the title\n accDescr: the description\n requirement a {\n }\n",
+    );
+    assert!(
+        out.svg
+            .contains("<title id=\"fermaid-title\">the title</title>"),
+        "{}",
+        out.svg
+    );
+    assert!(
+        out.svg
+            .contains("<desc id=\"fermaid-desc\">the description</desc>"),
+        "{}",
+        out.svg
+    );
 }
 
 #[test]

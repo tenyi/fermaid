@@ -39,6 +39,44 @@ pub(crate) fn skipped(text: &'static str) -> Vec<&'static str> {
         .collect()
 }
 
+/// Checks that the cases a `SKIPPED.md` lists are exactly the ones there is nothing to compare
+/// with. A case is listed because the spec builds it from values in the test code, so the golden
+/// file has no model for it, or because its source is not a diagram and both sides reject it. A
+/// case the golden file does have a model for is compared, and listing it would hide a
+/// difference that has to be fixed instead.
+#[allow(
+    dead_code,
+    reason = "used by every type but pie, whose compat test reads no golden file"
+)]
+pub(crate) fn assert_skips_match_the_templates(
+    pairs: impl Iterator<Item = (&'static str, &'static str)>,
+    skipped: &[&'static str],
+) {
+    let mut listed: Vec<&str> = skipped.to_vec();
+    listed.sort_unstable();
+    listed.dedup();
+    let mut without_a_model: Vec<&str> = Vec::new();
+    for (name, expected) in pairs {
+        if skipped.contains(&name) {
+            assert!(
+                expected == "template" || expected.starts_with("error:"),
+                "{name} is listed in SKIPPED.md, but the golden file has a model for it: {expected}"
+            );
+        }
+        if expected == "template" {
+            without_a_model.push(name);
+        }
+    }
+    without_a_model.sort_unstable();
+    without_a_model.dedup();
+    for name in &without_a_model {
+        assert!(
+            listed.contains(name),
+            "{name} has no model to compare, but it is not listed in SKIPPED.md"
+        );
+    }
+}
+
 /// The name of an error code, as pele's errors carry it.
 #[allow(
     dead_code,

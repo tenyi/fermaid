@@ -101,6 +101,8 @@ fn keeps_only_allowed_styles_and_links() {
     assert!(out.links.iter().all(|l| l.internal));
     assert!(!out.svg.contains(" href=\"javascript"));
     assert!(out.svg.contains("href=\"Page\""));
+    // The drawing is inert even though the link is reported.
+    assert_inert(&out.svg, "internal links");
 }
 
 #[test]
@@ -135,7 +137,19 @@ fn fits_a_narrow_host() {
         ..RenderOptions::default()
     };
     let narrow = fermaid::render(src, &options).unwrap();
-    assert!(narrow.width < wide.width);
+    assert!(
+        wide.width > 320.0,
+        "the wide drawing is wider than the host"
+    );
+    assert!(
+        narrow.width <= 320.0,
+        "the narrow drawing fits: {}",
+        narrow.width
+    );
+    assert!(
+        narrow.height > wide.height,
+        "the narrow drawing is turned down"
+    );
 }
 
 #[test]
@@ -203,12 +217,16 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
         "\n",
     ]);
     let mut rnd = Random::new(11);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 50, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -273,16 +291,118 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}class {}z k\n", repeat(8000, |i| format!("s{i},"))),
         format!("{head}c\n{}", "style c fill:red,stroke:blue\n".repeat(3000)),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 14,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_a_marker_for_every_cardinality() {
+    for (src, rings) in [
+        ("erDiagram\n A ||--|| B : x\n", 0),
+        ("erDiagram\n A |o--|| B : x\n", 1),
+        ("erDiagram\n A ||--|{ B : x\n", 0),
+        ("erDiagram\n A ||--o{ B : x\n", 1),
+        ("erDiagram\n A u--o{ B : x\n", 1),
+    ] {
+        let svg = svg(src);
+        assert_eq!(
+            count(&svg, "<circle class=\"fermaid-marker\""),
+            rings,
+            "{src}"
+        );
+        assert_eq!(count(&svg, "<path class=\"fermaid-marker\""), 2, "{src}");
+    }
+}
+
+#[test]
+fn draws_every_attribute_key() {
+    let out = render(
+        "erDiagram\n A {\n string a PK\n string b FK\n string c UK\n string d PK, FK\n string e FK, UK\n }\n",
+    );
+    for needle in [">PK<", ">FK<", ">UK<", ">PK, FK<", ">FK, UK<"] {
+        assert!(out.svg.contains(needle), "{needle}");
+    }
+}
+
+#[test]
+fn accepts_the_cardinality_aliases() {
+    for alias in [
+        "only one",
+        "1",
+        "one or zero",
+        "zero or one",
+        "one or more",
+        "one or many",
+        "many(1)",
+        "1+",
+        "zero or more",
+        "zero or many",
+        "many(0)",
+        "0+",
+    ] {
+        let src = format!("erDiagram\n A {alias} to {alias} B : x\n");
+        let out = render(&src);
+        assert!(out.svg.contains("fermaid-er-identifying"), "{alias}");
+    }
+}
+
+#[test]
+fn draws_the_accessible_title_and_description() {
+    let out = render("erDiagram\n accTitle: the title\n accDescr: the description\n A\n");
+    assert!(
+        out.svg
+            .contains("<title id=\"fermaid-title\">the title</title>"),
+        "{}",
+        out.svg
+    );
+    assert!(
+        out.svg
+            .contains("<desc id=\"fermaid-desc\">the description</desc>"),
+        "{}",
+        out.svg
+    );
+}
+
+#[test]
+fn puts_the_class_on_the_named_entity() {
+    let out =
+        render("erDiagram\n A\n B\n classDef hot fill:#f96\n class B hot\n style A stroke:red\n");
+    let b = out.svg.split("data-id=\"B\"").next().expect("B is drawn");
+    assert!(
+        b.contains("fermaid-entity hot"),
+        "the class went to the wrong entity"
+    );
+    assert!(out.svg.contains("stroke:red"), "{}", out.svg);
+}
+
+#[test]
+fn marks_non_identifying_relationships_dashed() {
+    let out = render("erDiagram\n A ||--o{ B : x\n A }|..|{ C : y\n");
+    assert!(out.svg.contains("fermaid-er-identifying"), "{}", out.svg);
+    assert!(
+        out.svg.contains("fermaid-er-non-identifying"),
+        "{}",
+        out.svg
+    );
+    assert!(out.svg.contains("stroke-dasharray=\"4 3\""), "{}", out.svg);
 }
 
 #[test]

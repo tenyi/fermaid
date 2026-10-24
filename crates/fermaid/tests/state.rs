@@ -46,6 +46,31 @@ fn corpus() -> Vec<&'static str> {
         .collect()
 }
 
+/// The y of every node the drawing places, in the order they are drawn.
+fn ys_of(svg: &str) -> Vec<String> {
+    svg.split("fermaid-node fermaid-state")
+        .skip(1)
+        .filter_map(|part| part.split_once("translate("))
+        .filter_map(|(_, rest)| rest.split_once(','))
+        .map(|(_, rest)| {
+            rest.split_once(')')
+                .map(|(y, _)| y.to_string())
+                .unwrap_or_default()
+        })
+        .collect()
+}
+
+/// The x of the first element that holds the needle.
+fn x_of(svg: &str, needle: &str) -> f64 {
+    let at = svg.find(needle).expect("the element is drawn");
+    let rest = &svg[at..];
+    let start = rest.find("translate(").expect("the element is placed") + "translate(".len();
+    rest[start..]
+        .split_once(',')
+        .and_then(|(x, _)| x.parse().ok())
+        .expect("a number")
+}
+
 #[test]
 fn draws_states_transitions_and_pseudo_states() {
     let out = render(
@@ -75,7 +100,27 @@ fn draws_composites_regions_and_notes() {
     ] {
         assert!(svg.contains(needle), "{needle}");
     }
+    // The composite is split in two regions, each with its own start.
+    assert_eq!(count(&svg, "fermaid-state-composite"), 1);
+    assert_eq!(count(&svg, "fermaid-state-start"), 2, "{svg}");
+    assert_eq!(count(&svg, "class=\"fermaid-note\""), 2, "{svg}");
+    assert_eq!(count(&svg, "fermaid-note-edge"), 2, "{svg}");
+    assert!(svg.contains(">two<"), "the note has its text");
     assert_inert(&svg, "composites");
+}
+
+#[test]
+fn lays_a_composite_out_in_its_own_direction() {
+    let lr = svg("stateDiagram-v2\n state C {\n direction LR\n a --> b\n }\n");
+    let tb = svg("stateDiagram-v2\n state C {\n a --> b\n }\n");
+    assert_ne!(lr, tb, "the direction of the composite is not read");
+    let ys = ys_of(&lr);
+    assert!(
+        ys.windows(2).all(|w| w[0] == w[1]),
+        "{ys:?} are not in one row"
+    );
+    let ys = ys_of(&tb);
+    assert!(ys.windows(2).any(|w| w[0] != w[1]), "{ys:?} are stacked");
 }
 
 #[test]
@@ -120,6 +165,8 @@ fn reports_errors_with_positions() {
     )
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::Semantic);
+    // A semantic error carries no position of its own.
+    assert_eq!((err.line, err.column), (0, 0));
 }
 
 #[test]
@@ -131,6 +178,27 @@ fn enforces_limits() {
     );
     assert_eq!(
         fermaid::render(&deep, &RenderOptions::default())
+            .unwrap_err()
+            .code,
+        ErrorCode::Limit
+    );
+    // The limit is at its boundary: nesting exactly as deep as it allows is drawn.
+    let at = format!(
+        "stateDiagram-v2\n{}x\n{}",
+        "state s {\n".repeat(64),
+        "}\n".repeat(64)
+    );
+    assert!(
+        fermaid::render(&at, &RenderOptions::default()).is_ok(),
+        "64 levels are within the limit"
+    );
+    let over = format!(
+        "stateDiagram-v2\n{}x\n{}",
+        "state s {\n".repeat(65),
+        "}\n".repeat(65)
+    );
+    assert_eq!(
+        fermaid::render(&over, &RenderOptions::default())
             .unwrap_err()
             .code,
         ErrorCode::Limit
@@ -206,7 +274,7 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
             rendered += 1;
         }
     }
-    assert!(rendered > 400, "only {rendered} hostile inputs rendered");
+    assert!(rendered > 800, "only {rendered} hostile inputs rendered");
     let mut fragments: Vec<&str> = PAYLOADS.to_vec();
     fragments.extend([
         "-->",
@@ -227,12 +295,16 @@ fn is_inert_for_corpus_hostile_and_mutated_inputs() {
         "end note",
     ]);
     let mut rnd = Random::new(9);
+    let mut rendered = 0;
     for _ in 0..1500 {
         let src = mutate(&corpus, &fragments, &mut rnd);
         if let Some(svg) = try_render(&src) {
             assert_inert(&svg, &src);
+            rendered += 1;
         }
     }
+    // A parser that refused every mutation would make the loop above assert nothing at all.
+    assert!(rendered > 500, "only {rendered} of 1500 mutations rendered");
 }
 
 fn repeat(n: usize, line: impl Fn(usize) -> String) -> String {
@@ -328,16 +400,100 @@ fn stays_fast_on_large_and_hostile_input() {
             )) + "a1500 --> x\nx --> a0\n"
         ),
     ];
+    let mut rendered = 0;
     for src in &cases {
         let started = Instant::now();
-        let _ = fermaid::render(src, &options);
+        let out = fermaid::render(src, &options);
         let took = started.elapsed();
         assert!(
             took < budget,
             "{:?} took {took:?}",
             &src[..src.len().min(40)]
         );
+        if out.is_ok() {
+            rendered += 1;
+        }
     }
+    // A renderer that refused everything would answer at once and say nothing about speed.
+    assert!(
+        rendered >= 25,
+        "only {rendered} of {} cases were drawn",
+        cases.len()
+    );
+}
+
+#[test]
+fn draws_join_and_fork_pseudo_states() {
+    let svg = svg("stateDiagram-v2\n state f <<fork>>\n state j <<join>>\n f --> j\n j --> done\n");
+    assert_eq!(count(&svg, "fermaid-state-fork"), 1, "{svg}");
+    assert_eq!(count(&svg, "fermaid-state-join"), 1, "{svg}");
+}
+
+#[test]
+fn draws_concurrency_regions() {
+    let svg = svg("stateDiagram-v2\n state C {\n [*] --> a\n --\n [*] --> b\n }\n");
+    assert_eq!(count(&svg, "fermaid-state-composite"), 1, "{svg}");
+    assert_eq!(
+        count(&svg, "class=\"fermaid-node fermaid-state\""),
+        2,
+        "{svg}"
+    );
+    assert_eq!(count(&svg, "fermaid-state-start"), 2, "{svg}");
+    assert!(svg.contains("fermaid-divider"), "{svg}");
+}
+
+#[test]
+fn renders_accessibility_text() {
+    let svg = svg("stateDiagram-v2\n accTitle: My Title\n accDescr: My Description\n a --> b\n");
+    assert!(
+        svg.contains("<title id=\"fermaid-title\">My Title</title>"),
+        "{svg}"
+    );
+    assert!(
+        svg.contains("<desc id=\"fermaid-desc\">My Description</desc>"),
+        "{svg}"
+    );
+    assert!(svg.contains("aria-labelledby=\"fermaid-title\""), "{svg}");
+    assert!(svg.contains("aria-describedby=\"fermaid-desc\""), "{svg}");
+}
+
+#[test]
+fn applies_class_defs_and_styles_to_states() {
+    let svg = svg(
+        "stateDiagram-v2\n a --> b\n classDef hot fill:red,stroke:blue\n class a hot\n style b fill:green\n",
+    );
+    assert!(svg.contains("fermaid-node fermaid-state hot"), "{svg}");
+    assert!(svg.contains("fill:red"), "{svg}");
+    assert!(svg.contains("stroke:blue"), "{svg}");
+    assert!(svg.contains("fill:green"), "{svg}");
+}
+
+#[test]
+fn styles_every_state_of_a_style_statement() {
+    let svg = svg("stateDiagram-v2\n a --> b\n style a,b fill:red\n");
+    assert_eq!(count(&svg, "fill:red"), 2, "{svg}");
+}
+
+#[test]
+fn draws_state_names_and_descriptions() {
+    let svg = svg("stateDiagram-v2\n state \"Long Name\" as s1\n s1 : the description\n");
+    assert!(svg.contains(">Long Name<"), "{svg}");
+    assert!(svg.contains("the description"), "{svg}");
+}
+
+#[test]
+fn places_notes_to_the_left_and_to_the_right() {
+    let left = svg("stateDiagram-v2\n a --> b\n note left of a : x\n");
+    let right = svg("stateDiagram-v2\n a --> b\n note right of a : x\n");
+    assert_ne!(left, right);
+    assert!(
+        x_of(&left, "class=\"fermaid-note\"") < x_of(&left, "fermaid-node fermaid-state\""),
+        "the note is to the left of the state"
+    );
+    assert!(
+        x_of(&right, "class=\"fermaid-note\"") > x_of(&right, "fermaid-node fermaid-state\""),
+        "the note is to the right of the state"
+    );
 }
 
 #[test]
