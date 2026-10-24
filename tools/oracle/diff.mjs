@@ -1,15 +1,16 @@
 // Dev-only differential fuzzing: parses inputs with Mermaid's own parsers and with fermaid's,
 // and reports every input on which the two disagree.
 //
-//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [mindmap] [url]
+//   node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [url]
 //
 // The inputs are the type's corpus (Mermaid's spec and documentation examples, as pele collects
 // them) and N mutated inputs (default 3,000) from a fixed seed (default 7). The reference is the
 // parser Mermaid uses: `@mermaid-js/parser` for pie, and the parsers jison generates from
-// Mermaid's flowchart, sequence, state, class and ER grammars, which pele vendors, driving pele's port of
-// Mermaid's model. `url` checks the link sanitizer against `@braintree/sanitize-url`, which
-// Mermaid applies to click targets, on addresses mutated from a list below. fermaid's side runs as the ignored `oracle_dump` test of each type. Both
-// sides are reduced to the summaries in `lib.mjs`, and errors to just "error".
+// Mermaid's flowchart, sequence, state, class, ER, gantt, timeline, journey, kanban and mind map
+// grammars, which pele vendors, driving pele's port of Mermaid's model. `url` checks the link
+// sanitizer against `@braintree/sanitize-url`, which Mermaid applies to click targets, on
+// addresses mutated from a list below. fermaid's side runs as the ignored `oracle_dump` test of
+// each type. Both sides are reduced to the summaries in `lib.mjs`, and errors to just "error".
 //
 // Differences that are intended are listed in KNOWN.md, as a type and a JSON-quoted input on
 // one line; they are counted but not reported. The exit code is 1 when anything else differs.
@@ -19,7 +20,11 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, ganttSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, seqSummary, stateSummary } from './lib.mjs';
+
+// Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
+// as tools/oracle/golden.mjs does.
+process.env.TZ = 'UTC';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -32,10 +37,10 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'timeline', 'journey', 'kanban', 'mindmap', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'timeline', 'journey', 'kanban', 'mindmap', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [timeline] [journey] [kanban] [mindmap] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [url]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -54,6 +59,7 @@ const m = await loadPele(pele, {
   'src/diagrams/er/graph.ts': ['buildErGraph'],
   'src/diagrams/requirement/db.ts': ['RequirementDb', 'RequirementType', 'RiskLevel', 'VerifyType', 'Relationships'],
   'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
+  'src/diagrams/gantt/db.ts': ['GanttDb'],
   'src/diagrams/timeline/db.ts': ['TimelineDb'],
   'src/diagrams/journey/db.ts': ['JourneyDb'],
   'src/diagrams/kanban/db.ts': ['KanbanDb'],
@@ -98,6 +104,7 @@ const journeyParser = m.buildParser(join(pele, 'tests/compat/journey/upstream/jo
 const timelineParser = m.buildParser(join(pele, 'tests/compat/timeline/upstream/timeline.jison'));
 const kanbanParser = m.buildParser(join(pele, 'tests/compat/kanban/upstream/kanban.jison'));
 const mindmapParser = m.buildParser(join(pele, 'tests/compat/mindmap/upstream/mindmap.jison'));
+const ganttParser = m.buildParser(join(pele, 'tests/compat/gantt/upstream/gantt.jison'));
 const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/upstream/requirementDiagram.jison'));
 
 const TYPES = {
@@ -172,6 +179,16 @@ const TYPES = {
       requirementParser.yy = asYy(db, { RequirementType: m.RequirementType, RiskLevel: m.RiskLevel, VerifyType: m.VerifyType, Relationships: m.Relationships });
       requirementParser.parse(src);
       return requirementSummary(db, m.buildRequirementGraph);
+    },
+  },
+  gantt: {
+    keyword: /(^|\n)\s*gantt\b/,
+    fragments: ['gantt', 'dateFormat YYYY-MM-DD', 'axisFormat %Y-%m-%d', 'tickInterval 1day', 'includes monday', 'excludes weekends', 'todayMarker stroke-width:5px', 'inclusiveEndDates', 'topAxis', 'weekday monday', 'weekend saturday', 'section S', 'title T', 'accTitle: t', 'accDescr: d', 'accDescr { d }', 'task', ':a1, 2014-01-01, 30d', 'done', 'active', 'crit', 'milestone', 'vert', 'after a1', 'until a2', 'd', 'w', 'h', 'm', 's', 'click a1 href "https://x"', '%%', '\n', ' ', 'é', ';', '#', ':', ','],
+    async reference(src) {
+      const db = new m.GanttDb();
+      ganttParser.yy = asYy(db);
+      ganttParser.parse(src);
+      return ganttSummary(db);
     },
   },
   timeline: {
@@ -288,6 +305,46 @@ function resolveDots(url) {
   return m[1] + '/' + out.join('/') + m[3];
 }
 
+// A gantt chart's date that does not fit the chart's format gets a second chance with V8's own
+// date parser, as in Mermaid. fermaid only falls back to the ECMAScript date time string format,
+// so a date that V8 reads and that format does not is a known difference. The task data holds the
+// dates a chart can name, and the reference's task times show which of them V8 read.
+function ganttV8Dates(src) {
+  const out = new Set();
+  for (const line of src.split('\n')) {
+    const at = line.indexOf(':');
+    if (at < 0) continue;
+    for (const field of line.slice(at + 1).split(',')) {
+      const text = field.trim();
+      if (text === '') continue;
+      const date = new Date(text);
+      if (!Number.isNaN(date.getTime())) out.add(date.getTime());
+    }
+  }
+  return out;
+}
+
+// The times of the tasks in a gantt summary: the start, the end and the end that is drawn.
+function ganttTaskTimes(summary) {
+  const out = new Set();
+  for (const line of summary.split('\n')) {
+    if (!line.startsWith('task:')) continue;
+    // The first three fields are quoted and may hold a "|", so they are taken out first.
+    const fields = line.replace(/"(?:[^"\\]|\\.)*"/g, '""').split('|');
+    for (const field of fields.slice(3, 6)) {
+      const time = field.trim();
+      if (/^-?\d+$/.test(time)) out.add(Number(time));
+    }
+  }
+  return out;
+}
+
+function ganttUsedV8Date(summary, src) {
+  const times = ganttTaskTimes(summary);
+  for (const time of ganttV8Dates(src)) if (times.has(time)) return true;
+  return false;
+}
+
 let unexplained = 0;
 for (const type of types) {
   const { kept, expected, corpus } = runs[type];
@@ -304,6 +361,7 @@ for (const type of types) {
       if (want === 'error') errors++;
     } else if (known.has(`${type} ${JSON.stringify(src)}`)) listed++;
     else if (type === 'url' && resolveDots(want) === have) listed++;
+    else if (type === 'gantt' && have === 'error' && ganttUsedV8Date(want, src)) listed++;
     else differ.push({ src, want, have });
   });
   unexplained += differ.length;

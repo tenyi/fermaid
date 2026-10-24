@@ -322,6 +322,21 @@ fn falls_back_to_the_date_parser_when_the_date_does_not_match_the_format() {
 }
 
 #[test]
+fn refuses_a_date_that_only_javascripts_own_parser_reads() {
+    // Mermaid gives a date the format does not match a second chance with JavaScript's own date
+    // parser, which reads "2014-1-12" and a bare "0" as well. fermaid falls back to the
+    // ECMAScript date time string format only, so it refuses a chart that Mermaid draws. The
+    // difference is recorded in tools/oracle/KNOWN.md.
+    let err = fermaid::render(
+        "gantt\ndateFormat YYYY-MM-DD\nA :a, 2014-1-12, 3d\n",
+        &options(None),
+    )
+    .unwrap_err();
+    assert_eq!(err.code, ErrorCode::Semantic);
+    assert_eq!(err.message, "Invalid date:2014-1-12");
+}
+
+#[test]
 fn draws_a_milestone_as_a_diamond() {
     let out = render(
         "gantt\ndateFormat YYYY-MM-DD\nFunctionality added :milestone, isadded, 2014-01-25, 0d\n",
