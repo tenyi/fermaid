@@ -34,3 +34,10 @@ path = "fuzz_targets/flowchart.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "sequence"
+path = "fuzz_targets/sequence.rs"
+test = false
+doc = false
+bench = false

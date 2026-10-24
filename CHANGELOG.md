@@ -3,6 +3,13 @@
 All notable changes are recorded here. fermaid follows [Semantic Versioning](https://semver.org);
 before 1.0, a minor version may break the API.
 
+## Unreleased
+
+- Sequence diagrams, behind the `sequence` feature: participants and actors of every kind,
+  every arrow kind, activations, notes, `loop`, `alt`, `opt`, `par`, `critical`, `break` and
+  `rect` blocks, boxes, `autonumber`, created and destroyed participants, and the `sequence`
+  config keys. Participant menus are parsed but never drawn as links.
+
 ## 0.1.0 (unreleased)
 
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

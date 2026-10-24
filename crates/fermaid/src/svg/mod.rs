@@ -6,6 +6,8 @@ pub(crate) mod cluster;
 mod document;
 #[cfg(feature = "flowchart")]
 pub(crate) mod edges;
+#[cfg(any(feature = "flowchart", feature = "sequence"))]
+pub(crate) mod markers;
 #[cfg(feature = "flowchart")]
 pub(crate) mod shapes;
 mod theme;
@@ -13,7 +15,7 @@ mod title;
 
 pub(crate) use document::{Accessible, svg_document};
 pub(crate) use theme::{
-    CRITICAL, FONT_MONO, ROOT_STYLE, ResolvedStyle, class_names, font_style, parse_float,
+    CRITICAL, FONT_MONO, ROOT_STYLE, ROUNDED, ResolvedStyle, class_names, font_style, parse_float,
     resolve_style, rounded, series_color,
 };
 pub(crate) use title::{title_label, with_title};

@@ -155,12 +155,26 @@ Notes:
 
 ## M3 — Sequence + differential fuzzing
 
-1. Sequence diagrams: participants, actors, messages, activations,
+1. [x] Sequence diagrams: participants, actors, messages, activations,
    `loop`/`alt`/`opt`/`par`, notes, `autonumber`.
 2. `tools/oracle/`: dev-only Node harness that loads Mermaid's jison and Langium
    parsers and runs differential fuzzing (about 3,000 mutated inputs, fixed seed)
    for pie, flowchart and sequence.
 3. Refine the M4 plan.
+
+Notes:
+- Sequence diagrams cover everything pele draws: every participant kind (including
+  `@{ "type": … }`), every arrow kind with half heads and central connections, activations,
+  notes, all block kinds, boxes, `autonumber`, created and destroyed participants, and the
+  `sequence` config keys `mirrorActors`, `rightAngles`, `actorMargin`, `width`, `height`,
+  `messageMargin`, `noteMargin`, `boxMargin`, `messageAlign`, `showSequenceNumbers`,
+  `hideUnusedParticipants` and `wrap`. As in pele, participant menus (`link`, `links`) are
+  parsed but never drawn as links.
+- Compat: 165 cases from pele's port of the Mermaid sequence specs; fermaid's model matches
+  pele's on all of them.
+- On pele's sequence corpus (200 inputs), with and without `max_width` and a non-default
+  `sequence` config, and on 3,000 mutated inputs, the output is byte for byte pele's, errors
+  included.
 
 **Done when**
 - Differential fuzzing reports no unexplained differences for the three types;

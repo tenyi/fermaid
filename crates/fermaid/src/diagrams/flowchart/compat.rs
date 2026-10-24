@@ -4,11 +4,9 @@
 //! fermaid's model matches pele's passes as well. Every case is either checked or listed in
 //! `tests/compat/flowchart/SKIPPED.md`.
 
-use std::fmt::Write;
-
 use super::db::{FlowDb, LabelType};
 use super::parser::parse_flowchart;
-use crate::error::ErrorCode;
+use crate::diagrams::common::golden::{error_code, json, q, skipped};
 
 struct Case {
     #[allow(
@@ -35,32 +33,6 @@ const SKIPPED: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/tests/compat/flowchart/SKIPPED.md"
 ));
-
-/// `JSON.stringify` of a string.
-fn json(s: &str) -> String {
-    let mut out = String::from("\"");
-    for c in s.chars() {
-        match c {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            '\u{8}' => out.push_str("\\b"),
-            '\u{c}' => out.push_str("\\f"),
-            c if (c as u32) < 0x20 => {
-                let _ = write!(out, "\\u{:04x}", c as u32);
-            }
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
-}
-
-fn q(s: Option<&str>) -> String {
-    s.map_or("-".to_string(), json)
-}
 
 fn list(items: Option<&[String]>) -> String {
     match items {
@@ -152,26 +124,8 @@ fn outcome(src: &str) -> String {
     let mut db = FlowDb::new(500, false);
     match parse_flowchart(src, &mut db, 64) {
         Ok(()) => summary(&db),
-        Err(e) => format!(
-            "error:{}",
-            match e.code {
-                ErrorCode::Syntax => "syntax",
-                ErrorCode::Semantic => "semantic",
-                ErrorCode::Limit => "limit",
-                ErrorCode::Unsupported => "unsupported-diagram",
-            }
-        ),
+        Err(e) => format!("error:{}", error_code(e.code)),
     }
-}
-
-/// The test names `SKIPPED.md` lists, as `` - `name`: reason `` lines under "Skipped tests".
-fn skipped() -> Vec<&'static str> {
-    SKIPPED
-        .lines()
-        .skip_while(|line| *line != "## Skipped tests")
-        .take_while(|line| !line.starts_with("## Spec files"))
-        .filter_map(|line| line.strip_prefix("- `")?.split_once("`:").map(|(n, _)| n))
-        .collect()
 }
 
 #[test]
@@ -181,7 +135,7 @@ fn passes_mermaid_specs() {
         EXPECTED.len(),
         "expected.rs is out of date; run tools/oracle/golden.mjs"
     );
-    let skipped = skipped();
+    let skipped = skipped(SKIPPED);
     let mut failures = Vec::new();
     for (case, (name, expected)) in CASES.iter().zip(EXPECTED) {
         assert_eq!(case.name, *name, "expected.rs is out of date");
@@ -212,7 +166,7 @@ fn passes_mermaid_specs() {
 
 #[test]
 fn skips_only_known_cases() {
-    for name in skipped() {
+    for name in skipped(SKIPPED) {
         assert!(
             CASES.iter().any(|c| c.name == name),
             "SKIPPED.md lists {name}, which is not a case"

@@ -7,6 +7,9 @@ mod yaml;
 #[cfg_attr(not(feature = "flowchart"), allow(unused_imports))]
 pub(crate) use yaml::parse_yaml;
 
+#[cfg_attr(not(feature = "sequence"), allow(unused_imports))]
+pub(crate) use json::parse_json;
+
 use std::collections::BTreeMap;
 
 use crate::error::{Error, ErrorCode};

@@ -4,12 +4,13 @@
 
 fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，无需 JavaScript 运行时、无头浏览器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一个小巧、无依赖的 TypeScript 渲染器），支持 Mermaid 12.1.0 语法，并采用 pele 自己的布局与视觉风格。
 
-> **状态：** pre-alpha。已支持流程图和饼图；其他图表类型目前会返回 `Unsupported` 错误。接下来是时序图。请参阅[开发路线图](docs/ROADMAP.md)。
+> **状态：** pre-alpha。已支持流程图、时序图和饼图；其他图表类型目前会返回 `Unsupported` 错误。接下来是状态图、类图、ER 图和需求图。请参阅[开发路线图](docs/ROADMAP.md)。
 
 | 图表类型 | 状态 |
 |---|---|
 | 饼图（`pie`） | 已支持：`showData`、`title`、`accTitle`、`accDescr`，以及 `pie` 配置项 `textPosition`、`donutHole` 和 `legendPosition` |
 | 流程图（`flowchart`、`graph`） | 已支持：所有节点形状（含 `@{ shape: … }`）、各种连线及长度、连线 ID、可自定义方向的子图、`classDef`、`class`、`style`、`linkStyle`、`click` 链接与提示文字、Markdown 标签，以及 `flowchart` 配置项 `curve`、`nodeSpacing`、`rankSpacing` 和 `wrappingWidth` |
+| 时序图（`sequenceDiagram`） | 已支持：各种参与者和角色、各种箭头、激活条、注释、`loop`、`alt`、`opt`、`par`、`critical`、`break` 和 `rect` 块、分组框、`autonumber`、创建和销毁参与者，以及 `sequence` 配置项。参与者菜单（`link`、`links`）不会画成链接 |
 | 时序图及其他 | 计划中 |
 
 ## 目标
@@ -66,7 +67,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie` 和 `flowchart` 目标
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart` 和 `sequence` 目标
 cargo xtask compat pie --pele ../pele   # 从 pele 源码重新生成 Mermaid 规范测试用例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新生成 pele 对这些用例的解析结果
 ```

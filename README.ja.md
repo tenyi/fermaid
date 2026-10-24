@@ -4,12 +4,13 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** pre-alpha。フローチャートと円グラフに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。次はシーケンス図に対応する予定です。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** pre-alpha。フローチャート、シーケンス図、円グラフに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。次は状態遷移図、クラス図、ER 図、要求図に対応する予定です。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
 | 円グラフ（`pie`） | 対応済み：`showData`、`title`、`accTitle`、`accDescr`、および `pie` の設定キー `textPosition`、`donutHole`、`legendPosition` |
 | フローチャート（`flowchart`、`graph`） | 対応済み：すべてのノード形状（`@{ shape: … }` を含む）、あらゆる種類と長さのエッジ、エッジ ID、独自の向きを持てるサブグラフ、`classDef`、`class`、`style`、`linkStyle`、`click` のリンクとツールチップ、Markdown ラベル、および `flowchart` の設定キー `curve`、`nodeSpacing`、`rankSpacing`、`wrappingWidth` |
+| シーケンス図（`sequenceDiagram`） | 対応済み：あらゆる種類の参加者とアクター、あらゆる種類の矢印、アクティベーション、ノート、`loop`、`alt`、`opt`、`par`、`critical`、`break`、`rect` ブロック、ボックス、`autonumber`、参加者の生成と破棄、および `sequence` の設定キー。参加者メニュー（`link`、`links`）はリンクとして描かれません |
 | シーケンス図、その他 | 予定 |
 
 ## 目標
@@ -66,7 +67,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie` と `flowchart` ターゲットもあります
+cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence` ターゲットもあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
 node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
 ```

@@ -4,12 +4,13 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** pre-alpha. Flowcharts and pie charts are supported; every other diagram type returns an `Unsupported` error for now. Sequence diagrams come next. See the [roadmap](docs/ROADMAP.md).
+> **Status:** pre-alpha. Flowcharts, sequence diagrams and pie charts are supported; every other diagram type returns an `Unsupported` error for now. State, class, ER and requirement diagrams come next. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
 | Pie (`pie`) | Supported: `showData`, `title`, `accTitle`, `accDescr`, and the `pie` config keys `textPosition`, `donutHole` and `legendPosition` |
 | Flowchart (`flowchart`, `graph`) | Supported: every node shape, including `@{ shape: … }`, all edge kinds and lengths, edge ids, subgraphs with their own direction, `classDef`, `class`, `style`, `linkStyle`, `click` links and tooltips, markdown labels, and the `flowchart` config keys `curve`, `nodeSpacing`, `rankSpacing` and `wrappingWidth` |
+| Sequence (`sequenceDiagram`) | Supported: participants and actors of every kind, every arrow kind, activations, notes, `loop`, `alt`, `opt`, `par`, `critical`, `break` and `rect` blocks, boxes, `autonumber`, created and destroyed participants, and the `sequence` config keys. Participant menus (`link`, `links`) are not drawn as links |
 | Sequence, and the rest | Planned |
 
 ## Goals
@@ -66,7 +67,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz; `pie` and `flowchart` are other targets
+cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart` and `sequence` are other targets
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
 ```

@@ -8,7 +8,7 @@ use crate::{DiagramKind, Link, RenderOptions};
 
 /// What a diagram type is given to render.
 #[cfg_attr(
-    not(any(feature = "pie", feature = "flowchart")),
+    not(any(feature = "pie", feature = "flowchart", feature = "sequence")),
     allow(
         dead_code,
         reason = "read by the diagram types, none of which is compiled in"
@@ -55,6 +55,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Flowchart => Some(&crate::diagrams::flowchart::Flowchart),
         #[cfg(feature = "pie")]
         DiagramKind::Pie => Some(&crate::diagrams::pie::Pie),
+        #[cfg(feature = "sequence")]
+        DiagramKind::Sequence => Some(&crate::diagrams::sequence::Sequence),
         _ => None,
     }
 }
