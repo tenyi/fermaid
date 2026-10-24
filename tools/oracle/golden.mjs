@@ -2,21 +2,21 @@
 // compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
 // which fermaid's model matches pele's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|sequence|state
+//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|requirement|sequence|state
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, memberSummary, loadPele, seqSummary, stateSummary } from './lib.mjs';
+import { classSummary, erSummary, flowSummary, memberSummary, loadPele, requirementSummary, seqSummary, stateSummary } from './lib.mjs';
 
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['class', 'er', 'flowchart', 'sequence', 'state'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|sequence|state');
+if (!peleDir || !['class', 'er', 'flowchart', 'requirement', 'sequence', 'state'].includes(type)) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|requirement|sequence|state');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
+const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, RequirementDb, parseRequirement, buildRequirementGraph, SeqDb, parseSequence, StateDb, parseState, encodeEntities } = await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
@@ -26,6 +26,9 @@ const { ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr,
   'src/diagrams/er/graph.ts': ['buildErGraph'],
   'src/diagrams/flowchart/db.ts': ['FlowDb'],
   'src/diagrams/flowchart/parser.ts': ['parseFlowchart'],
+  'src/diagrams/requirement/db.ts': ['RequirementDb'],
+  'src/diagrams/requirement/parser.ts': ['parseRequirement'],
+  'src/diagrams/requirement/graph.ts': ['buildRequirementGraph'],
   'src/diagrams/sequence/db.ts': ['SeqDb'],
   'src/diagrams/sequence/parser.ts': ['parseSequence'],
   'src/diagrams/state/db.ts': ['StateDb'],
@@ -85,6 +88,10 @@ for (const { name, src } of cases) {
         const db = new ErDb();
         parseEr(src, db);
         result = erSummary(db, buildErGraph);
+      } else if (type === 'requirement') {
+        const db = new RequirementDb();
+        parseRequirement(src, db);
+        result = requirementSummary(db, buildRequirementGraph);
       } else if (type === 'state') {
         const db = new StateDb();
         parseState(src, db);

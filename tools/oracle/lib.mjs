@@ -143,6 +143,25 @@ export function erSummary(db, buildErGraph) {
   return out.join('\n');
 }
 
+export function requirementSummary(db, buildRequirementGraph) {
+  const out = [`dir:${q(db.direction)}`];
+  for (const [name, r] of db.requirements) {
+    out.push(
+      `req:${q(name)}|${q(r.type)}|${q(r.requirementId)}|${q(r.text)}|${q(r.risk)}|${q(r.verifyMethod)}|s=${list(r.cssStyles)}|c=${list(r.classes)}`
+    );
+  }
+  for (const [name, e] of db.elements) {
+    out.push(`element:${q(name)}|${q(e.type)}|${q(e.docRef)}|s=${list(e.cssStyles)}|c=${list(e.classes)}`);
+  }
+  for (const r of db.relations) out.push(`rel:${q(r.type)}|${q(r.src)}|${q(r.dst)}`);
+  for (const [id, c] of db.classes) out.push(`class:${q(id)}|s=${list(c.styles)}|t=${list(c.textStyles)}`);
+  const graph = buildRequirementGraph(db);
+  for (const n of graph.nodes) out.push(`node:${q(n.id)}|${n.requirement !== undefined}|${list(n.cssStyles)}|${q(n.cssClasses)}`);
+  for (const e of graph.edges) out.push(`edge:${q(e.id)}|${q(e.start)}|${q(e.end)}|${q(e.type)}|${e.contains}`);
+  out.push(`title:${q(db.title)}|acc:${q(db.accTitle)}|${q(db.accDescr)}`);
+  return out.join('\n');
+}
+
 export function classSummary(db, buildClassGraph) {
   const out = [`dir:${q(db.direction)}`];
   for (const [id, c] of db.classes) {

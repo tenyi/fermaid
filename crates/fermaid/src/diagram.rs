@@ -70,6 +70,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::Class => Some(&crate::diagrams::class::Class),
         #[cfg(feature = "er")]
         DiagramKind::Er => Some(&crate::diagrams::er::Er),
+        #[cfg(feature = "requirement")]
+        DiagramKind::Requirement => Some(&crate::diagrams::requirement::Requirement),
         _ => None,
     }
 }

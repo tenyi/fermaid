@@ -8,7 +8,8 @@ mod document;
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "requirement"
 ))]
 pub(crate) mod edges;
 #[cfg(any(
@@ -16,7 +17,8 @@ pub(crate) mod edges;
     feature = "sequence",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "requirement"
 ))]
 pub(crate) mod markers;
 #[cfg(any(

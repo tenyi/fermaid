@@ -62,3 +62,10 @@ path = "fuzz_targets/er.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "requirement"
+path = "fuzz_targets/requirement.rs"
+test = false
+doc = false
+bench = false

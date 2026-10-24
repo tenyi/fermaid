@@ -7,7 +7,12 @@ pub(crate) mod generics;
 pub(crate) mod golden;
 #[cfg(feature = "sequence")]
 pub(crate) mod literal;
-#[cfg(any(feature = "state", feature = "class", feature = "er"))]
+#[cfg(any(
+    feature = "state",
+    feature = "class",
+    feature = "er",
+    feature = "requirement"
+))]
 pub(crate) mod ordered;
 #[cfg(feature = "pie")]
 pub(crate) mod tokens;

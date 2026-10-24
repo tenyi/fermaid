@@ -19,7 +19,8 @@ mod error;
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "requirement"
 ))]
 #[allow(
     dead_code,

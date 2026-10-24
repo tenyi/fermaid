@@ -31,7 +31,12 @@ pub(crate) fn is_line_end(c: char) -> bool {
 
 /// `text.replace(/\n\s+/g, '\n')`.
 #[cfg_attr(
-    not(any(feature = "state", feature = "class", feature = "er")),
+    not(any(
+        feature = "state",
+        feature = "class",
+        feature = "er",
+        feature = "requirement"
+    )),
     allow(dead_code)
 )]
 pub(crate) fn collapse_indent(text: &str) -> String {

@@ -8,7 +8,8 @@ pub(crate) mod class;
     feature = "sequence",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
+    feature = "requirement"
 ))]
 pub(crate) mod common;
 #[cfg(feature = "er")]
@@ -17,6 +18,8 @@ pub(crate) mod er;
 pub(crate) mod flowchart;
 #[cfg(feature = "pie")]
 pub(crate) mod pie;
+#[cfg(feature = "requirement")]
+pub(crate) mod requirement;
 #[cfg(feature = "sequence")]
 pub(crate) mod sequence;
 #[cfg(feature = "state")]
