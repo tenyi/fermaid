@@ -4,7 +4,7 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** pre-alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
@@ -48,7 +48,8 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 ## コマンドライン
 
 ```sh
-cargo install --path crates/fermaid-cli
+cargo install fermaid-cli                # crates.io からインストール
+cargo install --path crates/fermaid-cli  # チェックアウトからインストール
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # 今日のマーカー付きのガントチャート

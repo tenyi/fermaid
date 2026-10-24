@@ -4,7 +4,7 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust — no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** pre-alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie and gantt charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
+> **Status:** alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie and gantt charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
@@ -48,7 +48,8 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 ## Command line
 
 ```sh
-cargo install --path crates/fermaid-cli
+cargo install fermaid-cli                # from crates.io
+cargo install --path crates/fermaid-cli  # from a checkout
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # a gantt chart with today's marker

@@ -27,7 +27,7 @@ next.
 | Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as strict JSON, like `JSON.parse` in pele (not JSON5). Unknown keys are ignored. |
 | Testing | insta snapshots; Mermaid spec cases ported from pele's `tests/compat/<type>`, each with a `SKIPPED.md`; per-type security tests; cargo-fuzz (no panics, limits hold); differential fuzzing against Mermaid's parsers from M3 (dev-only Node harness, outside regular CI). |
 | CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. |
-| Releases | `0.0.1` after M1 (reserves the name), `0.1.0` after M2. Breaking changes are allowed before 1.0 and recorded in `CHANGELOG.md`. |
+| Releases | `0.2.0` is the first published release, after M5; it reserves the name on crates.io. Breaking changes are allowed before 1.0 and recorded in `CHANGELOG.md`. |
 
 ## Public API (initial shape)
 
@@ -93,7 +93,7 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 - `fermaid` returns an `Unsupported` error with line and column for an unknown diagram type.
 - Measurer unit tests match pele's `metricsMeasurer` on a fixed set of cases.
 
-## M1 — Pie (end-to-end pipeline) (done, except publishing)
+## M1 — Pie (end-to-end pipeline) (done)
 
 0. [x] `xtask`: convert pele's `tests/compat/<type>` cases into Rust test data
    (`cargo xtask compat <type> --pele <DIR>` writes `crates/fermaid/tests/compat/<type>/cases.rs`).
@@ -104,7 +104,7 @@ tools/oracle/        (M3) dev-only Node harness for differential fuzzing
 3. [x] Port the Mermaid spec cases from pele's `tests/compat/pie` and add `SKIPPED.md`.
 4. [x] insta snapshots, security tests (escaping, limits; pie has no nesting), a fuzz target.
 5. [x] First version of the CLI: `fermaid [INPUT|-] [-o OUT] [--font-size N] [--max-width N] [--id-prefix P]`.
-6. [ ] Publish `0.0.1` (needs the owner's crates.io token).
+6. Publishing is deferred to one release after M5: `0.2.0` (see "Release" below).
 
 Notes:
 - Output was compared byte for byte with pele 1.9.0 (after renaming `pele` to `fermaid`) on
@@ -120,7 +120,7 @@ Notes:
 - 10 minutes of fuzzing produces no panic.
 - The SVG renders in a browser and its theme can be changed through CSS.
 
-## M2 — Flowchart (core layout) (done, except publishing)
+## M2 — Flowchart (core layout) (done)
 
 1. [x] `layout::layered`: port pele's Sugiyama layout (ranking, crossing
    reduction, dummy/label nodes, edge tracks, straighten/settle/snap).
@@ -132,7 +132,7 @@ Notes:
 5. [x] Security: URL sanitizing and a link scheme allowlist (`RenderOptions::link_schemes`,
    `image_schemes`, `link_rel`); `style` limited to allowed properties.
 6. [x] Compat, snapshot and security tests; a fuzz target.
-7. [ ] Publish `0.1.0` (needs the owner's crates.io token).
+7. Publishing is deferred to one release after M5: `0.2.0` (see "Release" below).
 
 Notes:
 - Compat: 301 cases from pele's port of the Mermaid flowchart specs. `tools/oracle/golden.mjs`
@@ -256,6 +256,15 @@ Notes:
   difference for any of the thirteen types, and ten minutes of fuzzing per new target found no
   panic (gantt 757,835 runs, timeline 233,850, journey 293,981, kanban 279,941, mind map
   311,144).
+
+## Release — 0.2.0
+
+The first published version. The crates.io names `fermaid` and `fermaid-cli` were free, and
+`0.0.1` and `0.1.0` were never published, so `0.2.0` is the only version crates.io shows.
+
+1. [ ] Publish `fermaid` 0.2.0 to crates.io, then `fermaid-cli` 0.2.0, which depends on it
+   (needs the owner's crates.io token).
+2. [ ] Tag `v0.2.0`, push the tag and publish the GitHub release.
 
 ## Later milestones (scope only)
 

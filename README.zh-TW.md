@@ -4,7 +4,7 @@
 
 fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，不需要 JavaScript 執行環境、無頭瀏覽器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一個小巧、無相依套件的 TypeScript 渲染器），支援 Mermaid 12.1.0 語法，並採用 pele 自己的版面配置與視覺風格。
 
-> **狀態：** pre-alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
+> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
 
 | 圖表類型 | 狀態 |
 |---|---|
@@ -48,7 +48,8 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 ## 命令列
 
 ```sh
-cargo install --path crates/fermaid-cli
+cargo install fermaid-cli                # 從 crates.io 安裝
+cargo install --path crates/fermaid-cli  # 從原始碼安裝
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # 畫出今天標記的甘特圖
