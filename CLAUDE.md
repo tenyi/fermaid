@@ -15,7 +15,7 @@ fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) di
 The development plan and all settled design decisions are in `docs/ROADMAP.md`. Read it before starting work. Key points:
 
 - Algorithms, text metrics and limits are ported from pele v1.9.0 (`e7f092a`), written as idiomatic Rust (not a line-by-line translation). When behavior is in doubt, run pele's TypeScript sources and compare.
-- pele is a reference, not the specification: Mermaid is. Where pele has a defect — a keyword whose whitespace swallows the next line, a grammar that misreads a task — fermaid follows Mermaid instead, and the difference is recorded in `tools/oracle/KNOWN.md` and the roadmap. A behavior that only looks wrong but that Mermaid shares is not a defect: port it as it is and pin it with a test.
+- pele is a reference, not the specification: Mermaid is. Where pele has a defect — a keyword whose whitespace swallows the next line, a grammar that misreads a task — fermaid follows Mermaid instead, and the difference is recorded in `tools/oracle/KNOWN.md` and the roadmap. A behavior that only looks wrong but that Mermaid shares is not a defect: port it as it is and pin it with a test. Mermaid 12.1.0 has no `v12.1.0` tag; read its grammars at commit `21f72f07`.
 - Zero runtime dependencies. `std`, MSRV 1.85 (no APIs stabilized later). One Cargo feature per diagram type; `default = ["all"]`.
 - CSS variables use the `--fermaid-*` prefix with pele's suffixes.
 - Output must be deterministic (byte-identical for identical input and options).
