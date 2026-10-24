@@ -1,0 +1,22 @@
+[package]
+name = "fermaid-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+# Keeps the fuzz crate, which needs nightly, out of any enclosing workspace.
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+fermaid = { path = "../crates/fermaid" }
+
+[[bin]]
+name = "render"
+path = "fuzz_targets/render.rs"
+test = false
+doc = false
+bench = false
