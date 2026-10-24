@@ -12,7 +12,16 @@ fermaid is a pure-Rust library that renders [Mermaid](https://mermaid.js.org) di
 - Untrusted input is a first-class concern: escape all diagram text, filter links and inline styles, and cap source and output size.
 - Parsers are validated against Mermaid's own parser specs and with differential fuzzing.
 
-The project is at the very beginning: only the `cargo init --lib` skeleton exists. Update this file as real architecture lands.
+The project is at the very beginning: only the `cargo init --lib` skeleton exists. The development plan and all settled design decisions are in `docs/ROADMAP.md`. Read it before starting work. Key points:
+
+- Algorithms, text metrics and limits are ported from pele v1.9.0 (`e7f092a`), written as idiomatic Rust (not a line-by-line translation).
+- Zero runtime dependencies. `std`, MSRV 1.85. One Cargo feature per diagram type.
+- Planned workspace: `crates/fermaid` (lib), `crates/fermaid-cli`, `xtask/`, `fuzz/`.
+- CSS variables use the `--fermaid-*` prefix with pele's suffixes.
+- Output must be deterministic (byte-identical for identical input and options).
+- An explicit nesting depth limit is required, because a Rust stack overflow aborts and cannot be caught.
+
+Update this file as real architecture lands.
 
 ## Commands
 
