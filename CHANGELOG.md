@@ -5,6 +5,17 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- State diagrams, behind the `state` feature: states with descriptions, composite states with
+  their own direction, concurrency regions, start and end, choice, fork and join, notes,
+  `classDef`, `class`, `style` and `click`.
+- Class diagrams, behind the `class` feature: classes with members, generic types and
+  annotations, relations with markers and cardinalities, namespaces, notes, lollipop
+  interfaces, `classDef`, `cssClass`, `style`, `link`, `click` and `callback`.
+- ER diagrams, behind the `er` feature: entities with attributes, keys and comments,
+  relationships with crow's foot cardinalities, aliases, subgraphs, `classDef`, `class` and
+  `style`.
+- Requirement diagrams, behind the `requirement` feature: requirements of every kind and
+  elements with their fields, relationships, `classDef`, `class` and `style`.
 - Sequence diagrams, behind the `sequence` feature: participants and actors of every kind,
   every arrow kind, activations, notes, `loop`, `alt`, `opt`, `par`, `critical`, `break` and
   `rect` blocks, boxes, `autonumber`, created and destroyed participants, and the `sequence`

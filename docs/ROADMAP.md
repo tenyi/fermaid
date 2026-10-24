@@ -5,8 +5,8 @@ algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
 **v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
 
-Milestones M0–M4 are planned to task level. M5 onward is scoped only and will be
-refined when M4 ends.
+Milestones M0–M4 are planned to task level and done. M5 onward is scoped only and will be
+refined next.
 
 ## Decisions
 
@@ -194,7 +194,7 @@ Notes:
 - Regular CI does not need Node; the oracle runs only in a nightly or
   manually triggered workflow.
 
-## M4 — State, class, ER, requirement
+## M4 — State, class, ER, requirement ✅
 
 Each type is ported from pele as flowchart and sequence were: parser, model, render, and a
 check against pele's output on its corpus and on mutated inputs.
@@ -218,6 +218,19 @@ check against pele's output on its corpus and on mutated inputs.
   inputs, apart from recorded differences.
 - The differential run reports no unexplained differences for the new types.
 - 10 minutes of fuzzing each new target produces no panic.
+
+Notes:
+- All four types are ported. Class diagrams needed pele's `components` layout, which wraps
+  disconnected parts into rows to fit a narrow host; it is in `layout/components.rs`.
+- On each type's corpus from pele, on 3,000 mutated inputs, and with `max_width`, the output
+  is byte for byte pele's, errors included.
+- Compat cases from pele's ports of the Mermaid specs pass for all four types. The ER and
+  requirement specs partly call the model directly or build diagrams from arrays of lines, so
+  many of their extracted sources are not diagrams and both sides reject them; `SKIPPED.md`
+  says so, and the differential run covers the parsers instead.
+- The differential run against Mermaid's jison grammars (state, class, ER, requirement) agrees
+  on every input.
+- Fuzzing found no panic (class 831,000 runs, ER 895,000 runs in 10 minutes).
 
 ## Later milestones (scope only)
 

@@ -22,17 +22,17 @@ The development plan and all settled design decisions are in `docs/ROADMAP.md`. 
 
 ## Architecture
 
-M0 (foundation), M1 (pie), M2 (flowchart) and M3 (sequence, differential fuzzing) are done; every other type returns `ErrorCode::Unsupported`.
+M0 (foundation), M1 (pie), M2 (flowchart), M3 (sequence, differential fuzzing) and M4 (state, class, ER, requirement) are done; every other type returns `ErrorCode::Unsupported`.
 
 - `crates/fermaid` — the library. `render` checks the source limit, runs `preprocess`, detects the type (`detect.rs`), looks it up (`diagram.rs`, an internal `Diagram` trait; one module per type, feature-gated), renders it and checks the output limit.
-  - `diagrams/` — one module per type behind its feature (`pie/`: `parser.rs`, `model.rs`, `render.rs`, and `compat.rs`, which checks the generated Mermaid spec cases; `flowchart/`: a jison-style `lexer.rs` over UTF-16 code units, `parser.rs`, `db.rs` (the model), `graph.rs` (what is drawn), `shapes.rs` (shape names), `render.rs`, `compat.rs`; `sequence/`: `lexer.rs` (UTF-16, as flowchart), `parser.rs` (a flat statement list), `db.rs`, `colors.rs` (CSS color names for boxes), `actors.rs` (participant shapes), `render.rs`, `compat.rs`). `common/tokens.rs` is the tokenizer and `Reader` for Langium-defined types (pele's regex token types as hand-written matchers); `common/fit.rs` fits a chart to `RenderOptions::max_width`; `common/literal.rs` breaks long words when a diagram is squeezed; `common/golden.rs` holds helpers of the golden compat tests.
-  - `layout/` — `layered.rs` (pele's Sugiyama layout of one flat graph) and `compound.rs` (groups laid out on their own and placed in their parents, with ports where edges cross borders). The arithmetic keeps pele's order, so coordinates match pele's exactly.
+  - `diagrams/` — one module per type behind its feature (`pie/`: `parser.rs`, `model.rs`, `render.rs`, and `compat.rs`, which checks the generated Mermaid spec cases; `flowchart/`: a jison-style `lexer.rs` over UTF-16 code units, `parser.rs`, `db.rs` (the model), `graph.rs` (what is drawn), `shapes.rs` (shape names), `render.rs`, `compat.rs`; `sequence/`: `lexer.rs` (UTF-16, as flowchart), `parser.rs` (a flat statement list), `db.rs`, `colors.rs` (CSS color names for boxes), `actors.rs` (participant shapes), `render.rs`, `compat.rs`; `state/`, `class/`, `er/` and `requirement/` follow the same split of `lexer.rs`, `parser.rs`, `db.rs`, `graph.rs`, `render.rs` and `compat.rs`, with `markers.rs` for class and ER line ends). `common/ordered.rs` is an insertion-ordered map, as a JavaScript `Map`; `common/generics.rs` reads `~T~` generic types. `common/tokens.rs` is the tokenizer and `Reader` for Langium-defined types (pele's regex token types as hand-written matchers); `common/fit.rs` fits a chart to `RenderOptions::max_width`; `common/literal.rs` breaks long words when a diagram is squeezed; `common/golden.rs` holds helpers of the golden compat tests.
+  - `layout/` — `layered.rs` (pele's Sugiyama layout of one flat graph) and `compound.rs` (groups laid out on their own and placed in their parents, with ports where edges cross borders), and `components.rs` (disconnected parts wrapped into rows, for class diagrams). The arithmetic keeps pele's order, so coordinates match pele's exactly.
   - `url.rs` — link sanitizing and the scheme allowlist; `unicode.rs` — the `\p{L}` table jison lexers use.
   - `preprocess/` — `%%` comments, front matter (`yaml.rs`, a YAML subset), `%%{init}%%` (`json.rs`, strict JSON).
   - `text/` — `Style`, `TextMeasurer`, `MetricsMeasurer` (pele's Arial tables decoded at compile time), `entities.rs` (entity codes), `label.rs` (label parsing, measuring and wrapping; a port of pele's `text/label.ts` without math and icons).
   - `svg/` — escaping, number formatting, label `<text>` output, theme CSS variables and style resolution, the document root and titles, node `shapes.rs`, `edges.rs` (paths, loops), `markers.rs` (arrowheads) and `cluster.rs` (subgraph titles).
   - `error.rs` (`Error` with code, kind, line, column, snippet), `options.rs` (`RenderOptions`, `Limits`, `Rendered`, `Link`), `util.rs` (JavaScript-compatible whitespace, trimming and rounding).
-  - `tests/` — `pie.rs`, `flowchart.rs` and `sequence.rs` (render, security, limits, speed, insta snapshots in `snapshots/`), `support/mod.rs` (inert-output check, hostile payloads, mutator; shared by the type tests), `compat/<type>/` (generated `cases.rs`, for flowchart and sequence also the generated `expected.rs`, and a hand-written `SKIPPED.md`).
+  - `tests/` — one file per type (`pie.rs`, `flowchart.rs`, `sequence.rs`, `state.rs`, `class.rs`, `er.rs`, `requirement.rs`) (render, security, limits, speed, insta snapshots in `snapshots/`), `support/mod.rs` (inert-output check, hostile payloads, mutator; shared by the type tests), `compat/<type>/` (generated `cases.rs`, for flowchart and sequence also the generated `expected.rs`, and a hand-written `SKIPPED.md`).
 - `crates/fermaid-cli` — the `fermaid` binary, hand-rolled argument parsing.
 - `xtask/` — `cargo xtask compat <type> --pele <DIR>` converts pele's `tests/compat/<type>` specs into `cases.rs`.
 - `tools/oracle/` — dev-only Node scripts; each needs a pele checkout with `npm ci` done. `golden.mjs` writes what pele makes of each compat case, as `expected.rs`. `diff.mjs` is the differential run against Mermaid's own parsers (and `@braintree/sanitize-url` for links); fermaid's side is the ignored `oracle_dump` test of each type, and intended differences are in `KNOWN.md`. `lib.mjs` holds the pele bundle loader and the model summaries both share.
@@ -50,9 +50,9 @@ cargo test <name_substring>      # single test / filter
 cargo test -- --nocapture        # show println! output
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60   # also: pie, flowchart, sequence
+cd fuzz && cargo +nightly fuzz run render -- -max_total_time=60   # also: pie, flowchart, sequence, state, class, er, requirement
 cargo xtask compat pie --pele ../pele   # regenerate spec cases from a pele checkout
-node tools/oracle/golden.mjs ../pele sequence   # regenerate expected.rs (flowchart, sequence)
+node tools/oracle/golden.mjs ../pele sequence   # regenerate expected.rs (flowchart, sequence, state, class, er, requirement)
 node tools/oracle/diff.mjs ../pele              # differential run against Mermaid's parsers
 ```
 
