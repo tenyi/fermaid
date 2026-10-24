@@ -1,0 +1,16 @@
+[package]
+name = "fermaid"
+description = "Render Mermaid diagram text to SVG in pure Rust"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords = ["mermaid", "svg", "diagram"]
+categories = ["visualization", "rendering"]
+
+[features]
+default = ["all"]
+# Every diagram type. Each type gets its own feature as it lands.
+all = []
+
+[dependencies]

@@ -1,7 +1,10 @@
-[package]
-name = "fermaid"
-version = "0.1.0"
-edition = "2024"
-license = "MIT"
+[workspace]
+members = ["crates/fermaid", "crates/fermaid-cli"]
+exclude = ["fuzz"]
+resolver = "3"
 
-[dependencies]
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
