@@ -413,7 +413,7 @@ Notes:
 
 - [x] C4 diagrams, behind the `c4` feature.
 - [ ] Use case diagrams, behind the `usecase` feature.
-- [ ] Info diagrams, behind the `info` feature.
+- [x] Info diagrams, behind the `info` feature.
 - [ ] Venn diagrams, behind the `venn` feature.
 - [ ] Tree views, behind the `treeview` feature.
 - [ ] Cynefin diagrams, behind the `cynefin` feature.
@@ -431,6 +431,13 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 2,777
   inputs, the 55 Mermaid spec cases pass (13 of them hold a placeholder rather than a
   diagram and are listed in `SKIPPED.md`), and ten minutes of fuzzing (1,181,796 runs) found
+  no panic.
+Notes:
+- An information diagram is read with Mermaid's Langium grammar, which is small: the keyword,
+  the optional `showInfo`, and then any number of accessible texts and titles, each of them
+  on a line of its own.
+- The differential run against Mermaid's own grammar reports no difference over 3,005
+  inputs, the 16 Mermaid spec cases pass, and ten minutes of fuzzing (1,254,040 runs) found
   no panic.
 
 ## Later milestones (scope only)
