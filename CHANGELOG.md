@@ -5,6 +5,10 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- Mermaid 12.2.0 is the target. Its grammars are the same as 12.1.0's, so the one change is the
+  mind map config key `mindmap.colorBy`: `depth` gives the nodes of one level the same color in
+  every branch, and a link takes the color of its node. `branch`, the default, is as before.
+
 ## 0.3.0 - 2026-10-25
 
 The second published version. It covers milestone M6: the twenty-one diagram types that were

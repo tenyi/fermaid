@@ -6,7 +6,7 @@
 [![docs.rs](https://img.shields.io/docsrs/fermaid.svg)](https://docs.rs/fermaid)
 [![license](https://img.shields.io/crates/l/fermaid.svg)](https://crates.io/crates/fermaid)
 
-fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，无需 JavaScript 运行时、无头浏览器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一个小巧、无依赖的 TypeScript 渲染器），支持 Mermaid 12.1.0 语法，并采用 pele 自己的布局与视觉风格。
+fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，无需 JavaScript 运行时、无头浏览器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一个小巧、无依赖的 TypeScript 渲染器），支持 Mermaid 12.2.0 语法，并采用 pele 自己的布局与视觉风格。
 
 > **状态：** alpha。已支持 Mermaid 12.1.0 的所有图表类型，下表列出各类型可读取的语法。请参阅[开发路线图](docs/ROADMAP.md)。
 
@@ -23,7 +23,7 @@ fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，
 | 时间线（`timeline`） | 已支持：标题、分区、时期及其事件 |
 | 用户旅程（`journey`） | 已支持：标题、分区、带分数和参与者的任务 |
 | 看板（`kanban`） | 已支持：列和卡片（含形状）、`@{ … }` 元数据（`assigned`、`ticket`、`priority`、`label`）、class，以及通过 `ticketBaseUrl` 的工单链接 |
-| 思维导图（`mindmap`） | 已支持：所有节点形状、图标、class 和分支颜色；横向排列，宿主较窄时改为纵向 |
+| 思维导图（`mindmap`） | 已支持：所有节点形状、图标、class 和分支颜色（按分支，或用 `colorBy` 按层级）；横向排列，宿主较窄时改为纵向 |
 | 桑基图（`sankey`、`sankey-beta`） | 已支持：Mermaid 的 CSV 形式，每行一组 `source,target,value`，字段可加引号；以及 `sankey` 的配置键 `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix` 和 `labelStyle` |
 | XY 图（`xychart`、`xychart-beta`） | 已支持：`title`、以类别或范围表示的 `x-axis`、以范围表示的 `y-axis`、可带点标签的 `line` 与 `bar` 系列、`accTitle` 与 `accDescr`、`horizontal` 与 `vertical` 方向；以及 `xyChart` 的配置键 `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`，以及 `yAxis` 下同样的四个 |
 | 象限图（`quadrantChart`） | 已支持：`title`、以 `-->` 连接的 `x-axis` 与 `y-axis`、`quadrant-1` 到 `quadrant-4`、可带 `radius`、`color`、`stroke-color` 和 `stroke-width` 的点、`classDef` 与点的类别、`accTitle` 与 `accDescr`；以及 `quadrantChart` 的配置键 `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius` 和 `pointTextPadding` |

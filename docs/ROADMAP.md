@@ -3,10 +3,10 @@
 fermaid renders Mermaid diagram text to SVG in pure Rust. Behavior, layout
 algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
-**v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
+**v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.2.0 (see M7a).
 
-Milestones M0–M5 are planned to task level and done. M6 is planned to milestone level and
-done: every diagram type Mermaid 12.1.0 builds is supported.
+Milestones M0–M6 are done. M7 is planned to task level.
+Every diagram type Mermaid 12.2.0 builds is supported.
 
 ## Decisions
 
@@ -525,7 +525,76 @@ Notes:
   inputs, the 117 Mermaid spec cases pass (2 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (676,308 runs) found no panic.
 
-## Later milestones (scope only)
+## M7 — Beyond pele 1.9.0
 
-- **M7** — the diagrams Mermaid itself has not built in yet, if it ever does: the remaining
-  plugins, and the rendering of the syntax Mermaid accepts but does not draw.
+M6 covers every diagram type Mermaid 12.1.0 builds. M7 covers what Mermaid has built in and
+pele has not (yet) implemented, and what pele supports through the host and fermaid does not.
+
+Findings that set the scope (checked against the Mermaid clone, version 12.2.0):
+- Every diagram Mermaid 12.2.0 registers is already supported, `flowchart-elk` included, so no
+  new diagram type is missing today. `mermaid-zenuml` is an external plugin that needs a
+  JavaScript library, and is not built in.
+- The 19 jison grammars pele vendors are identical to Mermaid 12.2.0's. The Langium grammars
+  of `@mermaid-js/parser` are not compared yet (M7a).
+- 12.2.0 adds one feature: `mindmap.colorBy: depth`. The rest are layout fixes.
+- pele has what fermaid lacks: the `icons` and `math` resolvers, the five built-in icons of
+  architecture diagrams, and the `config`, `links` and `images` options.
+
+### M7a — Follow Mermaid 12.2.0
+
+- [x] Compare the Langium grammars (`packages/parser`) with the ones pele ships. There is no
+  difference: the built parser of the Mermaid clone is byte for byte the `@mermaid-js/parser`
+  2.0.1 that pele uses.
+- [x] Mindmap `colorBy: depth`.
+- [x] Run `tools/oracle/diff.mjs` against 12.2.0. It uses the grammars pele vendors, which are
+  identical to the clone's (all 19 jison files), so nothing new is reported (mind map: 537
+  inputs, 0 unexplained).
+- [x] Move the target version to 12.2.0 in this file, the READMEs, `NOTICE` and `CLAUDE.md`.
+- [ ] A diagram type that a later Mermaid release adds is handled the same way as M6: grammar,
+  model, layout, emitter, spec cases, oracle, fuzz target.
+
+Mermaid is the specification here, and pele has no 12.2.0 behavior to compare with.
+
+Notes:
+- `colorBy: depth` colors a node by the number of its ancestors, less one, wrapping after
+  eleven levels, as `assignSections` of Mermaid does; the indentation does not count. The
+  branch color stays in the model as it was, and the depth color is a second field, so the
+  setting only changes how the map is drawn.
+- Mermaid colors the nodes and the links by the `cScale` theme variables. fermaid has the
+  series colors only, so a level takes `--fermaid-series-N` (eight colors, as the branches do).
+- The classic and neo looks, and the `git0`/`cScale*` variables, are Mermaid's themes and are
+  not ported.
+
+### M7b — Icons and math through the host
+
+- [ ] `RenderOptions::icons` and `RenderOptions::math`: optional callbacks, `None` by default,
+  so there is still no dependency. Results are cached for one render, so that output stays
+  deterministic.
+- [ ] Decide how host markup is treated: trusted as pele does, but still checked by the
+  inertness test (no `script`, no `on*`, no `url()` outside the document).
+- [ ] `label.rs` makes room for an icon and typesets `$$…$$`, as pele's `text/label.ts` does,
+  instead of leaving them out.
+- [ ] Connect the types: mindmap, kanban, flowchart, gantt, cynefin, usecase, and for math
+  also class, ER, requirement, block, state, sequence and swimlane.
+- [ ] Tests with a fake resolver (snapshots) and hostile resolver results.
+
+### M7c — Built-in icons of architecture diagrams
+
+- [ ] `database`, `server`, `disk`, `internet` and `cloud` as pele draws them; any other name
+  goes to `icons`. Update README and CHANGELOG, which say a service has no icon font.
+
+### M7d — Options and packaging
+
+- [ ] `RenderOptions::config` (the same as `%%{init}%%`, never able to raise a limit), `links`
+  and `images` switches, and the matching CLI flags.
+- [ ] CI builds the library for `wasm32-unknown-unknown`, to keep the promise that the core does
+  no I/O.
+
+### Release — 0.4.0
+
+- [ ] Publish the library, then the command line tool; tag the version and publish the release.
+
+### Decided against
+
+ZenUML (needs a JavaScript library), ELK and tidy-tree layout plugins, the hand-drawn look, and
+pele's browser-only `mount`, `zoom` and `lazy`.

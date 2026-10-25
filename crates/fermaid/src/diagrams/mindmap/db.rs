@@ -17,6 +17,9 @@ pub(crate) struct Node {
     pub children: Vec<usize>,
     /// Index of the first-level branch the node belongs to; none for the root.
     pub section: Option<usize>,
+    /// The color of the node when `mindmap.colorBy` is `depth`: its distance from the root, less
+    /// one, wrapping as the branches do. None for the root.
+    pub depth_section: Option<usize>,
     pub class: Option<String>,
     pub icon: Option<String>,
 }
@@ -79,6 +82,8 @@ impl OutlineDb for MindmapDb {
             kind,
             children: Vec::new(),
             section,
+            // `depth` is the number of ancestors the node has, so the root's children are 1.
+            depth_section: parent.map(|_| (depth - 1) % SECTIONS),
             class: None,
             icon: None,
         });

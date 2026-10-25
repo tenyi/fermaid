@@ -6,7 +6,7 @@
 [![docs.rs](https://img.shields.io/docsrs/fermaid.svg)](https://docs.rs/fermaid)
 [![license](https://img.shields.io/crates/l/fermaid.svg)](https://crates.io/crates/fermaid)
 
-fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
+fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.2.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
 > **ステータス:** alpha。Mermaid 12.1.0 のすべてのダイアグラムに対応しています。下の表は、それぞれが読み取る記法をまとめたものです。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
@@ -23,7 +23,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | タイムライン（`timeline`） | 対応済み：タイトル、セクション、期間とそのイベント |
 | ユーザージャーニー（`journey`） | 対応済み：タイトル、セクション、スコアとアクターを持つタスク |
 | カンバン（`kanban`） | 対応済み：列と（形状付きの）カード、`@{ … }` メタデータ（`assigned`・`ticket`・`priority`・`label`）、クラス、`ticketBaseUrl` によるチケットリンク |
-| マインドマップ（`mindmap`） | 対応済み：すべてのノード形状、アイコン、クラス、枝の色。横向きに配置し、ホストが狭いときは縦向きにします |
+| マインドマップ（`mindmap`） | 対応済み：すべてのノード形状、アイコン、クラス、枝の色（枝ごと、または `colorBy` で階層ごと）。横向きに配置し、ホストが狭いときは縦向きにします |
 | サンキー図（`sankey`、`sankey-beta`） | 対応済み：Mermaid の CSV 形式。1 行につき `source,target,value` を 1 つ、フィールドは引用符で囲めます。`sankey` の設定キー `width`、`height`、`nodeWidth`、`nodePadding`、`nodeAlignment`、`nodeColors`、`linkColor`、`showValues`、`prefix`、`suffix`、`labelStyle` に対応 |
 | XY チャート（`xychart`、`xychart-beta`） | 対応済み：`title`、カテゴリまたは範囲を持つ `x-axis`、範囲を持つ `y-axis`、点ラベルを持つ `line` と `bar` の系列、`accTitle` と `accDescr`、`horizontal` と `vertical` の向き。`xyChart` の設定キー `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`、および `yAxis` 側の同じ 4 つのキーに対応 |
 | クアドラントチャート（`quadrantChart`） | 対応済み：`title`、`-->` を持つ `x-axis` と `y-axis`、`quadrant-1` から `quadrant-4`、`radius`、`color`、`stroke-color`、`stroke-width` を持つ点、`classDef` と点のクラス、`accTitle` と `accDescr`。`quadrantChart` の設定キー `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius`、`pointTextPadding` に対応 |

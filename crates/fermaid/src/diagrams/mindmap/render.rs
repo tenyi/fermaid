@@ -127,6 +127,12 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
         },
         _ => 200.0,
     };
+    // `colorBy: depth` gives the nodes of one level one color across all branches; anything else
+    // is the default, a color per branch.
+    let by_depth = match input.config.get("mindmap") {
+        Some(Value::Map(m)) => matches!(m.get("colorBy"), Some(Value::String(s)) if s == "depth"),
+        _ => false,
+    };
 
     let nodes = &db.nodes;
     let n = nodes.len();
@@ -309,9 +315,18 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
             flush(&mut out, &mut edges, &mut body, &color, section);
         }
         if i > 0 {
-            if parent[i] == 0 {
+            if by_depth {
+                color = series_color(node.depth_section.unwrap_or(0));
+            } else if parent[i] == 0 {
                 color = series_color(node.section.unwrap_or(0));
             }
+            // A link takes the color of its node. By branch that is the color of the group the
+            // link is in already, so the attribute is only written by depth.
+            let stroke = if by_depth {
+                format!(" stroke=\"{color}\"")
+            } else {
+                String::new()
+            };
             let p = parent[i];
             if down {
                 // The link drops from under its parent and turns in to the node's left. It
@@ -343,7 +358,7 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
                 trunk[p] = y2 - bend;
                 let _ = write!(
                     edges,
-                    "<path class=\"fermaid-edge\" d=\"M{},{}V{}Q{},{} {},{}H{}\"/>",
+                    "<path class=\"fermaid-edge\"{stroke} d=\"M{},{}V{}Q{},{} {},{}H{}\"/>",
                     num(x1),
                     num(y1),
                     num(y2 - bend),
@@ -371,7 +386,7 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
                 let mid = num((x1 + x2) / 2.0);
                 let _ = write!(
                     edges,
-                    "<path class=\"fermaid-edge\" d=\"M{},{}C{mid},{} {mid},{} {},{}\"/>",
+                    "<path class=\"fermaid-edge\"{stroke} d=\"M{},{}C{mid},{} {mid},{} {},{}\"/>",
                     num(x1),
                     num(y1),
                     num(y1),

@@ -16,7 +16,7 @@ the layout algorithms, and the default input and output limits.
 Mermaid (https://github.com/mermaid-js/mermaid)
 Copyright (c) 2014-2022 Knut Sveidqvist
 Licensed under the MIT License.
-fermaid targets the diagram syntax of Mermaid 12.1.0 and uses Mermaid's parser
+fermaid targets the diagram syntax of Mermaid 12.2.0 and uses Mermaid's parser
 specifications as test cases.
 
 The MIT License text for both projects:

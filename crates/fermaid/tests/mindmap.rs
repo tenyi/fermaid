@@ -105,6 +105,68 @@ fn colors_wrap_after_eleven_branches() {
     assert_eq!(count(&svg, "fermaid-section-0\""), 2);
 }
 
+/// The `stroke` of every link, in the order the links are drawn.
+fn link_colors(svg: &str) -> Vec<&str> {
+    svg.split("<path class=\"fermaid-edge\"")
+        .skip(1)
+        .map(|p| match p.strip_prefix(" stroke=\"") {
+            Some(rest) => rest.split('"').next().unwrap(),
+            None => "",
+        })
+        .collect()
+}
+
+#[test]
+fn colors_by_depth_across_branches() {
+    // Mermaid 12.2.0: `mindmap.colorBy: depth` gives one color to a level in every branch.
+    let body = "mindmap
+  root
+    a
+      a1
+        a2
+    b
+      b1
+        b2
+";
+    let by_depth = svg(&format!(
+        "---\nconfig:\n  mindmap:\n    colorBy: depth\n---\n{body}"
+    ));
+    let colors = link_colors(&by_depth);
+    // a, a1, a2, b, b1, b2: the same level has the same color, and the levels differ.
+    assert_eq!(colors.len(), 6);
+    assert_eq!(colors[0], colors[3]);
+    assert_eq!(colors[1], colors[4]);
+    assert_eq!(colors[2], colors[5]);
+    assert_ne!(colors[0], colors[1]);
+    assert_ne!(colors[1], colors[2]);
+
+    // The default, and `branch`, keep a color per branch, and write no color on a link.
+    let by_branch = svg(body);
+    assert!(link_colors(&by_branch).iter().all(|c| c.is_empty()));
+    assert_eq!(
+        by_branch,
+        svg(&format!(
+            "---\nconfig:\n  mindmap:\n    colorBy: branch\n---\n{body}"
+        ))
+    );
+    assert_ne!(by_branch, by_depth);
+}
+
+#[test]
+fn depth_colors_wrap_after_eleven_levels() {
+    let mut src =
+        String::from("---\nconfig:\n  mindmap:\n    colorBy: depth\n---\nmindmap\n  root\n");
+    for d in 1..=13 {
+        let _ = writeln!(src, "{}n{d}", "  ".repeat(d + 1));
+    }
+    let out = svg(&src);
+    let colors = link_colors(&out);
+    assert_eq!(colors.len(), 13);
+    // Level 12 is level 1 again, as the thirteen levels of Mermaid's own spec.
+    assert_eq!(colors[0], colors[11]);
+    assert_eq!(colors[1], colors[12]);
+}
+
 #[test]
 fn reports_errors_with_positions() {
     let err = fermaid::render("mindmap\n  root\n a\n", &RenderOptions::default()).unwrap_err();
