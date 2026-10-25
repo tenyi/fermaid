@@ -1,0 +1,38 @@
+name: fuzz
+
+# The fuzz targets look for panics in the library. Running all of them takes half an hour, which
+# is too long to wait for on every push, so the run happens nightly and on demand instead. The
+# regular CI keeps the format, the lints and the tests, which take a couple of minutes.
+on:
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds to fuzz each target for
+        default: "60"
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: fuzz smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - run: cargo install cargo-fuzz --locked
+      - name: Run each target
+        working-directory: fuzz
+        run: |
+          for target in $(cargo fuzz list); do
+            echo "::group::$target"
+            cargo fuzz run "$target" -- -max_total_time="${SECONDS_PER_TARGET:-60}"
+            echo "::endgroup::"
+          done
+        env:
+          SECONDS_PER_TARGET: ${{ inputs.seconds || '60' }}
