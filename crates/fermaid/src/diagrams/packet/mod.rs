@@ -1,17 +1,23 @@
-//! Packet diagrams, which fermaid does not draw yet.
+//! Packet diagrams: a block of bits, drawn as a row of fields, each with the bits it takes.
+
+mod db;
+mod parser;
+mod render;
+mod text;
+mod tokens;
+
+#[cfg(test)]
+mod compat;
 
 use crate::diagram::{Diagram, Input, Output};
-use crate::error::{Error, ErrorCode};
+use crate::error::Error;
 
-/// The packet diagram type.
 pub(crate) struct Packet;
 
 impl Diagram for Packet {
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
-        Err(Error::new(
-            ErrorCode::Unsupported,
-            "Diagram type \"packet\" is not supported yet.",
-        )
-        .at(&input.source, 0))
+        let ast = parser::parse_packet(&input.source)?;
+        let model = db::build_packet(&ast, input.config, input.title)?;
+        Ok(render::render_packet(&model, input.config, input))
     }
 }

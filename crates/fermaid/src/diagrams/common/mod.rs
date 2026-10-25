@@ -13,6 +13,7 @@ pub(crate) mod chars;
     feature = "journey",
     feature = "kanban",
     feature = "mindmap",
+    feature = "packet",
     feature = "pie",
     feature = "quadrantchart",
     feature = "requirement",

@@ -9,6 +9,9 @@ before 1.0, a minor version may break the API.
   between them with their labels, junctions, `service`, `group` and `junction` with their icons,
   and the `architecture` config keys `iconSize`, `padding` and `fontSize`. A service has no icon
   font, so its box holds its name.
+- Packet diagrams, behind the `packet` feature: `title`, `accTitle` and `accDescr`, rows of
+  fields with their bit ranges, a field of `+bits`, and the `packet` config keys `rowHeight`,
+  `bitWidth`, `bitsPerRow`, `showBits`, `bitOrder`, `paddingX` and `paddingY`.
 - Block diagrams, behind the `block` feature: blocks in a grid with `columns`, composites with
   `block:` and `end`, `space`, every shape of Mermaid, block arrows with their directions, links
   with their labels and their arrow ends, `classDef`, `class` and `style`, and the `block` config
