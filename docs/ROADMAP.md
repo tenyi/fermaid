@@ -281,6 +281,11 @@ The version that follows M6, when every diagram type Mermaid 12.1.0 builds is do
 2. [ ] Publish the library, then the command line tool, which depends on it.
 3. [ ] Tag the version, push the tag and publish the GitHub release.
 
+Notes:
+- The information diagram draws the version of the library under its title, so its snapshots
+  carry the version of the crate. A version bump therefore regenerates them:
+  `INSTA_UPDATE=always cargo test -p fermaid --all-features --test info`.
+
 ## M6 — The remaining types ✅
 
 Mermaid 12.1.0 builds 33 diagram types. M0–M5 cover twelve of them; M6 covers the rest, in
