@@ -411,7 +411,7 @@ Notes:
 
 ### M6c — The rest
 
-- [ ] C4 diagrams, behind the `c4` feature.
+- [x] C4 diagrams, behind the `c4` feature.
 - [ ] Use case diagrams, behind the `usecase` feature.
 - [ ] Info diagrams, behind the `info` feature.
 - [ ] Venn diagrams, behind the `venn` feature.
@@ -423,6 +423,15 @@ Notes:
 - [ ] Railroad diagrams, behind the `railroad` feature.
 - [ ] Swimlane diagrams, behind the `swimlane` feature.
 - [ ] Agent flows, behind the `agentflow` feature.
+Notes:
+- A C4 diagram is read with Mermaid's jison grammar, through a hand-written lexer that walks
+  UTF-16 code units, as the jison lexer does. The model holds the shapes with their kinds and
+  their labels, the boundaries that hold them and the relations between them; the layout and
+  the routes of the relations are pele's own.
+- The differential run against Mermaid's own grammar reports no difference over 2,777
+  inputs, the 55 Mermaid spec cases pass (13 of them hold a placeholder rather than a
+  diagram and are listed in `SKIPPED.md`), and ten minutes of fuzzing (1,181,796 runs) found
+  no panic.
 
 ## Later milestones (scope only)
 
