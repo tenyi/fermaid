@@ -599,9 +599,9 @@ Notes:
 
 ### M7d — Options and packaging
 
-- [ ] `RenderOptions::config` (the same as `%%{init}%%`, never able to raise a limit), `links`
+- [x] `RenderOptions::config` (the same as `%%{init}%%`, never able to raise a limit), `links`
   and `images` switches, and the matching CLI flags.
-- [ ] CI builds the library for `wasm32-unknown-unknown`, to keep the promise that the core does
+- [x] CI builds the library for `wasm32-unknown-unknown`, to keep the promise that the core does
   no I/O.
 
 ### Release — 0.4.0

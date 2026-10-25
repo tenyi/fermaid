@@ -5,6 +5,10 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- `RenderOptions::config` takes configuration in the form of `%%{init}%%` as a JSON object (what
+  the diagram sets itself wins, and no key can raise a limit), and `RenderOptions::links` and
+  `images` turn every link or every image off. The command line has `--config JSON|@FILE`,
+  `--no-links` and `--no-images`. CI builds the library for `wasm32-unknown-unknown`.
 - `RenderOptions::icons` and `RenderOptions::math` give the library the icons and the typeset
   math of the host (`IconResolver`, `MathResolver` and `MathMarkup` are public). A label makes
   room for an icon the host has and for typeset math, wraps around them and draws them beside

@@ -95,6 +95,22 @@ fn merge(target: &mut Config, source: &Config) {
     }
 }
 
+/// The configuration of the host, given as JSON, with the configuration of the diagram merged
+/// over it, so the diagram's own `%%{init}%%` and front matter win. A diagram's configuration
+/// cannot raise a limit, because the limits are not part of it.
+pub(crate) fn with_host_config(host: &str, config: &Config) -> Result<Config, Error> {
+    let Some(Value::Map(base)) = json::parse_json(trim(host)) else {
+        return Err(Error::new(
+            ErrorCode::Syntax,
+            "The config option is not a JSON object.",
+        ));
+    };
+    let mut merged = Config::new();
+    merge(&mut merged, &base);
+    merge(&mut merged, config);
+    Ok(merged)
+}
+
 /// Removes `%%` comment lines, along with the blank lines before each.
 fn cleanup_comments(text: &str) -> String {
     if !text.contains("%%") {

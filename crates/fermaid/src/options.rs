@@ -76,6 +76,15 @@ pub struct RenderOptions {
     /// Typesets the TeX between `$$` in labels, in the diagram types that read it. Without one,
     /// the TeX stays in the text as it was written.
     pub math: Option<MathResolver>,
+    /// Configuration in the form of `%%{init}%%`, as a JSON object such as
+    /// `{"theme": "dark", "flowchart": {"nodeSpacing": 30}}`. What the diagram sets itself
+    /// wins, and no key of it can raise a limit. A text that is not a JSON object is an error.
+    pub config: Option<String>,
+    /// Whether links are drawn. When `false`, every link is left out and `Rendered::links` is
+    /// empty, whatever `link_schemes` says.
+    pub links: bool,
+    /// Whether images are drawn. When `false`, every image is left out.
+    pub images: bool,
     /// The current time, in milliseconds since 1970-01-01 UTC, for what a gantt chart dates
     /// from today. `None` is 1970-01-01, so that output never depends on the clock.
     pub now: Option<f64>,
@@ -100,6 +109,9 @@ impl Default for RenderOptions {
             measurer: None,
             icons: None,
             math: None,
+            config: None,
+            links: true,
+            images: true,
             now: None,
         }
     }

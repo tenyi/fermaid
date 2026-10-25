@@ -66,7 +66,7 @@ pub use options::{Limits, Link, RenderOptions, Rendered};
 pub use text::{IconResolver, MathMarkup, MathResolver, MetricsMeasurer, Style, TextMeasurer};
 
 use diagram::Input;
-use preprocess::{Preprocessed, preprocess};
+use preprocess::{Preprocessed, preprocess, with_host_config};
 use text::entities::encode_entities;
 use text::{Host, HostMeasurer};
 
@@ -125,9 +125,17 @@ pub fn render(src: &str, options: &RenderOptions) -> Result<Rendered, Error> {
     } else {
         measured
     };
+    let merged;
+    let config = match options.config.as_deref() {
+        Some(host) => {
+            merged = with_host_config(host, &pre.config).map_err(|e| e.with_kind(kind))?;
+            &merged
+        }
+        None => &pre.config,
+    };
     let input = Input {
         source: encode_entities(source) + "\n",
-        config: &pre.config,
+        config,
         title: pre.title.as_deref(),
         line_offset: pre.line_offset,
         options,

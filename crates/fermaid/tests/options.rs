@@ -275,3 +275,58 @@ fn keeps_the_padding_around_the_drawing() {
         "the padding is space around the drawing"
     );
 }
+
+#[test]
+fn the_config_option_sits_under_the_diagrams_own_config() {
+    let src = "flowchart LR\n A --> B\n A --> C\n";
+    let plain = svg(src, &RenderOptions::default());
+    let spaced = RenderOptions {
+        config: Some(r#"{"flowchart": {"nodeSpacing": 120}}"#.to_string()),
+        ..Default::default()
+    };
+    assert_ne!(svg(src, &spaced), plain);
+    // The diagram's own directive wins over the host's.
+    let own =
+        "%%{init: {\"flowchart\": {\"nodeSpacing\": 50}}}%%\nflowchart LR\n A --> B\n A --> C\n";
+    let own_only = svg(own, &RenderOptions::default());
+    assert_eq!(svg(own, &spaced), own_only);
+}
+
+#[test]
+fn a_config_that_is_not_an_object_is_an_error() {
+    let options = RenderOptions {
+        config: Some("[1, 2]".to_string()),
+        ..Default::default()
+    };
+    let error = fermaid::render("flowchart LR\n A --> B\n", &options).unwrap_err();
+    assert_eq!(error.code, ErrorCode::Syntax);
+}
+
+#[test]
+fn the_links_switch_leaves_every_link_out() {
+    let src = "flowchart LR\n A --> B\n click A \"https://example.com\"\n";
+    assert_eq!(render(src, &RenderOptions::default()).links.len(), 1);
+    let off = render(
+        src,
+        &RenderOptions {
+            links: false,
+            ..Default::default()
+        },
+    );
+    assert!(off.links.is_empty());
+    assert!(!off.svg.contains("<a "));
+}
+
+#[test]
+fn the_images_switch_leaves_every_image_out() {
+    let src = "flowchart LR\n A@{ img: \"https://example.com/a.png\", label: \"A\" }\n";
+    assert!(svg(src, &RenderOptions::default()).contains("<image"));
+    let off = svg(
+        src,
+        &RenderOptions {
+            images: false,
+            ..Default::default()
+        },
+    );
+    assert!(!off.contains("<image"));
+}

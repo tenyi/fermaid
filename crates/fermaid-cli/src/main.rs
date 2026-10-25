@@ -5,7 +5,7 @@ use std::process::ExitCode;
 
 const USAGE: &str = "\
 Usage: fermaid [INPUT|-] [-o OUTPUT] [--font-size N] [--max-width N] [--id-prefix PREFIX]
-               [--now MS]
+               [--config JSON|@FILE] [--no-links] [--no-images] [--now MS]
 
 Renders the Mermaid diagram in INPUT (or standard input) to SVG.
 
@@ -14,6 +14,11 @@ Options:
       --font-size N      Font size in pixels
       --max-width N      The width the diagram should fit, in pixels
       --id-prefix PREFIX Prefix of the ids in the SVG (default: fermaid)
+      --config JSON|@FILE
+                         Configuration as in %%{init}%%, as a JSON object or
+                         @FILE holding one; the diagram's own settings win
+      --no-links         Leave every link out of the drawing
+      --no-images        Leave every image out of the drawing
       --now MS           The current time for gantt charts, in milliseconds since
                          1970-01-01 UTC (default: 0)
   -h, --help             Show this help
@@ -51,6 +56,17 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
             "--font-size" => parsed.options.font_size = Some(pixels(&value(&arg)?, "font size")?),
             "--max-width" => parsed.options.max_width = Some(pixels(&value(&arg)?, "width")?),
             "--id-prefix" => parsed.options.id_prefix = value(&arg)?,
+            "--config" => {
+                let text = value(&arg)?;
+                parsed.options.config = Some(match text.strip_prefix('@') {
+                    Some(path) => {
+                        std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?
+                    }
+                    None => text,
+                });
+            }
+            "--no-links" => parsed.options.links = false,
+            "--no-images" => parsed.options.images = false,
             "--now" => {
                 let text = value(&arg)?;
                 let now = text.parse().ok().filter(|n: &f64| n.is_finite());
@@ -153,6 +169,25 @@ mod tests {
         assert_eq!(args.options.font_size, Some(14.0));
         assert_eq!(args.options.max_width, Some(320.0));
         assert_eq!(args.options.id_prefix, "d1");
+    }
+
+    #[test]
+    fn parses_config_and_switches() {
+        let Ok(Parsed::Run(args)) = parse(&[
+            "--config",
+            "{\"theme\": \"dark\"}",
+            "--no-links",
+            "--no-images",
+        ]) else {
+            panic!("expected arguments");
+        };
+        assert_eq!(
+            args.options.config.as_deref(),
+            Some("{\"theme\": \"dark\"}")
+        );
+        assert!(!args.options.links);
+        assert!(!args.options.images);
+        assert!(parse(&["--config", "@/no/such/file"]).is_err());
     }
 
     #[test]

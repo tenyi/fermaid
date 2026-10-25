@@ -579,11 +579,17 @@ fn schemes(list: &Option<Vec<String>>, default: &'static [&'static str]) -> Vec<
 
 /// A link address the host allows, or `None`. A refused link is left out of the drawing.
 pub(crate) fn link_url(url: &str, options: &RenderOptions) -> Option<String> {
+    if !options.links {
+        return None;
+    }
     let list = schemes(&options.link_schemes, LINK_SCHEMES);
     allow(url, &list.iter().map(String::as_str).collect::<Vec<_>>())
 }
 
 pub(crate) fn image_url(url: &str, options: &RenderOptions) -> Option<String> {
+    if !options.images {
+        return None;
+    }
     let list = schemes(&options.image_schemes, IMAGE_SCHEMES);
     allow(url, &list.iter().map(String::as_str).collect::<Vec<_>>())
 }

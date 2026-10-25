@@ -79,6 +79,7 @@ cargo install --path crates/fermaid-cli  # 從原始碼安裝
 fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # 畫出今天標記的甘特圖
+fermaid page.mmd --config '{"theme": "dark"}' --no-links --no-images -o page.svg
 ```
 
 ## 主題
