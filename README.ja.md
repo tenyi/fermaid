@@ -80,6 +80,7 @@ fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # 今日のマーカー付きのガントチャート
 fermaid page.mmd --config '{"theme": "dark"}' --no-links --no-images -o page.svg
+fermaid page.mmd --palette dark -o page.svg   # var() を読めないビューア（resvg など）向けに色を実値で出力
 ```
 
 ## テーマ
@@ -97,6 +98,19 @@ svg {
 ```
 
 使用できる変数：`--fermaid-bg`、`--fermaid-fg`、`--fermaid-muted`、`--fermaid-line`、`--fermaid-surface`、`--fermaid-surface-alt`、`--fermaid-border`、`--fermaid-accent`、`--fermaid-radius`、`--fermaid-font`、`--fermaid-font-mono`、そして円グラフの扇形などデータ系列の色に使う `--fermaid-series-1` から `--fermaid-series-8`。
+
+### CSS 変数を読めないビューア
+
+resvg や librsvg などの SVG レンダラーは `var()` を読み取らないため、既定の SVG は黒一色で描画されます。`RenderOptions::palette` を設定すると、すべての色が実際の値で書き出され、SVG に `var()` は残りません（出力は決定的なままで、パレットを設定しなければ従来と完全に同じです）。
+
+```rust
+let options = fermaid::RenderOptions {
+    palette: Some(fermaid::Palette::dark()), // または Palette::light()、独自の色
+    ..Default::default()
+};
+```
+
+`Palette` には上記の変数に対応する色（`bg`、`fg`、`muted`、`line`、`surface`、`surface_alt`、`border`、`accent`、`critical`、8 色の `series`）があります。色に使えるのは英数字と `# % . , ( ) -` のみで、それ以外はライト用の色に置き換えられます。このモードでは、汎用ファミリの後ろにサンセリフの CJK フォント（Noto Sans CJK、PingFang、Microsoft JhengHei など）も指定します。そうしないと resvg は CJK 文字を明朝系のセリフ体で描画するためです。文字幅は CJK 文字を 1 em として計算します。コマンドラインでは `--palette light|dark` を使います。
 
 ## 開発
 

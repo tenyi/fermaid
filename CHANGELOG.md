@@ -3,6 +3,22 @@
 All notable changes are recorded here. fermaid follows [Semantic Versioning](https://semver.org);
 before 1.0, a minor version may break the API.
 
+## 0.5.0 - 2026-10-26
+
+- `RenderOptions::palette` takes a `Palette` (`Palette::light()`, `Palette::dark()`, or your own
+  colors) and writes every color out as a plain value, so that viewers that ignore CSS
+  variables (resvg, librsvg), which drew the default SVG black, show the diagram as designed.
+  The SVG then has no `var()` left; without a palette the output is exactly as before, and
+  with one it is still deterministic. A color that is not made of letters, digits and
+  `# % . , ( ) -` is replaced by the light palette's. The command line has
+  `--palette light|dark`.
+- With a palette the root element also carries what resvg needs and the default output leaves
+  out: the font size on its own (resvg ignores the `font` shorthand and drew 12 pixel text
+  where 16 was measured), no private `--_*` custom properties (resvg drops the rest of the
+  `style` attribute after the first one), the corner radius as an `rx` attribute, and sans-serif
+  CJK fonts (Noto Sans CJK, PingFang, Microsoft JhengHei, …) after the generic family, which
+  keeps CJK text out of a serif font. A CJK character is measured as one em wide.
+
 ## 0.4.0 - 2026-10-25
 
 - `RenderOptions::config` takes configuration in the form of `%%{init}%%` as a JSON object (what

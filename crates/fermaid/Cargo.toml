@@ -53,3 +53,4 @@ architecture = []
 
 [dev-dependencies]
 insta = "1"
+usvg = "0.45"

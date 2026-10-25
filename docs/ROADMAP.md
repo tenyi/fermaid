@@ -604,6 +604,11 @@ Notes:
 - [x] CI builds the library for `wasm32-unknown-unknown`, to keep the promise that the core does
   no I/O.
 
+### M7e — Viewers without CSS variables
+
+- [x] `RenderOptions::palette` (`Palette::light()` / `dark()`) writes the colors as plain values,
+  so resvg shows the diagram; CJK sans-serif fallbacks; `--palette` on the command line.
+
 ### Release — 0.4.0
 
 - [x] Publish the library, then the command line tool; tag the version and publish the release.

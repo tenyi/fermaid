@@ -39,12 +39,21 @@ pub(crate) fn svg_document(
     } else {
         ""
     };
+    let compat = options.palette.is_some();
+    // resvg drops the whole `style` attribute from the first custom property on, so a
+    // viewer that needs a palette gets none of the private aliases: `var(--_x)` is resolved
+    // in the content and the root keeps only its text color.
+    let root = if compat {
+        "color:var(--_fg)"
+    } else {
+        ROOT_STYLE
+    };
     let mut weights = String::new();
-    if content.contains("var(--_r)") {
+    if !compat && content.contains("var(--_r)") {
         weights += &format!(";--_r:{RADIUS}");
     }
     for (alias, name) in WEIGHTS {
-        if content.contains(&format!("var(--_{alias})")) {
+        if !compat && content.contains(&format!("var(--_{alias})")) {
             weights += &format!(";--_{alias}:var(--fermaid-{name}-weight,bold)");
         }
     }
@@ -52,12 +61,13 @@ pub(crate) fn svg_document(
         font_size,
         options.font_family.as_deref(),
         options.font_family_mono.as_deref(),
+        options.palette.is_some(),
     );
     let (w, h) = (num(width), num(height));
     let kind = kind.as_str();
     format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"fermaid fermaid-{kind}\" \
-         viewBox=\"0 0 {w} {h}\" width=\"{w}\" height=\"{h}\" style=\"{fit}{ROOT_STYLE}{weights}{}\" \
+         viewBox=\"0 0 {w} {h}\" width=\"{w}\" height=\"{h}\" style=\"{fit}{root}{weights}{}\" \
          fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"{kind}\"{aria}>\
          {head}{content}</svg>",
         esc(&font)

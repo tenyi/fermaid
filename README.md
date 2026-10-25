@@ -80,6 +80,7 @@ fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # a gantt chart with today's marker
 fermaid page.mmd --config '{"theme": "dark"}' --no-links --no-images -o page.svg
+fermaid page.mmd --palette dark -o page.svg   # plain colors, for resvg and other viewers without var()
 ```
 
 ## Theming
@@ -97,6 +98,19 @@ svg {
 ```
 
 Available variables: `--fermaid-bg`, `--fermaid-fg`, `--fermaid-muted`, `--fermaid-line`, `--fermaid-surface`, `--fermaid-surface-alt`, `--fermaid-border`, `--fermaid-accent`, `--fermaid-radius`, `--fermaid-font`, `--fermaid-font-mono`, and `--fermaid-series-1` to `--fermaid-series-8` for the colors of chart series such as pie slices.
+
+### Viewers without CSS variables
+
+resvg, librsvg and other SVG renderers do not read `var()`, so a default SVG is drawn black in them. Set `RenderOptions::palette` and every color is written out as a plain value, with no `var()` left in the SVG (the output stays deterministic, and without a palette it is exactly as before):
+
+```rust
+let options = fermaid::RenderOptions {
+    palette: Some(fermaid::Palette::dark()), // or Palette::light(), or your own colors
+    ..Default::default()
+};
+```
+
+A `Palette` has the colors of the variables above (`bg`, `fg`, `muted`, `line`, `surface`, `surface_alt`, `border`, `accent`, `critical` and the eight `series`); a color may hold only letters, digits and `# % . , ( ) -`, and any other is replaced by the light one. The same mode also names sans-serif CJK fonts (Noto Sans CJK, PingFang, Microsoft JhengHei, …) after the generic family, since resvg would otherwise draw CJK text in a serif font; the text widths assume that a CJK character is one em wide. On the command line it is `--palette light|dark`.
 
 ## Development
 

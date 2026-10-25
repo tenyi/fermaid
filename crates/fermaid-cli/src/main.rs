@@ -6,6 +6,7 @@ use std::process::ExitCode;
 const USAGE: &str = "\
 Usage: fermaid [INPUT|-] [-o OUTPUT] [--font-size N] [--max-width N] [--id-prefix PREFIX]
                [--config JSON|@FILE] [--no-links] [--no-images] [--now MS]
+               [--palette light|dark]
 
 Renders the Mermaid diagram in INPUT (or standard input) to SVG.
 
@@ -21,6 +22,9 @@ Options:
       --no-images        Leave every image out of the drawing
       --now MS           The current time for gantt charts, in milliseconds since
                          1970-01-01 UTC (default: 0)
+      --palette light|dark
+                         Write plain colors instead of CSS variables, for viewers
+                         that ignore var() such as resvg
   -h, --help             Show this help
   -V, --version          Show the version";
 
@@ -71,6 +75,13 @@ fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Parsed, String> 
                 let text = value(&arg)?;
                 let now = text.parse().ok().filter(|n: &f64| n.is_finite());
                 parsed.options.now = Some(now.ok_or(format!("invalid time: {text}"))?);
+            }
+            "--palette" => {
+                parsed.options.palette = Some(match value(&arg)?.as_str() {
+                    "light" => fermaid::Palette::light(),
+                    "dark" => fermaid::Palette::dark(),
+                    other => return Err(format!("unknown palette: {other} (light or dark)")),
+                });
             }
             "-" => parsed.input = None,
             flag if flag.starts_with('-') => return Err(format!("unknown option: {flag}")),
@@ -188,6 +199,16 @@ mod tests {
         assert!(!args.options.links);
         assert!(!args.options.images);
         assert!(parse(&["--config", "@/no/such/file"]).is_err());
+    }
+
+    #[test]
+    fn parses_palette() {
+        let Ok(Parsed::Run(args)) = parse(&["--palette", "dark"]) else {
+            panic!("expected arguments");
+        };
+        assert_eq!(args.options.palette, Some(fermaid::Palette::dark()));
+        assert!(parse(&["--palette", "blue"]).is_err());
+        assert!(parse(&["--palette"]).is_err());
     }
 
     #[test]

@@ -62,7 +62,7 @@ mod util;
 
 pub use detect::DiagramKind;
 pub use error::{Error, ErrorCode};
-pub use options::{Limits, Link, RenderOptions, Rendered};
+pub use options::{Limits, Link, Palette, RenderOptions, Rendered};
 pub use text::{IconResolver, MathMarkup, MathResolver, MetricsMeasurer, Style, TextMeasurer};
 
 use diagram::Input;
@@ -141,7 +141,10 @@ pub fn render(src: &str, options: &RenderOptions) -> Result<Rendered, Error> {
         options,
         measurer,
     };
-    let out = diagram.render(&input).map_err(|e| e.with_kind(kind))?;
+    let mut out = diagram.render(&input).map_err(|e| e.with_kind(kind))?;
+    if let Some(palette) = &options.palette {
+        out.svg = svg::resolve_vars(&out.svg, palette, options.font_family_mono.as_deref());
+    }
     if out.svg.chars().count() > limits.output {
         return Err(Error::new(
             ErrorCode::Limit,

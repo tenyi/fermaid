@@ -30,6 +30,112 @@ impl Default for Limits {
     }
 }
 
+/// The colors of a diagram, for a viewer that does not read CSS custom properties.
+///
+/// By default the SVG takes its colors from `var(--fermaid-*, fallback)` so that the page can
+/// theme it. Renderers such as resvg ignore `var()`, so a host that cannot theme the SVG
+/// through CSS sets [`RenderOptions::palette`]: every color is then written out as a plain
+/// value and the SVG holds no `var()` of its own.
+///
+/// A color is any CSS color made of letters, digits and `# % . , ( ) -` and spaces, such as
+/// `#fff`, `rgb(0, 0, 0)` or `steelblue`. Anything else is replaced by the matching color of
+/// [`Palette::light`], so that a color can never carry markup into the SVG.
+///
+/// ```
+/// let options = fermaid::RenderOptions {
+///     palette: Some(fermaid::Palette::dark()),
+///     ..Default::default()
+/// };
+/// let svg = fermaid::render("pie\n\"a\": 1\n\"b\": 2", &options).unwrap().svg;
+/// assert!(!svg.contains("var("));
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Palette {
+    /// The page behind the diagram (`--fermaid-bg`).
+    pub bg: String,
+    /// Text (`--fermaid-fg`).
+    pub fg: String,
+    /// Secondary text and axes (`--fermaid-muted`).
+    pub muted: String,
+    /// Lines and arrows (`--fermaid-line`).
+    pub line: String,
+    /// The fill of nodes (`--fermaid-surface`).
+    pub surface: String,
+    /// The fill of nested or alternate areas (`--fermaid-surface-alt`).
+    pub surface_alt: String,
+    /// Outlines (`--fermaid-border`).
+    pub border: String,
+    /// The accent color (`--fermaid-accent`).
+    pub accent: String,
+    /// What a diagram marks as critical (`--fermaid-critical`).
+    pub critical: String,
+    /// The colors of data series, cycling (`--fermaid-series-1` to `-8`).
+    pub series: [String; 8],
+}
+
+impl Palette {
+    /// The colors the SVG falls back to on a light page.
+    pub fn light() -> Self {
+        let s = |c: &str| c.to_string();
+        Self {
+            bg: s("#fff"),
+            fg: s("#1f1f1f"),
+            muted: s("#6e6e6e"),
+            line: s("#1f1f1f"),
+            surface: s("#f3f3f3"),
+            surface_alt: s("#e6e6e6"),
+            border: s("#8a8a8a"),
+            accent: s("#5b7bd5"),
+            critical: s("#e45756"),
+            series: [
+                "#4c78a8", "#f58518", "#54a24b", "#e45756", "#72b7b2", "#eeca3b", "#b279a2",
+                "#9d755d",
+            ]
+            .map(s),
+        }
+    }
+
+    /// Colors for a dark page.
+    pub fn dark() -> Self {
+        let s = |c: &str| c.to_string();
+        Self {
+            bg: s("#1e1e1e"),
+            fg: s("#e6e6e6"),
+            muted: s("#a0a0a0"),
+            line: s("#c8c8c8"),
+            surface: s("#2d2d2d"),
+            surface_alt: s("#3a3a3a"),
+            border: s("#6e6e6e"),
+            accent: s("#7f9be8"),
+            critical: s("#ff6b6b"),
+            series: [
+                "#6a9bd1", "#ff9f40", "#6fbf66", "#ff7070", "#8fd0cb", "#f2d65c", "#c796bd",
+                "#b9917a",
+            ]
+            .map(s),
+        }
+    }
+
+    /// The color of a `--fermaid-*` token by its suffix, if the palette has one.
+    pub(crate) fn token(&self, name: &str) -> Option<&str> {
+        Some(match name {
+            "bg" => &self.bg,
+            "fg" => &self.fg,
+            "muted" => &self.muted,
+            "line" => &self.line,
+            "surface" => &self.surface,
+            "surface-alt" => &self.surface_alt,
+            "border" => &self.border,
+            "accent" => &self.accent,
+            "critical" => &self.critical,
+            _ => {
+                let n: usize = name.strip_prefix("series-")?.parse().ok()?;
+                return self.series.get(n.checked_sub(1)?).map(String::as_str);
+            }
+        })
+    }
+}
+
 /// How a diagram is rendered. Every field has a default, so set only what you need:
 ///
 /// ```
@@ -88,6 +194,11 @@ pub struct RenderOptions {
     /// The current time, in milliseconds since 1970-01-01 UTC, for what a gantt chart dates
     /// from today. `None` is 1970-01-01, so that output never depends on the clock.
     pub now: Option<f64>,
+    /// Writes every color out as a plain value instead of a CSS variable, for viewers that
+    /// ignore `var()` (resvg, librsvg). `None`, the default, keeps the variables, so the page
+    /// can theme the SVG. With a palette, fonts also gain fallbacks for Chinese, Japanese and
+    /// Korean text, as such viewers would otherwise draw it in a serif font.
+    pub palette: Option<Palette>,
 }
 
 impl Default for RenderOptions {
@@ -113,6 +224,7 @@ impl Default for RenderOptions {
             links: true,
             images: true,
             now: None,
+            palette: None,
         }
     }
 }

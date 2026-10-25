@@ -266,20 +266,59 @@ fn is_family_list(list: &str) -> bool {
     }
 }
 
-fn families<'a>(list: Option<&'a str>, generic: &'a str) -> &'a str {
+pub(crate) fn families<'a>(list: Option<&'a str>, generic: &'a str) -> &'a str {
     list.filter(|l| is_family_list(l)).unwrap_or(generic)
 }
 
+/// Sans-serif CJK fonts, named for the viewers that do not pick one for CJK text themselves
+/// (resvg draws it in a serif font). They come after the generic family, so a viewer tries
+/// them for the characters the first font lacks. Traditional Chinese goes first, then
+/// Simplified Chinese, Japanese and Korean.
+const CJK_SANS: &str = "'Noto Sans CJK TC','Noto Sans TC','PingFang TC','Microsoft JhengHei',\
+    'Noto Sans CJK SC','PingFang SC','Microsoft YaHei','Noto Sans CJK JP','Hiragino Sans',\
+    'Yu Gothic','Meiryo','Noto Sans CJK KR','Malgun Gothic','WenQuanYi Micro Hei'";
+
+/// `list` followed by the CJK fonts, when `compat` is set.
+fn with_cjk(list: &str, compat: bool) -> String {
+    if compat {
+        format!("{list},{CJK_SANS}")
+    } else {
+        list.to_string()
+    }
+}
+
 /// The fonts the labels were measured in are the ones they are drawn in, unless the page names
-/// others. The rest of what text inherits is pinned, as none of it was measured.
-pub(crate) fn font_style(size: f64, family: Option<&str>, mono: Option<&str>) -> String {
+/// others. With `compat`, the style also suits viewers that read neither CSS variables nor the
+/// `font` shorthand: it gains the font size on its own and fonts for CJK text. The rest of what
+/// text inherits is pinned, as none of it was measured.
+pub(crate) fn font_style(
+    size: f64,
+    family: Option<&str>,
+    mono: Option<&str>,
+    compat: bool,
+) -> String {
+    let size = super::num(size);
+    // resvg does not read the `font` shorthand and would draw 12 pixel text.
+    let longhand = if compat {
+        format!("font-size:{size}px;")
+    } else {
+        String::new()
+    };
+    // resvg drops the whole `style` attribute from the first custom property on, so the
+    // private ones (`--_fm` here) are left out and `var(--_fm)` is resolved from the options.
+    let mono = if compat {
+        String::new()
+    } else {
+        format!(
+            "--_fm:var(--fermaid-font-mono,{});",
+            families(mono, "monospace")
+        )
+    };
     format!(
-        ";--_fm:var(--fermaid-font-mono,{});font:{}px sans-serif;\
+        ";{mono}font:{size}px sans-serif;{longhand}\
          letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;\
          font-family:var(--fermaid-font,{})",
-        families(mono, "monospace"),
-        super::num(size),
-        families(family, "sans-serif"),
+        with_cjk(families(family, "sans-serif"), compat),
     )
 }
 
@@ -329,9 +368,17 @@ mod tests {
     }
 
     #[test]
+    fn adds_cjk_fonts_after_the_family() {
+        let style = font_style(16.0, Some("Inter"), None, true);
+        assert!(style.contains("font-family:var(--fermaid-font,Inter,'Noto Sans CJK TC',"));
+        assert!(font_style(16.0, None, None, true).contains("sans-serif,'Noto Sans CJK TC'"));
+        assert!(!font_style(16.0, None, None, false).contains("CJK"));
+    }
+
+    #[test]
     fn writes_font_style() {
         assert_eq!(
-            font_style(16.0, Some("x;y"), None),
+            font_style(16.0, Some("x;y"), None, false),
             ";--_fm:var(--fermaid-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;\
              word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--fermaid-font,sans-serif)"
         );

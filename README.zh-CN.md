@@ -80,6 +80,7 @@ fermaid diagram.mmd -o diagram.svg
 cat diagram.mmd | fermaid --font-size 14 --max-width 360 --id-prefix fig1 > diagram.svg
 fermaid plan.mmd --now 1700000000000 -o plan.svg   # 画出今天标记的甘特图
 fermaid page.mmd --config '{"theme": "dark"}' --no-links --no-images -o page.svg
+fermaid page.mmd --palette dark -o page.svg   # 输出纯颜色值，供 resvg 等不支持 var() 的查看器使用
 ```
 
 ## 主题
@@ -97,6 +98,19 @@ svg {
 ```
 
 可用的变量：`--fermaid-bg`、`--fermaid-fg`、`--fermaid-muted`、`--fermaid-line`、`--fermaid-surface`、`--fermaid-surface-alt`、`--fermaid-border`、`--fermaid-accent`、`--fermaid-radius`、`--fermaid-font`、`--fermaid-font-mono`，以及用于饼图扇区等数据系列颜色的 `--fermaid-series-1` 到 `--fermaid-series-8`。
+
+### 不支持 CSS 变量的查看器
+
+resvg、librsvg 等 SVG 渲染器不会读取 `var()`，所以默认的 SVG 在其中会变成一片黑。设置 `RenderOptions::palette` 后，所有颜色都会直接写成实际数值，SVG 中不再有 `var()`（输出仍是确定性的；不设置调色板时输出与之前完全相同）：
+
+```rust
+let options = fermaid::RenderOptions {
+    palette: Some(fermaid::Palette::dark()), // 或 Palette::light()，或自定义颜色
+    ..Default::default()
+};
+```
+
+`Palette` 含有上述变量对应的颜色（`bg`、`fg`、`muted`、`line`、`surface`、`surface_alt`、`border`、`accent`、`critical` 与八个 `series`）；颜色只能由字母、数字与 `# % . , ( ) -` 组成，其他内容会换成浅色调色板的对应颜色。此模式还会在通用字体族之后加上无衬线 CJK 字体（Noto Sans CJK、PingFang、Microsoft JhengHei 等），否则 resvg 会以衬线字体画出中日韩文字；文字宽度按一个 CJK 字符等于一个 em 计算。命令行的对应参数是 `--palette light|dark`。
 
 ## 开发
 

@@ -37,6 +37,7 @@ pub(crate) mod edges;
     feature = "wardley",
 ))]
 pub(crate) mod markers;
+mod resolve;
 #[cfg(any(
     feature = "flowchart",
     feature = "state",
@@ -62,6 +63,7 @@ mod theme;
 mod title;
 
 pub(crate) use document::{Accessible, svg_document};
+pub(crate) use resolve::resolve_vars;
 pub(crate) use theme::{
     CRITICAL, FONT_MONO, ROOT_STYLE, ROUNDED, ResolvedStyle, class_names, font_style, parse_float,
     resolve_style, rounded, series_color,
