@@ -14,13 +14,16 @@
 //
 // Differences that are intended are listed in KNOWN.md, as a type and a JSON-quoted input on
 // one line; they are counted but not reported. The exit code is 1 when anything else differs.
+// A type that has a module in `summaries/` brings its own reference with it, so a new type
+// needs no change here.
 // The checkout needs `npm ci`.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { asYy, blockSummary, classSummary, erSummary, flowSummary, ganttSummary, gitSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { asYy, classSummary, erSummary, flowSummary, ganttSummary, gitSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { loadSummaries } from './summaries/index.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
 // as tools/oracle/golden.mjs does.
@@ -37,10 +40,12 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'git', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'block', 'url'];
+// A type that has a module in `summaries/` brings its own reference with it.
+const summaries = await loadSummaries();
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'git', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'url', ...summaries.keys()];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
-  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [quadrantchart] [url]');
+  console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [<type> ...]');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -69,7 +74,6 @@ const m = await loadPele(pele, {
   'src/diagrams/git/db.ts': ['buildGit'],
   'src/diagrams/xychart/db.ts': ['XyChartDb'],
   'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
-  'src/diagrams/block/db.ts': ['BlockDb'],
   'src/diagrams/common/outline.ts': ['NODE_TYPE'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
@@ -116,7 +120,6 @@ const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/ups
 const sankeyParser = m.buildParser(join(pele, 'tests/compat/sankey/upstream/sankey.jison'));
 const xychartParser = m.buildParser(join(pele, 'tests/compat/xychart/upstream/xychart.jison'));
 const quadrantParser = m.buildParser(join(pele, 'tests/compat/quadrant/upstream/quadrant.jison'));
-const blockParser = m.buildParser(join(pele, 'tests/compat/block/upstream/block.jison'));
 
 const TYPES = {
   pie: {
@@ -288,17 +291,6 @@ const TYPES = {
       return mindmapSummary(db);
     },
   },
-  block: {
-    keyword: /(^|\n)\s*block(-beta)?\b/,
-    fragments: ['block', 'block-beta', 'block:', 'columns 3', 'columns auto', 'space', 'space:3', 'end', '-->', '---', '-.->', '==>', '--o', '--x', '<-->', '~~~', '[', ']', '(', ')', '{', '}', '((', '))', '{{', '}}', '>', '|', '"', '`', '\\[', '/]', ']', '<[', ']>', '(right)', ',left', ',up', ',down', ',x', ',y', 'classDef c fill:red', 'class A c', 'style A fill:red', ':2', '\n', ' ', '%%', 'A', 'é'],
-    async reference(src) {
-      const db = new m.BlockDb();
-      blockParser.yy = asYy(db, { getLogger: () => quiet });
-      // Mermaid's Diagram.fromText encodes entities and adds a line break.
-      blockParser.parse(m.encodeEntities(src) + '\n');
-      return blockSummary(db);
-    },
-  },
   url: {
     corpus: [
       'https://example.com', 'HTTPS://Example.COM/a/b?c=d#e', 'http://x', 'http://a.b/c/../d/./e', 'https://user@host/p',
@@ -315,6 +307,19 @@ const TYPES = {
     },
   },
 };
+
+// A type that has a module in `summaries/` brings its own reference, its own corpus filter and
+// its own mutation fragments with it.
+for (const [type, spec] of summaries) {
+  TYPES[type] = {
+    keyword: spec.keyword,
+    fragments: spec.fragments,
+    ...(spec.corpusName ? { corpusName: spec.corpusName } : {}),
+    async reference(src) {
+      return spec.reference(pele, src);
+    },
+  };
+}
 
 const known = new Set(
   readFileSync(join(root, 'tools/oracle/KNOWN.md'), 'utf8')

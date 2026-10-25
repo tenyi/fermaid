@@ -5,12 +5,18 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// The bundles already built, by the checkout and by what they export.
+const bundles = new Map();
+
 // Bundles the named modules of a pele checkout (`npm ci` done, for esbuild) and imports them.
 // `exports` maps a path in the checkout, or a package name, to the names it exports. Packages
 // stay outside the bundle, which is written into the checkout's node_modules/.cache so that
-// they resolve.
+// they resolve. The same bundle is built once, so a reference may ask for it for every input.
 export async function loadPele(peleDir, exports) {
   const pele = resolve(peleDir);
+  const key = `${pele}|${JSON.stringify(exports)}`;
+  const cached = bundles.get(key);
+  if (cached) return cached;
   mkdirSync(join(pele, 'node_modules/.cache'), { recursive: true });
   const work = mkdtempSync(join(pele, 'node_modules/.cache/fermaid-oracle-'));
   const entry = join(work, 'entry.ts');
@@ -33,7 +39,9 @@ export async function loadPele(peleDir, exports) {
     `--outfile=${bundle}`,
     '--log-level=error',
   ]);
-  return import(pathToFileURL(bundle).href);
+  const mod = await import(pathToFileURL(bundle).href);
+  bundles.set(key, mod);
+  return mod;
 }
 
 export const q = (s) => (s === undefined || s === null ? '-' : JSON.stringify(String(s)));
@@ -78,26 +86,6 @@ export function asYy(db, extra) {
     }
   }
   return yy;
-}
-
-export function blockSummary(model) {
-  const out = [];
-  const walk = (block, depth) => {
-    out.push(
-      `block:${depth}|${q(block.id)}|${q(block.type ?? 'na')}|${q(block.label ?? '')}|w=${block.widthInColumns ?? '-'}|c=${block.columns ?? '-'}|cls=${list(block.classes ?? [])}|s=${list(block.styles ?? [])}`
-    );
-    for (const child of block.children ?? []) walk(child, depth + 1);
-  };
-  walk(model.root, 0);
-  for (const edge of model.edges) {
-    out.push(
-      `edge:${q(edge.id)}|${q(edge.start ?? '')}|${q(edge.end ?? '')}|${q(edge.label ?? '')}|${q(edge.arrowTypeStart ?? '')}|${q(edge.arrowTypeEnd ?? '')}|${q(edge.thickness ?? '')}|${q(edge.pattern ?? '')}`
-    );
-  }
-  for (const [name, def] of model.classes) {
-    out.push(`class:${q(name)}|s=${list(def.styles)}|t=${list(def.textStyles)}`);
-  }
-  return out.join('\n');
 }
 
 export function flowSummary(db) {

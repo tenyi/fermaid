@@ -1,24 +1,31 @@
-// Dev-only: writes what pele makes of each generated Mermaid spec case, as golden data for the
-// compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a case on
-// which fermaid's model matches pele's passes the spec too.
+// Dev-only: writes what the reference makes of each generated Mermaid spec case, as golden data
+// for the compat tests. pele passes Mermaid's own specs (less what its SKIPPED.md lists), so a
+// case on which fermaid's model matches the reference's passes the spec too.
 //
-//   node tools/oracle/golden.mjs <pele checkout> class|er|flowchart|gantt|journey|kanban|mindmap|requirement|sequence|state|timeline
+//   node tools/oracle/golden.mjs <pele checkout> <type>
 //
 // The checkout needs `npm ci` for esbuild. Writes crates/fermaid/tests/compat/<type>/expected.rs.
+// A type that has a module in `summaries/` is read with its own reference; the others are read
+// with the reference written here.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { asYy, blockSummary, classSummary, erSummary, flowSummary, ganttSummary, gitSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary, sankeySummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { asYy, classSummary, erSummary, flowSummary, ganttSummary, gitSummary, memberSummary, loadPele, journeySummary, kanbanSummary, mindmapSummary, requirementSummary, timelineSummary, seqSummary, stateSummary, sankeySummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { loadSummaries } from './summaries/index.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid.
 process.env.TZ = 'UTC';
 const [peleDir, type] = process.argv.slice(2);
-if (!peleDir || !['block', 'class', 'er', 'flowchart', 'gantt', 'git', 'journey', 'kanban', 'mindmap', 'requirement', 'sankey', 'sequence', 'state', 'timeline', 'xychart', 'quadrantchart'].includes(type)) {
-  console.error('usage: node tools/oracle/golden.mjs <pele checkout> block|class|er|flowchart|gantt|git|journey|kanban|mindmap|requirement|sankey|sequence|state|timeline|xychart|quadrantchart');
+const summaries = await loadSummaries();
+// The types whose reference is written here, rather than in a module of `summaries/`.
+const LEGACY = ['class', 'er', 'flowchart', 'gantt', 'git', 'journey', 'kanban', 'mindmap', 'requirement', 'sankey', 'sequence', 'state', 'timeline', 'xychart', 'quadrantchart'];
+if (!peleDir || (!LEGACY.includes(type) && !summaries.has(type))) {
+  console.error('usage: node tools/oracle/golden.mjs <pele checkout> <type>');
   process.exit(2);
 }
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const { BlockDb, buildGit, parseGit, XyChartDb, parseXyChart, QuadrantDb, parseQuadrant, ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, GanttDb, parseGantt, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, SankeyDb, parseSankey, prepareTextForParsing, encodeEntities } = await loadPele(peleDir, {
+const { buildGit, parseGit, XyChartDb, parseXyChart, QuadrantDb, parseQuadrant, ClassDb, ClassMember, parseClassDiagram, buildClassGraph, ErDb, parseEr, buildErGraph, FlowDb, parseFlowchart, GanttDb, parseGantt, RequirementDb, parseRequirement, buildRequirementGraph, TimelineDb, parseTimeline, JourneyDb, parseJourney, KanbanDb, parseKanban, MindmapDb, parseMindmap, SeqDb, parseSequence, StateDb, parseState, SankeyDb, parseSankey, prepareTextForParsing, encodeEntities } = LEGACY.includes(type)
+  ? await loadPele(peleDir, {
   'src/diagrams/class/db.ts': ['ClassDb'],
   'src/diagrams/class/parser.ts': ['parseClassDiagram'],
   'src/diagrams/class/graph.ts': ['buildClassGraph'],
@@ -52,11 +59,10 @@ const { BlockDb, buildGit, parseGit, XyChartDb, parseXyChart, QuadrantDb, parseQ
   'src/diagrams/xychart/db.ts': ['XyChartDb'],
   'src/diagrams/xychart/parser.ts': ['parseXyChart'],
   'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
-  'src/diagrams/block/db.ts': ['BlockDb'],
-  'tests/support/jison.ts': ['buildParser'],
   'src/diagrams/quadrant/parser.ts': ['parseQuadrant'],
   'src/preprocess.ts': ['encodeEntities'],
-});
+})
+  : {};
 
 // Reads the Rust string literals of cases.rs, as `{:?}` writes them.
 function rustString(lit) {
@@ -80,13 +86,6 @@ function rustString(lit) {
   }
   return out;
 }
-// The block diagram is parsed with the parser Mermaid generates from its own grammar, and the
-// model is filled by pele's port of Mermaid's block database.
-const blockParser = type === 'block'
-  ? (await loadPele(peleDir, { 'tests/support/jison.ts': ['buildParser'] })).buildParser(
-      join(resolve(peleDir), 'tests/compat/block/upstream/block.jison')
-    )
-  : undefined;
 
 const casesRs = readFileSync(join(root, `crates/fermaid/tests/compat/${type}/cases.rs`), 'utf8');
 const cases = [...casesRs.matchAll(/name: ("(?:[^"\\]|\\.)*"),\n\s*src: ("(?:[^"\\]|\\.)*"),/g)].map((m) => ({
@@ -100,7 +99,10 @@ for (const { name, src } of cases) {
   if (src.includes('${')) result = 'template';
   else {
     try {
-      if (type === 'flowchart') {
+      const spec = summaries.get(type);
+      if (spec) {
+        result = await spec.reference(peleDir, src);
+      } else if (type === 'flowchart') {
         const db = new FlowDb({ maxEdges: 500 });
         parseFlowchart(src, db);
         result = flowSummary(db);
@@ -163,12 +165,6 @@ for (const { name, src } of cases) {
         // the entities of the whole diagram before any parser sees it.
         const ast = parseGit(encodeEntities(src) + '\n');
         result = gitSummary(buildGit(ast, {}, undefined));
-      } else if (type === 'block') {
-        // Mermaid's Diagram.fromText encodes entities and adds a line break.
-        const db = new BlockDb();
-        blockParser.yy = asYy(db, { getLogger: () => ({ debug() {}, log() {}, warn() {}, error() {} }) });
-        blockParser.parse(encodeEntities(src) + '\n');
-        result = blockSummary(db);
       } else if (type === 'xychart') {
         // Mermaid's diagram parses the text as Mermaid prepares it first, and Mermaid encodes
         // the entities of the whole diagram before any parser sees it.
