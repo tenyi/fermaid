@@ -95,6 +95,44 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::QuadrantChart => Some(&crate::diagrams::quadrantchart::QuadrantChart),
         #[cfg(feature = "git")]
         DiagramKind::GitGraph => Some(&crate::diagrams::git::GitGraph),
+        #[cfg(feature = "agentflow")]
+        DiagramKind::Agentflow => Some(&crate::diagrams::agentflow::Agentflow),
+        #[cfg(feature = "swimlane")]
+        DiagramKind::Swimlane => Some(&crate::diagrams::swimlane::Swimlane),
+        #[cfg(feature = "railroad")]
+        DiagramKind::Railroad => Some(&crate::diagrams::railroad::Railroad),
+        #[cfg(feature = "wardley")]
+        DiagramKind::Wardley => Some(&crate::diagrams::wardley::Wardley),
+        #[cfg(feature = "eventmodeling")]
+        DiagramKind::EventModeling => Some(&crate::diagrams::eventmodeling::EventModeling),
+        #[cfg(feature = "ishikawa")]
+        DiagramKind::Ishikawa => Some(&crate::diagrams::ishikawa::Ishikawa),
+        #[cfg(feature = "cynefin")]
+        DiagramKind::Cynefin => Some(&crate::diagrams::cynefin::Cynefin),
+        #[cfg(feature = "treeview")]
+        DiagramKind::TreeView => Some(&crate::diagrams::treeview::TreeView),
+        #[cfg(feature = "venn")]
+        DiagramKind::Venn => Some(&crate::diagrams::venn::Venn),
+        #[cfg(feature = "info")]
+        DiagramKind::Info => Some(&crate::diagrams::info::Info),
+        #[cfg(feature = "usecase")]
+        DiagramKind::Usecase => Some(&crate::diagrams::usecase::Usecase),
+        #[cfg(feature = "c4")]
+        DiagramKind::C4 => Some(&crate::diagrams::c4::C4),
+        #[cfg(feature = "treemap")]
+        DiagramKind::Treemap => Some(&crate::diagrams::treemap::Treemap),
+        #[cfg(feature = "radar")]
+        DiagramKind::Radar => Some(&crate::diagrams::radar::Radar),
+        #[cfg(feature = "packet")]
+        DiagramKind::Packet => Some(&crate::diagrams::packet::Packet),
+        #[cfg(feature = "architecture")]
+        DiagramKind::Architecture => Some(&crate::diagrams::architecture::Architecture),
+        // Every type is compiled in when all the features are on, so the arm is out of reach
+        // then; it is what answers for a type whose feature is off.
+        #[allow(
+            unreachable_patterns,
+            reason = "a type without its feature is not drawn"
+        )]
         _ => None,
     }
 }

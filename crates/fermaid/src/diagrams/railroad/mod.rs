@@ -1,0 +1,17 @@
+//! Railroad diagrams, which fermaid does not draw yet.
+
+use crate::diagram::{Diagram, Input, Output};
+use crate::error::{Error, ErrorCode};
+
+/// The railroad diagram type.
+pub(crate) struct Railroad;
+
+impl Diagram for Railroad {
+    fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
+        Err(Error::new(
+            ErrorCode::Unsupported,
+            "Diagram type \"railroad\" is not supported yet.",
+        )
+        .at(&input.source, 0))
+    }
+}

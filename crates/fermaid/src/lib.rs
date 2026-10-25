@@ -20,7 +20,8 @@ mod error;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "requirement"
+    feature = "requirement",
+    feature = "block"
 ))]
 #[allow(
     dead_code,
@@ -170,10 +171,13 @@ mod tests {
 
     #[test]
     fn reports_types_not_compiled_in() {
-        let err = render("block\n", &RenderOptions::default()).unwrap_err();
+        let err = render("architecture-beta\n", &RenderOptions::default()).unwrap_err();
         assert_eq!(err.code, ErrorCode::Unsupported);
-        assert_eq!(err.kind, Some(DiagramKind::Block));
-        assert_eq!(err.message, "Diagram type \"block\" is not supported yet.");
+        assert_eq!(err.kind, Some(DiagramKind::Architecture));
+        assert_eq!(
+            err.message,
+            "Diagram type \"architecture\" is not supported yet."
+        );
         assert_eq!((err.line, err.column), (1, 1));
     }
 

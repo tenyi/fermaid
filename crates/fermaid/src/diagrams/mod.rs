@@ -1,5 +1,11 @@
 //! The diagram types, one module each behind its own Cargo feature.
 
+#[cfg(feature = "agentflow")]
+pub(crate) mod agentflow;
+#[cfg(feature = "architecture")]
+pub(crate) mod architecture;
+#[cfg(feature = "c4")]
+pub(crate) mod c4;
 #[cfg(feature = "class")]
 pub(crate) mod class;
 #[cfg(any(
@@ -18,27 +24,57 @@ pub(crate) mod class;
     feature = "sankey",
     feature = "xychart",
     feature = "quadrantchart",
-    feature = "git"
+    feature = "git",
+    feature = "architecture",
+    feature = "packet",
+    feature = "radar",
+    feature = "treemap",
+    feature = "c4",
+    feature = "usecase",
+    feature = "info",
+    feature = "venn",
+    feature = "treeview",
+    feature = "cynefin",
+    feature = "ishikawa",
+    feature = "eventmodeling",
+    feature = "wardley",
+    feature = "railroad",
+    feature = "swimlane",
+    feature = "agentflow"
 ))]
 pub(crate) mod common;
+#[cfg(feature = "cynefin")]
+pub(crate) mod cynefin;
 #[cfg(feature = "er")]
 pub(crate) mod er;
+#[cfg(feature = "eventmodeling")]
+pub(crate) mod eventmodeling;
 #[cfg(feature = "flowchart")]
 pub(crate) mod flowchart;
 #[cfg(feature = "gantt")]
 pub(crate) mod gantt;
 #[cfg(feature = "git")]
 pub(crate) mod git;
+#[cfg(feature = "info")]
+pub(crate) mod info;
+#[cfg(feature = "ishikawa")]
+pub(crate) mod ishikawa;
 #[cfg(feature = "journey")]
 pub(crate) mod journey;
 #[cfg(feature = "kanban")]
 pub(crate) mod kanban;
 #[cfg(feature = "mindmap")]
 pub(crate) mod mindmap;
+#[cfg(feature = "packet")]
+pub(crate) mod packet;
 #[cfg(feature = "pie")]
 pub(crate) mod pie;
 #[cfg(feature = "quadrantchart")]
 pub(crate) mod quadrantchart;
+#[cfg(feature = "radar")]
+pub(crate) mod radar;
+#[cfg(feature = "railroad")]
+pub(crate) mod railroad;
 #[cfg(feature = "requirement")]
 pub(crate) mod requirement;
 #[cfg(feature = "sankey")]
@@ -47,7 +83,19 @@ pub(crate) mod sankey;
 pub(crate) mod sequence;
 #[cfg(feature = "state")]
 pub(crate) mod state;
+#[cfg(feature = "swimlane")]
+pub(crate) mod swimlane;
 #[cfg(feature = "timeline")]
 pub(crate) mod timeline;
+#[cfg(feature = "treemap")]
+pub(crate) mod treemap;
+#[cfg(feature = "treeview")]
+pub(crate) mod treeview;
+#[cfg(feature = "usecase")]
+pub(crate) mod usecase;
+#[cfg(feature = "venn")]
+pub(crate) mod venn;
+#[cfg(feature = "wardley")]
+pub(crate) mod wardley;
 #[cfg(feature = "xychart")]
 pub(crate) mod xychart;
