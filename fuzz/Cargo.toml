@@ -237,3 +237,10 @@ path = "fuzz_targets/railroad.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "swimlane"
+path = "fuzz_targets/swimlane.rs"
+test = false
+doc = false
+bench = false

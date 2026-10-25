@@ -43,6 +43,7 @@ fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，
 | 事件建模图（`eventmodeling`） | 已支持：泳道、框架、关系与注记 |
 | Wardley 地图（`wardley-beta`） | 已支持：`title`、`accTitle` 与 `accDescr`、各条目及其坐标与演化；以及 `wardley` 的配置键 `width`、`height` 与 `showGrid` |
 | 铁路图（`railroad-beta`、`railroad-ebnf-beta`、`railroad-abnf-beta`、`railroad-peg-beta`） | 已支持：Mermaid 的四种记法，含其规则与终结符；以及 `railroad` 的配置键 `padding`、`verticalSeparation`、`horizontalSeparation`、`arcRadius`、`fontSize`、`strokeWidth`、`showMarkers` 与 `markerRadius` |
+| 泳道图（`swimlane-beta`） | 已支持：流程图语法，最上层的子图画成泳道。设置取自 `flowchart` 一节，与 Mermaid 的说明相同 |
 | 其他 | 计划中 |
 
 ## 目标

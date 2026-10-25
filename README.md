@@ -43,6 +43,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Event modeling diagram (`eventmodeling`) | Supported: the lanes, the frames, the relations and the notes |
 | Wardley map (`wardley-beta`) | Supported: `title`, `accTitle` and `accDescr`, the items with their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid` |
 | Railroad diagram (`railroad-beta`, `railroad-ebnf-beta`, `railroad-abnf-beta`, `railroad-peg-beta`) | Supported: the four notations of Mermaid, with their rules and their terminals; and the `railroad` config keys `padding`, `verticalSeparation`, `horizontalSeparation`, `arcRadius`, `fontSize`, `strokeWidth`, `showMarkers` and `markerRadius` |
+| Swimlane diagram (`swimlane-beta`) | Supported: the flowchart syntax, with the top-level subgraphs drawn as the lanes. The settings come from the `flowchart` section, as Mermaid documents |
 | The rest | Planned |
 
 ## Goals

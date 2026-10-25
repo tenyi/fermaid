@@ -43,6 +43,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | イベントモデリング図（`eventmodeling`） | 対応済み：レーン、フレーム、関係、注記 |
 | Wardley マップ（`wardley-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、各項目と座標、進化。`wardley` の設定キー `width`、`height`、`showGrid` に対応 |
 | 鉄道図（`railroad-beta`、`railroad-ebnf-beta`、`railroad-abnf-beta`、`railroad-peg-beta`） | 対応済み：Mermaid の四つの記法と、その規則と終端。`railroad` の設定キー `padding`、`verticalSeparation`、`horizontalSeparation`、`arcRadius`、`fontSize`、`strokeWidth`、`showMarkers`、`markerRadius` に対応 |
+| スイムレーン図（`swimlane-beta`） | 対応済み：フローチャートの記法と、最上位のサブグラフをレーンとして描く。設定は Mermaid の記述どおり `flowchart` の節から読む |
 | その他 | 予定 |
 
 ## 目標

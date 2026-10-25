@@ -69,6 +69,9 @@ before 1.0, a minor version may break the API.
   ABNF and PEG — with their rules and their terminals; and the `railroad` config keys `padding`,
   `verticalSeparation`, `horizontalSeparation`, `arcRadius`, `fontSize`, `strokeWidth`,
   `showMarkers` and `markerRadius`.
+- Swimlane diagrams, behind the `swimlane` feature: the flowchart syntax, with the top-level
+  subgraphs drawn as the lanes. The settings come from the `flowchart` section, as Mermaid
+  documents.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
