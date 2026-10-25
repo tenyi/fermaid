@@ -350,6 +350,9 @@ Notes:
 
 - [x] Block diagrams, behind the `block` feature.
 - [ ] Architecture diagrams, behind the `architecture` feature.
+- [ ] Packet diagrams, behind the `packet` feature.
+- [ ] Radar charts, behind the `radar` feature.
+- [ ] Treemaps, behind the `treemap` feature.
 
 Notes:
 - A block diagram is read with Mermaid's own `block.jison` grammar, through a hand-written lexer
@@ -369,9 +372,6 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,063 inputs,
   the 40 Mermaid spec cases pass (13 of them are not diagrams and are listed in `SKIPPED.md`),
   and 490,480 runs of fuzzing over ten minutes found no panic.
-- [ ] Packet diagrams, behind the `packet` feature.
-- [ ] Radar charts, behind the `radar` feature.
-- [ ] Treemaps, behind the `treemap` feature.
 
 ### M6c — The rest
 
