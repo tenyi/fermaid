@@ -181,3 +181,10 @@ path = "fuzz_targets/usecase.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "info"
+path = "fuzz_targets/info.rs"
+test = false
+doc = false
+bench = false

@@ -49,6 +49,8 @@ before 1.0, a minor version may break the API.
 - Use case diagrams, behind the `usecase` feature: `title`, `accTitle` and `accDescr`, actors and
   use cases with the relations between them, boundaries, notes, the JSON tables, `classDef` and
   `class`; and the `usecase` config keys `nodeSpacing` and `rankSpacing`.
+- Information diagrams, behind the `info` feature: `title`, `accTitle` and `accDescr`, the
+  version of the library and the lines of text.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
