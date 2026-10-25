@@ -34,6 +34,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | レーダーチャート（`radar-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、項目を持つ `axis` と `curve`、およびオプション `showLegend`、`ticks`、`min`、`max`、`graticule`。`radar` の設定キー `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor`、`curveTension` に対応 |
 | ツリーマップ（`treemap`） | 対応済み：セクションと葉から成る木とその値、`classDef` と `class` に対応 |
 | C4 図（`C4Context`、`C4Container`、`C4Component`、`C4Dynamic`、`C4Deployment`） | 対応済み：`title`、`accTitle` と `accDescr`、人物、システム、コンテナ、コンポーネントと、その境界と関係、および `UpdateLayoutConfig` 文 |
+| ユースケース図（`usecase-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、アクターとユースケース、その関係。`usecase` の設定キー `nodeSpacing` と `rankSpacing` に対応 |
 | その他 | 予定 |
 
 ## 目標

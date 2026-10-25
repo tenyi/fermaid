@@ -22,6 +22,7 @@ mod error;
     feature = "er",
     feature = "requirement",
     feature = "block",
+    feature = "usecase",
 ))]
 #[allow(
     dead_code,
@@ -46,6 +47,7 @@ mod unicode;
     feature = "er",
     feature = "kanban",
     feature = "gantt",
+    feature = "usecase",
     feature = "c4",
 ))]
 #[allow(

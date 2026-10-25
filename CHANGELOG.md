@@ -46,6 +46,9 @@ before 1.0, a minor version may break the API.
   `C4Container`, `C4Component`, `C4Dynamic` and `C4Deployment` statements, persons, systems,
   containers and components with their boundaries and their relationships, and the
   `UpdateLayoutConfig` statement.
+- Use case diagrams, behind the `usecase` feature: `title`, `accTitle` and `accDescr`, actors and
+  use cases with the relations between them, boundaries, notes, the JSON tables, `classDef` and
+  `class`; and the `usecase` config keys `nodeSpacing` and `rankSpacing`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

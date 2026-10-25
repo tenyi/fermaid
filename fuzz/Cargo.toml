@@ -174,3 +174,10 @@ path = "fuzz_targets/c4.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "usecase"
+path = "fuzz_targets/usecase.rs"
+test = false
+doc = false
+bench = false

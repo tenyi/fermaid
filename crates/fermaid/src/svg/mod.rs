@@ -5,6 +5,7 @@
     feature = "flowchart",
     feature = "class",
     feature = "er",
+    feature = "usecase",
 ))]
 pub(crate) mod cluster;
 mod document;
@@ -15,6 +16,7 @@ mod document;
     feature = "er",
     feature = "requirement",
     feature = "block",
+    feature = "usecase",
 ))]
 pub(crate) mod edges;
 #[cfg(any(
@@ -26,6 +28,7 @@ pub(crate) mod edges;
     feature = "requirement",
     feature = "timeline",
     feature = "block",
+    feature = "usecase",
     feature = "c4",
 ))]
 pub(crate) mod markers;
@@ -37,6 +40,7 @@ pub(crate) mod markers;
     feature = "mindmap",
     feature = "block",
     feature = "c4",
+    feature = "usecase",
 ))]
 #[cfg_attr(
     not(any(

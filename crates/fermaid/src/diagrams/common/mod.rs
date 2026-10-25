@@ -23,6 +23,7 @@ pub(crate) mod chars;
     feature = "state",
     feature = "timeline",
     feature = "treemap",
+    feature = "usecase",
     feature = "xychart",
     feature = "c4",
     feature = "agentflow"
@@ -55,6 +56,7 @@ pub(crate) mod generics;
         feature = "block",
         feature = "architecture",
         feature = "c4",
+        feature = "usecase",
     )
 ))]
 #[allow(dead_code, reason = "each type uses only part of the golden helpers")]

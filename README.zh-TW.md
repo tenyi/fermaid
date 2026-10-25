@@ -34,6 +34,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 雷達圖（`radar-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、可帶項目的 `axis` 與 `curve`，以及選項 `showLegend`、`ticks`、`min`、`max` 與 `graticule`；以及 `radar` 的設定鍵 `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor` 與 `curveTension` |
 | 矩形樹圖（`treemap`） | 已支援：由區段與葉節點組成的樹及其數值，以及 `classDef` 與 `class` |
 | C4 圖（`C4Context`、`C4Container`、`C4Component`、`C4Dynamic`、`C4Deployment`） | 已支援：`title`、`accTitle` 與 `accDescr`、人員、系統、容器與元件及其邊界與關聯，以及 `UpdateLayoutConfig` 敘述 |
+| 用例圖（`usecase-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、角色與用例及其間的關聯；以及 `usecase` 的設定鍵 `nodeSpacing` 與 `rankSpacing` |
 | 其他 | 規劃中 |
 
 ## 目標
