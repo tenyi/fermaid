@@ -163,10 +163,12 @@ struct End {
 fn attach_ends(cedges: &mut [CEdge], cnodes: &[CNode], views: &[View<'_>]) {
     let mut sides: HashMap<usize, Vec<End>> = HashMap::new();
     for (edge_index, edge) in cedges.iter().enumerate() {
-        let last = edge.route.len() - 3;
-        if edge.src == edge.dst || last < 3 {
+        // The route of an edge holds its two ends and the points between them, so an edge
+        // with fewer points than that has no end to put on the outline of a node.
+        if edge.src == edge.dst || edge.route.len() < 6 {
             continue;
         }
+        let last = edge.route.len() - 3;
         for (index, at, next) in [(edge.src, 0usize, 3usize), (edge.dst, last, last - 3)] {
             let c = &cnodes[index];
             if c.is_group {

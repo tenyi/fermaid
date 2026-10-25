@@ -147,6 +147,14 @@ fn refuses_a_json_node_that_is_not_json() {
 }
 
 #[test]
+fn draws_an_edge_whose_route_is_short() {
+    // The route of the edge holds fewer points than the drawing expects, so the edge has no
+    // end to put on the outline of a node. It is still drawn.
+    let rendered = try_render("usecase-beta\nA--A");
+    assert!(rendered.is_some());
+}
+
+#[test]
 fn output_is_deterministic() {
     assert_eq!(svg(FULL), svg(FULL));
 }
