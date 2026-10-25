@@ -3,10 +3,12 @@
 
 #[cfg(test)]
 mod compat;
-mod db;
-mod graph;
+// The swimlane diagram is a flowchart whose subgraphs are lanes, so it reads the flowchart's
+// own model and parser rather than a second copy of them.
+pub(crate) mod db;
+pub(crate) mod graph;
 mod lexer;
-mod parser;
+pub(crate) mod parser;
 mod render;
 mod shapes;
 
