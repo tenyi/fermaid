@@ -416,7 +416,7 @@ Notes:
 - [x] Info diagrams, behind the `info` feature.
 - [x] Venn diagrams, behind the `venn` feature.
 - [x] Tree views, behind the `treeview` feature.
-- [ ] Cynefin diagrams, behind the `cynefin` feature.
+- [x] Cynefin diagrams, behind the `cynefin` feature.
 - [ ] Ishikawa diagrams, behind the `ishikawa` feature.
 - [ ] Event modeling diagrams, behind the `eventmodeling` feature.
 - [ ] Wardley maps, behind the `wardley` feature.
@@ -452,6 +452,13 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,011
   inputs, the 163 Mermaid spec cases pass (1 of them holds no diagram and is listed in
   `SKIPPED.md`), and ten minutes of fuzzing (884,204 runs) found no panic.
+- A Cynefin diagram is read with Mermaid's Langium grammar: the four regions with the items in
+  them, and the transitions between the regions with their labels. Mermaid's parser is
+  hand-written, and pele's port of it reads the same sources the same way; where the two
+  differ, this follows Mermaid.
+- The differential run against Mermaid's own grammar reports no difference over 3,019
+  inputs, the 42 Mermaid spec cases pass (27 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (462,372 runs) found no panic.
 
 ## Later milestones (scope only)
 
