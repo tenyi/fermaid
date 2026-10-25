@@ -421,7 +421,7 @@ Notes:
 - [x] Event modeling diagrams, behind the `eventmodeling` feature.
 - [x] Wardley maps, behind the `wardley` feature.
 - [ ] Railroad diagrams, behind the `railroad` feature.
-- [ ] Swimlane diagrams, behind the `swimlane` feature.
+- [x] Swimlane diagrams, behind the `swimlane` feature.
 - [ ] Agent flows, behind the `agentflow` feature.
 
 Notes:
@@ -481,6 +481,18 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,039
   inputs, the 24 Mermaid spec cases pass (4 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,003,196 runs) found no panic.
+- A swimlane diagram is a flowchart whose top-level subgraphs are the lanes, and Mermaid draws
+  it with the flowchart's own parser and model: the syntax is the flowchart's, and only the
+  layout and the drawing of the lanes are of its own. The `swimlane` feature brings the
+  `flowchart` one with it, and the settings come from the `flowchart` section, as Mermaid
+  documents.
+- The lanes are laid out as pele lays them out: every top-level group is a band that runs the
+  length of the diagram along the flow, the ranks are shared by all lanes, so a step sits
+  level with the steps that happen at the same time in other lanes, and each node stays
+  inside its own lane.
+- The differential run against Mermaid's own grammar reports no difference over 3,013
+  inputs, the 14 Mermaid spec cases pass (2 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (803,536 runs) found no panic.
 
 ## Later milestones (scope only)
 
