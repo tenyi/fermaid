@@ -419,7 +419,7 @@ Notes:
 - [x] Cynefin diagrams, behind the `cynefin` feature.
 - [x] Ishikawa diagrams, behind the `ishikawa` feature.
 - [x] Event modeling diagrams, behind the `eventmodeling` feature.
-- [ ] Wardley maps, behind the `wardley` feature.
+- [x] Wardley maps, behind the `wardley` feature.
 - [ ] Railroad diagrams, behind the `railroad` feature.
 - [ ] Swimlane diagrams, behind the `swimlane` feature.
 - [ ] Agent flows, behind the `agentflow` feature.
@@ -476,6 +476,11 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,024
   inputs, the 41 Mermaid spec cases pass (27 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,393,960 runs) found no panic.
+- A Wardley map is read with Mermaid's Langium grammar, over the shared tokenizer. The model
+  holds the items of the map with the axes they are placed on and the evolution they sit at.
+- The differential run against Mermaid's own grammar reports no difference over 3,039
+  inputs, the 24 Mermaid spec cases pass (4 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (1,003,196 runs) found no panic.
 
 ## Later milestones (scope only)
 
