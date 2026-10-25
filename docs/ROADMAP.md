@@ -26,7 +26,7 @@ done: every diagram type Mermaid 12.1.0 builds is supported.
 | Dates | Gantt dates are read and drawn in UTC: there is no time zone database, and output must be deterministic. "Today" is `RenderOptions::now` (milliseconds since the epoch, CLI `--now`); `None` is 1970-01-01, not the clock. A date no format matches falls back to `new Date(text)`, which V8 reads with a parser of its own, ported in `gantt/legacy_date.rs`; the dates it reads are in `gantt/date_cases.rs`, and `tools/oracle/dates.mjs` writes them. |
 | Preprocessing | `%%` comments, a front-matter YAML subset (`title`, nested `config` maps and scalars), and `%%{init}%%` parsed as strict JSON, like `JSON.parse` in pele (not JSON5). Unknown keys are ignored. |
 | Testing | insta snapshots; Mermaid spec cases ported from pele's `tests/compat/<type>`, each with a `SKIPPED.md`; per-type security tests; cargo-fuzz (no panics, limits hold); differential fuzzing against Mermaid's parsers from M3 (dev-only Node harness, outside regular CI). |
-| CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. |
+| CI | GitHub Actions: `fmt --check`, `clippy -D warnings`, `test` on stable and MSRV, 60-second fuzz smoke run per target. A commit that touches only the documentation skips the run, because prose cannot break the build and the fuzz smoke run takes half an hour. |
 | Releases | `0.2.0` is the first published release, after M5; it reserves the name on crates.io. Breaking changes are allowed before 1.0 and recorded in `CHANGELOG.md`. |
 
 ## Public API (initial shape)
