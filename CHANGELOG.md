@@ -5,6 +5,15 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+## 0.3.0 - 2026-10-25
+
+The second published version. It covers milestone M6: the twenty-one diagram types that were
+still to come, so that every diagram type Mermaid 12.1.0 builds is supported now. Every
+diagram type is behind its own Cargo feature, and the default feature `all` includes them
+all. The library has no runtime dependencies.
+
+### Diagram types
+
 - Architecture diagrams, behind the `architecture` feature: services in groups, the edges
   between them with their labels, junctions, `service`, `group` and `junction` with their icons,
   and the `architecture` config keys `iconSize`, `padding` and `fontSize`. A service has no icon

@@ -270,9 +270,9 @@ Notes:
 - The library is `fermaid` and the command line tool is `fermaid-cli`; the tool depends on
   the library, so the library goes first.
 
-## Release — the next version
+## Release — 0.3.0
 
-The next version comes after M6, when every diagram type Mermaid 12.1.0 builds is done.
+The version that follows M6, when every diagram type Mermaid 12.1.0 builds is done.
 
 1. [x] Add `LICENSE.md`, so that the licence texts travel with the published crates: the
    licence files sit at the root of the repository, and cargo packages only what is inside the

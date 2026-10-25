@@ -13,4 +13,4 @@ name = "fermaid"
 path = "src/main.rs"
 
 [dependencies]
-fermaid = { path = "../fermaid", version = "0.2.0" }
+fermaid = { path = "../fermaid", version = "0.3.0" }
