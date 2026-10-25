@@ -352,7 +352,7 @@ Notes:
 - [x] Block diagrams, behind the `block` feature.
 - [x] Architecture diagrams, behind the `architecture` feature.
 - [x] Packet diagrams, behind the `packet` feature.
-- [ ] Radar charts, behind the `radar` feature.
+- [x] Radar charts, behind the `radar` feature.
 - [ ] Treemaps, behind the `treemap` feature.
 
 Notes:
@@ -391,6 +391,15 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,019
   inputs, the 23 Mermaid spec cases pass (1 of them read positions back from a DOM and are
   listed in `SKIPPED.md`), and ten minutes of fuzzing (1,270,660 runs) found no panic.
+- A radar chart is read with Mermaid's Langium grammar, over the shared tokenizer. The values
+  of a curve are either a list of numbers or a list of `axis: value` pairs, and never a mix
+  of the two in one curve: Mermaid's grammar tries the numbers first and falls back to the
+  pairs, and here the first value decides which of the two it is.
+- The chart is drawn with pele's own layout, as it is for every type: Mermaid draws the chart
+  with d3, and the two are not the same picture.
+- The differential run against Mermaid's own grammar reports no difference over 3,014
+  inputs, the 62 Mermaid spec cases pass (43 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (1,065,746 runs) found no panic.
 
 ### M6c — The rest
 
