@@ -61,6 +61,11 @@ node tools/oracle/render-compare.mjs ../pele xychart   # compare the drawn chart
 
 Rust edition is 2024.
 
+The CI runs two toolchains: the latest `stable`, which moves, and `1.85`, the minimum supported
+Rust version, which is pinned on purpose. The `stable` job is the one that finds new lints, so
+keep the local `stable` in step with it: run `rustup update stable` before trusting a clean
+`cargo clippy`, and run the gates again on `1.85` when a change touches the library.
+
 ## Language and documentation rules
 
 This is an open-source project for a worldwide audience.
