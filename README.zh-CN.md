@@ -32,6 +32,7 @@ fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，
 | 架构图（`architecture`、`architecture-beta`） | 已支持：分组中的服务、服务之间的连线及其标签、连接点、可带图标的 `service`、`group` 与 `junction`；以及 `architecture` 的配置键 `iconSize`、`padding` 与 `fontSize`。fermaid 没有图标字体，因此以方块承载服务的名称 |
 | 封包图（`packet`、`packet-beta`） | 已支持：`title`、`accTitle` 与 `accDescr`、以位范围表示的字段行、以 `+bits` 表示的字段；以及 `packet` 的配置键 `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX` 与 `paddingY` |
 | 雷达图（`radar-beta`） | 已支持：`title`、`accTitle` 与 `accDescr`、可带条目的 `axis` 与 `curve`，以及选项 `showLegend`、`ticks`、`min`、`max` 与 `graticule`；以及 `radar` 的配置键 `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor` 与 `curveTension` |
+| 矩形树图（`treemap`） | 已支持：由分区与叶节点组成的树及其数值，以及 `classDef` 与 `class` |
 | 其他 | 计划中 |
 
 ## 目标

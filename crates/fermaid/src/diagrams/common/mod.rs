@@ -22,6 +22,7 @@ pub(crate) mod chars;
     feature = "sequence",
     feature = "state",
     feature = "timeline",
+    feature = "treemap",
     feature = "xychart",
     feature = "agentflow"
 ))]
@@ -48,6 +49,7 @@ pub(crate) mod generics;
         feature = "sequence",
         feature = "state",
         feature = "timeline",
+        feature = "treemap",
         feature = "xychart",
         feature = "block",
         feature = "architecture",
@@ -66,6 +68,7 @@ pub(crate) mod literal;
     feature = "quadrantchart",
     feature = "git",
     feature = "block",
+    feature = "treemap",
     feature = "architecture",
     feature = "wardley"
 ))]
@@ -90,6 +93,7 @@ pub(crate) mod scan;
     feature = "pie",
     feature = "git",
     feature = "radar",
+    feature = "treemap",
     feature = "architecture",
     feature = "wardley"
 ))]
@@ -98,6 +102,7 @@ pub(crate) mod scan;
         feature = "pie",
         feature = "git",
         feature = "radar",
+        feature = "treemap",
         feature = "architecture"
     )),
     allow(dead_code, reason = "each type uses only part of the tokenizer")

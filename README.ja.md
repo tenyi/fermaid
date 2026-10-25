@@ -32,6 +32,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | アーキテクチャ図（`architecture`、`architecture-beta`） | 対応済み：グループ化されたサービス、サービスの間のエッジとそのラベル、ジャンクション、アイコンを持つ `service`、`group` と `junction`。`architecture` の設定キー `iconSize`、`padding`、`fontSize` に対応。アイコンのフォントはないため、サービスの名前で図を表す |
 | パケット図（`packet`、`packet-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、ビット範囲を持つフィールドの行、`+bits` のフィールド。`packet` の設定キー `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX`、`paddingY` に対応 |
 | レーダーチャート（`radar-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、項目を持つ `axis` と `curve`、およびオプション `showLegend`、`ticks`、`min`、`max`、`graticule`。`radar` の設定キー `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor`、`curveTension` に対応 |
+| ツリーマップ（`treemap`） | 対応済み：セクションと葉から成る木とその値、`classDef` と `class` に対応 |
 | その他 | 予定 |
 
 ## 目標

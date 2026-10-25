@@ -32,6 +32,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Architecture (`architecture`, `architecture-beta`) | Supported: services in groups, with the edges between them and their labels, junctions, `service`, `group` and `junction` with their icons; and the `architecture` config keys `iconSize`, `padding` and `fontSize`. A service has no icon font, so its box holds its name |
 | Packet (`packet`, `packet-beta`) | Supported: `title`, `accTitle` and `accDescr`, rows of fields with their bit ranges, a field of `+bits`; and the `packet` config keys `rowHeight`, `bitWidth`, `bitsPerRow`, `showBits`, `bitOrder`, `paddingX` and `paddingY` |
 | Radar chart (`radar-beta`) | Supported: `title`, `accTitle` and `accDescr`, `axis` and `curve` with their entries, and the options `showLegend`, `ticks`, `min`, `max` and `graticule`; and the `radar` config keys `width`, `height`, `marginTop`, `marginRight`, `marginBottom`, `marginLeft`, `axisScaleFactor`, `axisLabelFactor` and `curveTension` |
+| Treemap (`treemap`) | Supported: a tree of sections and leaves with their values, and `classDef` and `class` |
 | The rest | Planned |
 
 ## Goals

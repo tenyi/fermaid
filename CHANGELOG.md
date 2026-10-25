@@ -16,6 +16,8 @@ before 1.0, a minor version may break the API.
   `curve` with their entries, and the options `showLegend`, `ticks`, `min`, `max` and
   `graticule`; and the `radar` config keys `width`, `height`, `marginTop`, `marginRight`,
   `marginBottom`, `marginLeft`, `axisScaleFactor`, `axisLabelFactor` and `curveTension`.
+- Treemaps, behind the `treemap` feature: a tree of sections and leaves with their values, and
+  `classDef` and `class`.
 - Block diagrams, behind the `block` feature: blocks in a grid with `columns`, composites with
   `block:` and `end`, `space`, every shape of Mermaid, block arrows with their directions, links
   with their labels and their arrow ends, `classDef`, `class` and `style`, and the `block` config
