@@ -422,7 +422,7 @@ Notes:
 - [x] Wardley maps, behind the `wardley` feature.
 - [ ] Railroad diagrams, behind the `railroad` feature.
 - [x] Swimlane diagrams, behind the `swimlane` feature.
-- [ ] Agent flows, behind the `agentflow` feature.
+- [x] Agent flows, behind the `agentflow` feature.
 
 Notes:
 - A C4 diagram is read with Mermaid's jison grammar, through a hand-written lexer that walks
@@ -493,6 +493,16 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,013
   inputs, the 14 Mermaid spec cases pass (2 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (803,536 runs) found no panic.
+- An agent flow diagram is read with Mermaid's jison grammar, through a hand-written lexer that
+  walks UTF-16 code units, as the jison lexer does.
+- The metadata of an `@{ … }` block is read the way Mermaid reads it: the body is handed to
+  js-yaml as it was written, and a block that is written over several lines is retried once
+  with the line-trailing commas stripped. A body that parses into something else than a
+  mapping holds no metadata, but it is not an error.
+- The differential run against Mermaid's own grammar reports no difference over 3,173
+  inputs, the 239 Mermaid spec cases pass (79 are listed in `SKIPPED.md`: 72 are sources
+  Mermaid itself refuses and 7 hold no diagram listed in `SKIPPED.md`), and ten minutes of
+  fuzzing (676,742 runs) found no panic.
 
 ## Later milestones (scope only)
 
