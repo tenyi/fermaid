@@ -733,13 +733,10 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
             continue;
         }
 
-        let body;
-        let kind;
-        if view.kind == Kind::Actor {
-            kind = "fermaid-actor";
+        let (kind, body) = if view.kind == Kind::Actor {
             let top = -h / 2.0;
             let stereotype_y = top + FIGURE_H + FIGURE_GAP + view.stereotype.height / 2.0;
-            body = format!(
+            let body = format!(
                 "<g class=\"fermaid-actor-figure\" transform=\"translate(0,{})\">{}</g>",
                 num(top + FIGURE_H / 2.0),
                 figure(view)
@@ -754,8 +751,8 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                 h / 2.0 - view.label.height / 2.0,
                 &format!(" class=\"fermaid-label\"{text_attrs}"),
             );
+            ("fermaid-actor", body)
         } else if view.kind == Kind::Json {
-            kind = "fermaid-json";
             let x0 = -w / 2.0;
             let mut y = -h / 2.0 + view.head_h;
             let mut cells = String::new();
@@ -779,7 +776,7 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                 ));
                 y += row_h;
             }
-            body = format!(
+            let body = format!(
                 "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\"{}/>\
                  <path class=\"fermaid-json-lines\" d=\"{lines}\" fill=\"none\" stroke=\"var(--_b)\"{}/>{}\
                  <g font-size=\"{small}\">{cells}</g>",
@@ -796,10 +793,17 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                     &format!(" class=\"fermaid-label\" font-weight=\"var(--_hw)\"{text_attrs}"),
                 ),
             );
+            ("fermaid-json", body)
         } else {
             let label_y = view.stereotype.height / 2.0;
+            let kind = if view.kind == Kind::Ellipse {
+                "fermaid-usecase"
+            } else if node.shape == GraphShape::Note {
+                "fermaid-note"
+            } else {
+                "fermaid-usecase"
+            };
             let outline = if view.kind == Kind::Ellipse {
-                kind = "fermaid-usecase";
                 let mut outline = format!(
                     "<ellipse rx=\"{}\" ry=\"{}\"{SHAPE_ATTRS}{shape}/>",
                     num(w / 2.0),
@@ -822,7 +826,6 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                 }
                 outline
             } else if node.shape == GraphShape::Note {
-                kind = "fermaid-note";
                 let r = w / 2.0;
                 let b = h / 2.0;
                 format!(
@@ -842,7 +845,6 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                     view.style.line
                 )
             } else {
-                kind = "fermaid-usecase";
                 format!(
                     "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\"{}/>",
                     num(-w / 2.0),
@@ -852,7 +854,7 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                     rounded(&format!("{SHAPE_ATTRS}{shape}"))
                 )
             };
-            body = outline
+            let body = outline
                 + &label_svg(
                     &view.stereotype,
                     0.0,
@@ -874,7 +876,8 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
                         }
                     ),
                 );
-        }
+            (kind, body)
+        };
         nodes_out.push_str(&format!(
             "<g class=\"fermaid-node {kind} fermaid-shape-{}{classes}\" data-id=\"{id}\" transform=\"translate({},{})\">{body}</g>",
             node.shape.as_str(),
