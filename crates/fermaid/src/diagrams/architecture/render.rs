@@ -1,27 +1,28 @@
 //! Drawing an architecture diagram.
 //!
-//! Mermaid draws an icon for every service, with its name beneath it. fermaid has no icon font
-//! and no images, so the name of the service is drawn as the label of its icon: the icon is a
-//! box that holds the name, and the name of the icon itself is kept as an attribute of the box.
+//! Mermaid draws an icon for every service, with its title beneath it. The icon is a square;
+//! what is drawn in it is the host's icon of that name, or one of the five that are built in
+//! (`database`, `server`, `disk`, `internet` and `cloud`), or the text of the service when it
+//! was given as one. An icon nothing draws leaves the square empty.
 //!
 //! The grid the services are placed in is pele's; the drawing follows it.
 
 use crate::diagram::{Input, Output};
 use crate::diagrams::architecture::db::{ArchitectureModel, NodeKind};
+use crate::diagrams::architecture::icons::builtin_icon;
 use crate::diagrams::architecture::layout::place_on_grid;
 use crate::diagrams::architecture::parser::Side;
 use crate::diagrams::common::fit::{tighten, title_room};
 use crate::error::Error;
 use crate::preprocess::{Config, Value};
-use crate::svg::{Accessible, ROUNDED, esc_text, label_svg, num, svg_document};
-use crate::text::Style;
-use crate::text::label::{Label, layout_label};
+use crate::svg::{Accessible, ROUNDED, esc_text, icon_svg, label_svg, num, svg_document};
+use crate::text::label::{Label, Span, layout_label};
+use crate::text::{Style, TextMeasurer, icon_markup};
 
-/// The smallest a service box is.
+/// The side of the square of an icon.
 const ICON: f64 = 48.0;
-/// The room around the name in a service box.
-const PAD_X: f64 = 12.0;
-const PAD_Y: f64 = 10.0;
+/// Between the square of a service and its title.
+const LABEL_GAP: f64 = 4.0;
 /// How far a line leaves a node before it turns.
 const STUB: f64 = 12.0;
 /// The radius of the corner of a bend.
@@ -276,6 +277,74 @@ fn edge_label_svg(id: &str, label: &Label, x: f64, y: f64) -> String {
     )
 }
 
+/// A square for an icon: the host's drawing of it, or one of the built-in ones, or nothing.
+fn icon_slot(measurer: &dyn TextMeasurer, name: &str, x: f64, y: f64, side: f64) -> String {
+    let markup = icon_markup(measurer, name)
+        .map(|markup| markup.to_string())
+        .or_else(|| builtin_icon(name))
+        .unwrap_or_default();
+    icon_svg(name, x, y, side, &markup)
+}
+
+/// Cuts a label down to a box, ending what is left with an ellipsis.
+fn fit(label: &Label, max_width: f64, max_lines: usize, measurer: &dyn TextMeasurer) -> Label {
+    let cut = label.lines.len() > max_lines;
+    if !cut && label.width <= max_width {
+        return label.clone();
+    }
+    let dots = measurer.width("…", label.size, Style::NONE);
+    let mut lines: Vec<Vec<Span>> = Vec::new();
+    let mut widths: Vec<f64> = Vec::new();
+    let mut widest = 0.0f64;
+    for i in 0..max_lines.min(label.lines.len()) {
+        let mut line = label.lines[i].clone();
+        let mut width = label.widths[i];
+        if width > max_width || (cut && i == max_lines - 1) {
+            loop {
+                let Some(span) = line.last_mut() else {
+                    line.push(Span::text("…".to_string(), Style::NONE, dots));
+                    width = dots;
+                    break;
+                };
+                let rest = width - span.width;
+                if span.is_plain() && rest + dots < max_width {
+                    // The most characters that fit with the ellipsis after them.
+                    let chars: Vec<char> = span.text.chars().collect();
+                    let (mut lo, mut hi) = (0usize, chars.len());
+                    while lo < hi {
+                        let mid = (lo + hi).div_ceil(2);
+                        let head: String = chars[..mid].iter().collect();
+                        if rest + measurer.width(&head, label.size, span.style) + dots <= max_width
+                        {
+                            lo = mid;
+                        } else {
+                            hi = mid - 1;
+                        }
+                    }
+                    let head: String = chars[..lo].iter().collect();
+                    span.text = format!("{}…", crate::util::trim_end(&head));
+                    span.width = measurer.width(&span.text, label.size, span.style);
+                    width = rest + span.width;
+                    break;
+                }
+                line.pop();
+                width = rest;
+            }
+        }
+        lines.push(line);
+        widths.push(width);
+        widest = widest.max(width);
+    }
+    let height = lines.len() as f64 * label.line_height;
+    Label {
+        lines,
+        widths,
+        width: widest,
+        height,
+        ..label.clone()
+    }
+}
+
 /// Draws the diagram.
 pub(crate) fn render_architecture(
     model: &ArchitectureModel,
@@ -289,7 +358,7 @@ pub(crate) fn render_architecture(
 struct View {
     /// The label of each node.
     labels: Vec<Label>,
-    /// The size of the box of each node.
+    /// The size of each node: its icon, and the title beneath it.
     box_w: Vec<f64>,
     box_h: Vec<f64>,
     /// The column and the row of each node, and the width and the height of each of them.
@@ -343,7 +412,7 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
     let g = groups.len();
     let grid = place_on_grid(model);
 
-    // A service is a box that holds its name; a junction takes the same room.
+    // A service is its icon square with the title beneath; a junction takes the same room.
     let wrap = if tight {
         icon_size.max(64.0)
     } else {
@@ -353,9 +422,21 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
     let mut box_w: Vec<f64> = Vec::with_capacity(n);
     let mut box_h: Vec<f64> = Vec::with_capacity(n);
     for node in &nodes {
-        let label = layout_label(Some(node.name()), true, measurer, size, wrap, Style::NONE);
-        box_w.push(icon_size.max(label.width + 2.0 * PAD_X));
-        box_h.push(icon_size.max(label.height + 2.0 * PAD_Y));
+        let title = if node.kind == NodeKind::Service {
+            node.title.as_deref()
+        } else {
+            None
+        };
+        let label = layout_label(title, true, measurer, size, wrap, Style::NONE);
+        box_w.push(icon_size.max(2.0 * (label.width / 2.0).ceil()));
+        box_h.push(
+            icon_size
+                + if label.height > 0.0 {
+                    LABEL_GAP + label.height
+                } else {
+                    0.0
+                },
+        );
         labels.push(label);
     }
 
@@ -465,6 +546,7 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
     let mut col_r = vec![0.0_f64; c];
     let mut row_t = vec![0.0_f64; r];
     let mut row_b = vec![0.0_f64; r];
+    let badge = (size * 1.25).round();
     for gi in 0..g {
         c0[gi] = rank_of(&col_of, grid.group_col[gi]);
         c1[gi] = rank_of(&col_of, grid.group_col[gi] + grid.group_cols[gi] - 1);
@@ -482,8 +564,19 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
             },
             Style::NONE,
         );
-        head_w[gi] = label.width;
-        head_h[gi] = label.height;
+        let icon = if groups[gi].icon.is_some() {
+            badge
+        } else {
+            0.0
+        };
+        head_w[gi] = label.width
+            + icon
+            + if label.width > 0.0 && icon > 0.0 {
+                6.0
+            } else {
+                0.0
+            };
+        head_h[gi] = label.height.max(icon);
         group_labels.push(label);
     }
     for gi in (0..g).rev() {
@@ -593,7 +686,8 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
         let (dx, dy) = (DX[side], DY[side]);
         let cx = center_x(i);
         let y = view.y[view.node_row[i]];
-        let (mut px, mut py) = (cx, y + view.box_h[i] / 2.0);
+        let half = icon_size / 2.0;
+        let (mut px, mut py) = (cx, y + half);
         let (mut x0, mut y0) = (cx - view.box_w[i] / 2.0, y);
         let (mut x1, mut y1) = (cx + view.box_w[i] / 2.0, y + view.box_h[i]);
         let mut gap = 0.0;
@@ -605,11 +699,17 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
             y1 = py;
             gap = DOT;
         } else if dx != 0.0 {
-            px = cx + dx * view.box_w[i] / 2.0;
+            px = cx + dx * half;
         } else if dy < 0.0 {
             py = y;
         } else {
-            py = y + view.box_h[i];
+            py = y
+                + view.box_h[i]
+                + if view.labels[i].height > 0.0 {
+                    2.0
+                } else {
+                    0.0
+                };
         }
         let gi = if via_group { grid.node_parent[i] } else { -1 };
         if gi >= 0 {
@@ -665,11 +765,11 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
         let mut routed = route(&s, &e);
         if s.wire {
             routed.insert(0, center_x(a));
-            routed.insert(1, view.y[view.node_row[a]] + view.box_h[a] / 2.0);
+            routed.insert(1, view.y[view.node_row[a]] + icon_size / 2.0);
         }
         if e.wire {
             routed.push(center_x(b));
-            routed.push(view.y[view.node_row[b]] + view.box_h[b] / 2.0);
+            routed.push(view.y[view.node_row[b]] + icon_size / 2.0);
         }
         let points = simplify(&routed);
         if points.len() < 4 {
@@ -818,19 +918,16 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
                 start = x + 10.0;
             }
             let cy = y + 6.0 + view.head_h[gi] / 2.0;
-            head += &format!(
-                "<g class=\"fermaid-cluster-label\"{}>{}</g>",
-                group
-                    .icon
-                    .as_ref()
-                    .map(|icon| format!(" data-icon=\"{}\"", esc_text(icon)))
-                    .unwrap_or_default(),
-                label_svg(
-                    label,
-                    start + label.width / 2.0,
-                    cy,
-                    " class=\"fermaid-cluster-label\" fill=\"var(--_m)\"",
-                )
+            let mut text_x = start;
+            if let Some(icon) = &group.icon {
+                head += &icon_slot(measurer, icon, start, cy - badge / 2.0, badge);
+                text_x += badge + 6.0;
+            }
+            head += &label_svg(
+                label,
+                text_x + label.width / 2.0,
+                cy,
+                " class=\"fermaid-cluster-label\" fill=\"var(--_m)\"",
             );
         }
         clusters += &format!(
@@ -846,6 +943,9 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
     }
 
     let mut nodes_out = String::new();
+    let half = icon_size / 2.0;
+    let glyph = icon_size * 0.5;
+    let text_size = (size * 0.75).round().max(6.0);
     for (i, node) in nodes.iter().enumerate() {
         let at = format!(
             "data-id=\"{}\" transform=\"translate({},{})\"",
@@ -857,24 +957,61 @@ fn draw(model: &ArchitectureModel, input: &Input<'_>, tight: bool) -> Output {
             nodes_out += &format!(
                 "<g class=\"fermaid-node fermaid-junction\" {at}><circle cy=\"{}\" r=\"{}\" \
                  fill=\"var(--_l)\"/></g>",
-                num(view.box_h[i] / 2.0),
+                num(half),
                 num(DOT)
             );
             continue;
         }
+        // What is in the square: the icon of the service, or its text.
+        let mut inner = String::new();
+        if let Some(icon) = &node.icon {
+            inner = icon_slot(
+                measurer,
+                icon,
+                -glyph / 2.0,
+                (icon_size - glyph) / 2.0,
+                glyph,
+            );
+        } else if let Some(text) = &node.icon_text {
+            let label = layout_label(
+                Some(text),
+                false,
+                measurer,
+                text_size,
+                icon_size - 8.0,
+                Style::NONE,
+            );
+            let lines = (((icon_size - 4.0)
+                / if label.line_height == 0.0 {
+                    1.0
+                } else {
+                    label.line_height
+                })
+            .floor())
+            .max(1.0) as usize;
+            inner = label_svg(
+                &fit(&label, icon_size - 8.0, lines, measurer),
+                0.0,
+                half,
+                &format!(
+                    " class=\"fermaid-icon-text\" font-size=\"{}\"",
+                    num(text_size)
+                ),
+            );
+        }
         let label = &view.labels[i];
         nodes_out += &format!(
-            "<g class=\"fermaid-node fermaid-service\" {at}{}><rect x=\"{}\" y=\"{}\" width=\"{}\" \
-             height=\"{}\" fill=\"var(--_s)\" stroke=\"var(--_b)\"{ROUNDED}/>{}</g>",
-            node.icon
-                .as_ref()
-                .map(|icon| format!(" data-icon=\"{}\"", esc_text(icon)))
-                .unwrap_or_default(),
-            num(-view.box_w[i] / 2.0),
-            num(0.0),
-            num(view.box_w[i]),
-            num(view.box_h[i]),
-            label_svg(label, 0.0, view.box_h[i] / 2.0, " class=\"fermaid-label\"",)
+            "<g class=\"fermaid-node fermaid-service\" {at}><rect x=\"{}\" width=\"{}\" height=\"{}\" \
+             fill=\"var(--_s)\" stroke=\"var(--_b)\"{ROUNDED}/>{inner}{}</g>",
+            num(-half),
+            num(icon_size),
+            num(icon_size),
+            label_svg(
+                label,
+                0.0,
+                icon_size + LABEL_GAP + label.height / 2.0,
+                " class=\"fermaid-label\""
+            )
         );
     }
 

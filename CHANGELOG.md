@@ -30,8 +30,9 @@ all. The library has no runtime dependencies.
 
 - Architecture diagrams, behind the `architecture` feature: services in groups, the edges
   between them with their labels, junctions, `service`, `group` and `junction` with their icons,
-  and the `architecture` config keys `iconSize`, `padding` and `fontSize`. A service has no icon
-  font, so its box holds its name.
+  and the `architecture` config keys `iconSize`, `padding` and `fontSize`. The icons `database`,
+  `server`, `disk`, `internet` and `cloud` are built in, and any other name goes to the `icons`
+  option; a service is an icon square with its title beneath.
 - Packet diagrams, behind the `packet` feature: `title`, `accTitle` and `accDescr`, rows of
   fields with their bit ranges, a field of `+bits`, and the `packet` config keys `rowHeight`,
   `bitWidth`, `bitsPerRow`, `showBits`, `bitOrder`, `paddingX` and `paddingY`.

@@ -2,7 +2,7 @@
 // The model of a chart is compared by tools/oracle/diff.mjs; this compares what is drawn, which
 // is the layout port.
 //
-//   node tools/oracle/render-compare.mjs <pele checkout> <type>
+//   node tools/oracle/render-compare.mjs <pele checkout> <type>   (xychart, quadrantchart, git, architecture)
 //
 // The names of the classes and of the CSS variables are fermaid's, not pele's, so they are
 // normalized away before the two are compared. The checkout needs `npm ci`.
@@ -278,13 +278,89 @@ const TYPES = {
   },
 };
 
+TYPES.architecture = {
+  modules: {
+    'src/diagrams/architecture/db.ts': ['ArchitectureDb', 'populate'],
+    'src/diagrams/architecture/parser.ts': ['parseArchitecture'],
+    'src/diagrams/architecture/render.ts': ['renderArchitecture'],
+  },
+  // Every class of pele's becomes fermaid's.
+  generic: true,
+  names: [],
+  cases: {
+    services: [
+      `architecture-beta
+  service db(database)[Database]
+  service server(server)[Server]
+  service disk(disk)[Disk]
+  service net(internet)[Internet]
+  service cloud(cloud)[Cloud]
+  db:R -- L:server
+  server:R -- L:disk
+  net:B -- T:cloud
+`,
+      {},
+    ],
+    groups: [
+      `architecture-beta
+  group api(cloud)[API]
+  service db(database)[Database] in api
+  service server(server)[Server] in api
+  service disk(disk)[Disk]
+  db:R -- L:server
+  server:B -- T:disk
+`,
+      {},
+    ],
+    text: [
+      `architecture-beta
+  service a(server)[A very long title for the service that wraps]
+  service b(cloud)[B]
+  a:R --> L:b
+`,
+      {},
+    ],
+    junction: [
+      `architecture-beta
+  service a(server)[A]
+  service b(server)[B]
+  service c(server)[C]
+  junction j
+  a:R -- L:j
+  j:R -- L:b
+  j:B -- T:c
+`,
+      {},
+    ],
+    labels: [
+      `architecture-beta
+  title Edge labels
+  service a(server)[A]
+  service b(cloud)[B]
+  a:R -[ships]- L:b
+`,
+      {},
+    ],
+    nested: [
+      `architecture-beta
+  group outer(cloud)[Outer]
+  group inner(server)[Inner] in outer
+  service a(database)[A] in inner
+  service b(disk)[B] in outer
+  a{group}:R -- L:b
+`,
+      {},
+    ],
+  },
+};
+
 const spec = TYPES[type];
 if (!spec) {
   console.error(`unknown type: ${type}`);
   process.exit(2);
 }
 
-const { XyChartDb, parseXyChart, renderXyChart, QuadrantDb, parseQuadrant, renderQuadrant, buildGit, parseGit, renderGit } =
+const { XyChartDb, parseXyChart, renderXyChart, QuadrantDb, parseQuadrant, renderQuadrant, buildGit, parseGit, renderGit, ArchitectureDb, populate, parseArchitecture, renderArchitecture } =
   await loadPele(resolve(peleDir), spec.modules);
 
 function draw(src, config) {
@@ -292,6 +368,11 @@ function draw(src, config) {
     const db = new XyChartDb();
     parseXyChart(src, db);
     return renderXyChart(db, config, {}).svg;
+  }
+  if (type === 'architecture') {
+    const db = new ArchitectureDb();
+    populate(parseArchitecture(src), db);
+    return renderArchitecture(db, config, {}).svg;
   }
   if (type === 'git') {
     const model = buildGit(parseGit(src), config, undefined);
@@ -327,6 +408,7 @@ function normalize(svg) {
       .split(`${a} `)
       .join(`${b} `);
   }
+  if (spec.generic) out = out.split('pele-').join('fermaid-').replace(/class="pele /g, 'class="fermaid ');
   out = out.split('--pele-').join('--fermaid-');
   out = out.replace(/var\(--fermaid-series-\d+/g, 'var(--fermaid-series-N');
   out = out.replace(/class="pele pele-([^"]+)"/g, 'class="fermaid fermaid-$1"');

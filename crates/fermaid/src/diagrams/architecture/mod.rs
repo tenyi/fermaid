@@ -1,6 +1,7 @@
 //! Architecture diagrams: groups of services, drawn as boxes with the edges between them.
 
 mod db;
+mod icons;
 mod layout;
 mod parser;
 mod render;

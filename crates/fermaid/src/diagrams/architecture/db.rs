@@ -29,16 +29,6 @@ pub(crate) struct Node {
     pub parent: Option<String>,
 }
 
-impl Node {
-    /// The name the node is drawn with: its title, the text of its icon, or its id.
-    pub(crate) fn name(&self) -> &str {
-        self.title
-            .as_deref()
-            .or(self.icon_text.as_deref())
-            .unwrap_or(&self.id)
-    }
-}
-
 /// A group of services.
 #[derive(Debug, Clone)]
 pub(crate) struct GroupModel {

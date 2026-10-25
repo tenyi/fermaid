@@ -384,7 +384,7 @@ Notes:
   tokenizer. The model holds the services, the groups and the junctions with the edges
   between them, and the layout is pele's own: every node takes a cell of a grid, so a group
   never encloses a node that is not in it.
-- A service has no icon font, so its box holds its name.
+- A service is an icon square with its title beneath (M7c).
 - The differential run against Mermaid's own grammar reports no difference over 3,024
   inputs, the 59 Mermaid spec cases pass (23 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,127,260 runs) found no panic.
@@ -591,12 +591,11 @@ Notes:
 - Which types read `$$` is a method of the internal `Diagram` trait, `math`.
 - An icon the host has not is a dashed frame in a flowchart icon shape, as it was, and an empty
   square for the icon of a use case actor.
-- Architecture diagrams are M7c.
 
 ### M7c — Built-in icons of architecture diagrams
 
-- [ ] `database`, `server`, `disk`, `internet` and `cloud` as pele draws them; any other name
-  goes to `icons`. Update README and CHANGELOG, which say a service has no icon font.
+- [x] `database`, `server`, `disk`, `internet` and `cloud` as pele draws them (the picture is
+  pele's, checked by `render-compare.mjs`); any other name goes to `icons`.
 
 ### M7d — Options and packaging
 
