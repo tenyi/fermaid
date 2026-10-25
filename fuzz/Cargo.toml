@@ -216,3 +216,10 @@ path = "fuzz_targets/ishikawa.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "eventmodeling"
+path = "fuzz_targets/eventmodeling.rs"
+test = false
+doc = false
+bench = false

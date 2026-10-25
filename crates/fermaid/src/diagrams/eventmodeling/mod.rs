@@ -1,17 +1,32 @@
-//! Event modeling diagrams, which fermaid does not draw yet.
+//! Event modeling diagrams: the timeline of a system, with the frames that trigger it, the
+//! commands and queries they carry, and the events they cause.
+
+mod db;
+mod lexer;
+mod parser;
+mod render;
+
+#[cfg(test)]
+mod compat;
+#[cfg(test)]
+mod summary;
 
 use crate::diagram::{Diagram, Input, Output};
-use crate::error::{Error, ErrorCode};
+use crate::error::Error;
 
-/// The eventmodeling diagram type.
+/// The event modeling diagram type.
 pub(crate) struct EventModeling;
 
 impl Diagram for EventModeling {
+    /// Mermaid's grammar has a terminal for the comments, so the parser is given the text with
+    /// them, and the positions it reports are the ones of the source.
+    fn keep_comments(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
-        Err(Error::new(
-            ErrorCode::Unsupported,
-            "Diagram type \"eventmodeling\" is not supported yet.",
-        )
-        .at(&input.source, 0))
+        let ast = parser::parse_event_modeling(&input.source)?;
+        let model = db::build_event_model(&ast, input.title, &input.source)?;
+        render::render_event_model(&model, input)
     }
 }

@@ -40,6 +40,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Tree view diagram (`treeView-beta`) | Supported: the tree drawn with box-drawing characters, the icons in front of a label, `classDef` and `class`; and the `treeView` config keys `rowIndent`, `paddingX`, `paddingY`, `lineThickness`, `showIcons`, `defaultIconPack`, `filenameIcons` and `extensionIcons` |
 | Cynefin diagram (`cynefin-beta:`) | Supported: `title`, `accTitle` and `accDescr`, the items in the four regions and the transitions between them; and the `cynefin` config keys `width`, `height`, `showDomainDescriptions`, `boundaryAmplitude` and `seed` |
 | Ishikawa diagram (`ishikawa`) | Supported: the causes on the levels and the spine |
+| Event modeling diagram (`eventmodeling`) | Supported: the lanes, the frames, the relations and the notes |
 | The rest | Planned |
 
 ## Goals
