@@ -3,6 +3,7 @@
 
 mod support;
 
+use std::fmt::Write as _;
 use std::time::{Duration, Instant};
 
 use fermaid::{DiagramKind, ErrorCode, Limits, RenderOptions};
@@ -218,9 +219,10 @@ fn stays_fast_on_large_and_hostile_input() {
     let head = "eventmodeling\n";
     // A number of frames, each with its own number.
     let frames = |kind: &str| {
-        (0..500)
-            .map(|i| format!("tf {i:03} {kind} A\n"))
-            .collect::<String>()
+        (0..500).fold(String::new(), |mut s, i| {
+            let _ = writeln!(s, "tf {i:03} {kind} A");
+            s
+        })
     };
     let cases = [
         format!("{head}tf 01 cmd {}\n", "x".repeat(N)),

@@ -370,9 +370,10 @@ pub(crate) fn build_block(parsed: &Parsed, title: Option<&str>) -> Result<BlockM
             Statement::Block(block) => block,
         };
 
-        if columns > 0
-            && let Some(span) = block.width_in_columns
-            && span > columns
+        // A block that is wider than the number of columns of its composite is a warning.
+        if let Some(span) = block
+            .width_in_columns
+            .filter(|&span| columns > 0 && span > columns)
         {
             model.warnings.push(format!(
                 "Block {} width {span} exceeds configured column width {columns}",

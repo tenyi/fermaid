@@ -3,6 +3,7 @@
 
 mod support;
 
+use std::fmt::Write as _;
 use std::time::{Duration, Instant};
 
 use fermaid::{DiagramKind, ErrorCode, Limits, RenderOptions};
@@ -358,29 +359,34 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}component {} [0.5, 0.5]\n", "x".repeat(N * 10)),
         format!(
             "{head}{}",
-            (0..N)
-                .map(|i| format!("component a{i} [0.5, 0.5]\n"))
-                .collect::<String>()
+            (0..N).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "component a{i} [0.5, 0.5]");
+                s
+            })
         ),
         format!(
             "{head}{}",
-            (0..N / 3)
-                .map(|i| format!(
-                    "component a{i} [0.5, 0.5]\ncomponent b{i} [0.6, 0.6]\na{i} -> b{i}\n"
-                ))
-                .collect::<String>()
+            (0..N / 3).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "component a{i} [0.5, 0.5]");
+                let _ = writeln!(s, "component b{i} [0.6, 0.6]");
+                let _ = writeln!(s, "a{i} -> b{i}");
+                s
+            })
         ),
         format!(
             "{head}{}",
-            (0..N / 4)
-                .map(|i| format!("evolution A{i} -> B{i}\ncomponent a{i} [0.5, 0.5]\n"))
-                .collect::<String>()
+            (0..N / 4).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "evolution A{i} -> B{i}");
+                let _ = writeln!(s, "component a{i} [0.5, 0.5]");
+                s
+            })
         ),
         format!(
             "{head}{}",
-            (0..N / 2)
-                .map(|i| format!("note \"n{i}\" [0.5, 0.5]\n"))
-                .collect::<String>()
+            (0..N / 2).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "note \"n{i}\" [0.5, 0.5]");
+                s
+            })
         ),
     ];
     let mut rendered = 0;

@@ -3,6 +3,7 @@
 
 mod support;
 
+use std::fmt::Write as _;
 use std::time::{Duration, Instant};
 
 use fermaid::{DiagramKind, ErrorCode, Limits, RenderOptions};
@@ -303,31 +304,35 @@ fn stays_fast_on_large_and_hostile_input() {
         format!("{head}service a(server)[{}]\n", "x".repeat(N * 10)),
         format!(
             "{head}{}",
-            (0..N)
-                .map(|i| format!("service a{i}(server)[A]\n"))
-                .collect::<String>()
+            (0..N).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "service a{i}(server)[A]");
+                s
+            })
         ),
         format!(
             "{head}{}",
-            (0..N / 3)
-                .map(|i| format!(
-                    "service a{i}(server)[A]\nservice b{i}(server)[B]\na{i}:R -- L:b{i}\n"
-                ))
-                .collect::<String>()
+            (0..N / 3).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "service a{i}(server)[A]");
+                let _ = writeln!(s, "service b{i}(server)[B]");
+                let _ = writeln!(s, "a{i}:R -- L:b{i}");
+                s
+            })
         ),
         format!(
             "{head}group g(cloud)[G]\n{}",
-            (0..N / 2)
-                .map(|i| format!("service a{i}(server)[A] in g\n"))
-                .collect::<String>()
+            (0..N / 2).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "service a{i}(server)[A] in g");
+                s
+            })
         ),
         format!(
             "{head}{}",
-            (0..N / 4)
-                .map(|i| format!(
-                    "service a{i}(server)[A]\nservice b{i}(server)[B]\nalign row a{i} b{i}\n"
-                ))
-                .collect::<String>()
+            (0..N / 4).fold(String::new(), |mut s, i| {
+                let _ = writeln!(s, "service a{i}(server)[A]");
+                let _ = writeln!(s, "service b{i}(server)[B]");
+                let _ = writeln!(s, "align row a{i} b{i}");
+                s
+            })
         ),
     ];
     let mut rendered = 0;

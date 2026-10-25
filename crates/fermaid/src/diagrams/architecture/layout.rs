@@ -85,7 +85,7 @@ fn cell_key(cx: i32, cy: i32) -> i64 {
     (i64::from(cx) + OFFSET) * SPAN + (i64::from(cy) + OFFSET)
 }
 
-impl<'a> Placer<'a> {
+impl Placer<'_> {
     /// The offset of an item from the container it is placed in.
     fn anchor(&mut self, node: i32, item: i32) {
         self.ax = 0;
