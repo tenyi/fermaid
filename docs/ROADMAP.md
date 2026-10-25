@@ -274,9 +274,10 @@ Notes:
 
 The next version comes after M6, when every diagram type Mermaid 12.1.0 builds is done.
 
-1. [ ] Add `LICENSE.md`, so that the licence texts travel with the published crates: the
+1. [x] Add `LICENSE.md`, so that the licence texts travel with the published crates: the
    licence files sit at the root of the repository, and cargo packages only what is inside the
-   crate's own directory.
+   crate's own directory. Every crate therefore carries a copy of them, and a test keeps the
+   copies and the ones at the root the same.
 2. [ ] Publish the library, then the command line tool, which depends on it.
 3. [ ] Tag the version, push the tag and publish the GitHub release.
 
