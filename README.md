@@ -102,7 +102,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # needs cargo-fuzz; `pie`, `flowchart`, `sequence`, `state`, `class`, `er`, `requirement`, `timeline`, `journey`, `kanban`, `mindmap`, `gantt`, `sankey`, `xychart`, `quadrantchart` and `git` are other targets
+cargo +nightly fuzz run render    # needs cargo-fuzz; every diagram type has a target of its own
 cargo xtask compat pie --pele ../pele   # regenerates the Mermaid spec cases from a pele checkout
 node tools/oracle/golden.mjs ../pele flowchart   # regenerates what pele makes of them
 node tools/oracle/diff.mjs ../pele   # differential fuzzing against Mermaid's own parsers

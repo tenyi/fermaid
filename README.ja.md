@@ -102,7 +102,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # cargo-fuzz が必要。`pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart`、`quadrantchart`、`git` ターゲットもあります
+cargo +nightly fuzz run render    # cargo-fuzz が必要。ダイアグラムの種類ごとにターゲットがあります
 cargo xtask compat pie --pele ../pele   # pele のチェックアウトから Mermaid の仕様テストケースを再生成
 node tools/oracle/golden.mjs ../pele flowchart   # それらに対する pele の解析結果を再生成
 node tools/oracle/diff.mjs ../pele   # Mermaid 自身のパーサーとの差分ファジング

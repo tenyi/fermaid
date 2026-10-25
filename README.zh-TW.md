@@ -102,7 +102,7 @@ cargo build
 cargo test
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all
-cargo +nightly fuzz run render    # 需要 cargo-fuzz；另有 `pie`、`flowchart`、`sequence`、`state`、`class`、`er`、`requirement`、`timeline`、`journey`、`kanban`、`mindmap`、`gantt`、`sankey`、`xychart`、`quadrantchart` 與 `git` 目標
+cargo +nightly fuzz run render    # 需要 cargo-fuzz；每一種圖表類型都有自己的目標
 cargo xtask compat pie --pele ../pele   # 從 pele 原始碼重新產生 Mermaid 規格測試案例
 node tools/oracle/golden.mjs ../pele flowchart   # 重新產生 pele 對這些案例的解析結果
 node tools/oracle/diff.mjs ../pele   # 與 Mermaid 自身的解析器做差異模糊測試
