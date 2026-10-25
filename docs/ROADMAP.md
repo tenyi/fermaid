@@ -350,7 +350,7 @@ Notes:
 
 - [x] Block diagrams, behind the `block` feature.
 - [x] Architecture diagrams, behind the `architecture` feature.
-- [ ] Packet diagrams, behind the `packet` feature.
+- [x] Packet diagrams, behind the `packet` feature.
 - [ ] Radar charts, behind the `radar` feature.
 - [ ] Treemaps, behind the `treemap` feature.
 
@@ -381,6 +381,17 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,024
   inputs, the 59 Mermaid spec cases pass (23 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,127,260 runs) found no panic.
+
+- A packet diagram is read with Mermaid's Langium grammar, over a tokenizer of its own. The
+  model holds the rows of fields the packet is drawn in: a field names the bit it starts at,
+  the bit it ends at, or the number of bits it takes, and what it does not name is filled in
+  later.
+- Mermaid's own spec expects a field that is split across rows to be drawn on a row of its
+  own, but the code of Mermaid 12.1.0 draws it beside the field before it, in the row both
+  share. The code is what Mermaid draws, so this follows the code.
+- The differential run against Mermaid's own grammar reports no difference over 3,019
+  inputs, the 23 Mermaid spec cases pass (1 of them read positions back from a DOM and are
+  listed in `SKIPPED.md`), and ten minutes of fuzzing (1,270,660 runs) found no panic.
 
 ### M6c — The rest
 
