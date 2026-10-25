@@ -5,6 +5,10 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- Architecture diagrams, behind the `architecture` feature: services in groups, the edges
+  between them with their labels, junctions, `service`, `group` and `junction` with their icons,
+  and the `architecture` config keys `iconSize`, `padding` and `fontSize`. A service has no icon
+  font, so its box holds its name.
 - Block diagrams, behind the `block` feature: blocks in a grid with `columns`, composites with
   `block:` and `end`, `space`, every shape of Mermaid, block arrows with their directions, links
   with their labels and their arrow ends, `classDef`, `class` and `style`, and the `block` config
@@ -29,16 +33,6 @@ before 1.0, a minor version may break the API.
   `order`, `checkout` and `switch`, `merge` and `cherry-pick` with a `parent`, the `LR`, `TB`
   and `BT` directions, and the `gitGraph` config keys `mainBranchName`, `mainBranchOrder`,
   `showCommitLabel`, `showBranches`, `rotateCommitLabel` and `parallelCommits`.
-
-## 0.2.0 - 2026-10-24
-
-The first published release. It covers milestones M0 to M5: the foundation, pie charts,
-flowcharts, sequence diagrams, the Mermaid grammar types, and the M5 chart types. Every
-diagram type is behind its own Cargo feature, and the default feature `all` includes them
-all. The library has no runtime dependencies.
-
-### Diagram types
-
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

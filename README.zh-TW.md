@@ -29,6 +29,8 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 象限圖（`quadrantChart`） | 已支援：`title`、以 `-->` 連接的 `x-axis` 與 `y-axis`、`quadrant-1` 到 `quadrant-4`、可帶 `radius`、`color`、`stroke-color` 與 `stroke-width` 的點、`classDef` 與點的類別、`accTitle` 與 `accDescr`；以及 `quadrantChart` 的設定鍵 `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius` 與 `pointTextPadding` |
 | Git 圖（`gitGraph`） | 已支援：`title`、`accTitle` 與 `accDescr`、可帶 `id`、`msg`、`tag` 與 `NORMAL`、`REVERSE` 或 `HIGHLIGHT` 類型的 `commit`、可帶 `order` 的 `branch`、`checkout` 與 `switch`、`merge` 與可帶 `parent` 的 `cherry-pick`；以及 `gitGraph` 的設定鍵 `mainBranchName`、`mainBranchOrder`、`showCommitLabel`、`showBranches`、`rotateCommitLabel` 與 `parallelCommits` |
 | 方塊圖（`block`、`block-beta`） | 已支援：以 `columns` 排成格線的方塊、以 `block:` 與 `end` 組成的複合方塊、`space`、Mermaid 的所有形狀、可指定方向的方塊箭頭、帶標籤與箭頭端點的連線、`classDef`、`class` 與 `style`；以及 `block` 的設定鍵 `padding` |
+| 架構圖（`architecture`、`architecture-beta`） | 已支援：分組中的服務、服務之間的連線與其標籤、連接點、可帶圖示的 `service`、`group` 與 `junction`；以及 `architecture` 的設定鍵 `iconSize`、`padding` 與 `fontSize`。fermaid 沒有圖示字型，因此以方塊承載服務的名稱 |
+| 封包圖（`packet`、`packet-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、以位元範圍表示的欄位列、以 `+bits` 表示的欄位；以及 `packet` 的設定鍵 `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX` 與 `paddingY` |
 | 其他 | 規劃中 |
 
 ## 目標

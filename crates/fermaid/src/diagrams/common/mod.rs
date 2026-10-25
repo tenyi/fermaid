@@ -2,6 +2,27 @@
 
 #[cfg(any(feature = "xychart", feature = "quadrantchart", feature = "block"))]
 pub(crate) mod chars;
+#[cfg(any(
+    feature = "architecture",
+    feature = "block",
+    feature = "class",
+    feature = "er",
+    feature = "flowchart",
+    feature = "gantt",
+    feature = "git",
+    feature = "journey",
+    feature = "kanban",
+    feature = "mindmap",
+    feature = "pie",
+    feature = "quadrantchart",
+    feature = "requirement",
+    feature = "sankey",
+    feature = "sequence",
+    feature = "state",
+    feature = "timeline",
+    feature = "xychart",
+    feature = "agentflow"
+))]
 pub(crate) mod fit;
 #[cfg(any(feature = "class", feature = "er"))]
 pub(crate) mod generics;
@@ -25,11 +46,13 @@ pub(crate) mod generics;
         feature = "state",
         feature = "timeline",
         feature = "xychart",
-        feature = "block"
+        feature = "block",
+        feature = "architecture",
     )
 ))]
+#[allow(dead_code, reason = "each type uses only part of the golden helpers")]
 pub(crate) mod golden;
-#[cfg(feature = "sequence")]
+#[cfg(any(feature = "sequence"))]
 pub(crate) mod literal;
 #[cfg(any(
     feature = "state",
@@ -39,7 +62,9 @@ pub(crate) mod literal;
     feature = "sankey",
     feature = "quadrantchart",
     feature = "git",
-    feature = "block"
+    feature = "block",
+    feature = "architecture",
+    feature = "wardley"
 ))]
 pub(crate) mod ordered;
 #[cfg(any(feature = "kanban", feature = "mindmap"))]
@@ -58,5 +83,18 @@ pub(crate) mod plain;
     allow(dead_code, reason = "outlines and gantt charts use only part of it")
 )]
 pub(crate) mod scan;
-#[cfg(any(feature = "pie", feature = "git"))]
+#[cfg(any(
+    feature = "pie",
+    feature = "git",
+    feature = "architecture",
+    feature = "wardley"
+))]
+#[cfg_attr(
+    not(all(
+        feature = "pie",
+        feature = "git",
+        feature = "architecture"
+    )),
+    allow(dead_code, reason = "each type uses only part of the tokenizer")
+)]
 pub(crate) mod tokens;

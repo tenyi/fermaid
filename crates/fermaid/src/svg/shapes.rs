@@ -10,7 +10,7 @@ use super::theme::rounded;
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
 ))]
 use crate::layout::compound::CNode;
 
@@ -966,7 +966,7 @@ pub(crate) fn shape_has_label(shape: &str) -> bool {
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
 ))]
 pub(crate) fn end_side(route: &[f64], at: usize, c: &CNode) -> Option<u8> {
     let dx = route[at] - c.x;
@@ -985,7 +985,7 @@ pub(crate) fn end_side(route: &[f64], at: usize, c: &CNode) -> Option<u8> {
     feature = "flowchart",
     feature = "state",
     feature = "class",
-    feature = "er"
+    feature = "er",
 ))]
 pub(crate) fn inset_route(route: &mut [f64], at: usize, shape: &str, w: f64, h: f64, c: &CNode) {
     if c.is_group {

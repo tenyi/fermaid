@@ -139,3 +139,10 @@ path = "fuzz_targets/block.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "architecture"
+path = "fuzz_targets/architecture.rs"
+test = false
+doc = false
+bench = false

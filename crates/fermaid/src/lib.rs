@@ -21,7 +21,7 @@ mod error;
     feature = "class",
     feature = "er",
     feature = "requirement",
-    feature = "block"
+    feature = "block",
 ))]
 #[allow(
     dead_code,
@@ -37,7 +37,7 @@ mod preprocess;
 )]
 mod svg;
 mod text;
-#[cfg(any(feature = "flowchart", feature = "class"))]
+#[cfg(any(feature = "flowchart", feature = "class",))]
 mod unicode;
 #[cfg(any(
     feature = "flowchart",
@@ -45,7 +45,7 @@ mod unicode;
     feature = "class",
     feature = "er",
     feature = "kanban",
-    feature = "gantt"
+    feature = "gantt",
 ))]
 #[allow(
     dead_code,
@@ -170,13 +170,17 @@ mod tests {
     }
 
     #[test]
+    // The type has to be out of this build for the test to have a subject: a build with every
+    // feature draws every type, so there is nothing left to report as not supported.
+    #[cfg(not(feature = "treeview"))]
     fn reports_types_not_compiled_in() {
-        let err = render("architecture-beta\n", &RenderOptions::default()).unwrap_err();
+        // A type whose feature is off reports that it is not supported.
+        let err = render("treeView-beta\n", &RenderOptions::default()).unwrap_err();
         assert_eq!(err.code, ErrorCode::Unsupported);
-        assert_eq!(err.kind, Some(DiagramKind::Architecture));
+        assert_eq!(err.kind, Some(DiagramKind::TreeView));
         assert_eq!(
             err.message,
-            "Diagram type \"architecture\" is not supported yet."
+            "Diagram type \"treeView\" is not supported yet."
         );
         assert_eq!((err.line, err.column), (1, 1));
     }

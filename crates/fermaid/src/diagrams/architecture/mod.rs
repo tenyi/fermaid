@@ -1,17 +1,22 @@
-//! Architecture diagrams, which fermaid does not draw yet.
+//! Architecture diagrams: groups of services, drawn as boxes with the edges between them.
+
+mod db;
+mod layout;
+mod parser;
+mod render;
+
+#[cfg(test)]
+mod compat;
 
 use crate::diagram::{Diagram, Input, Output};
-use crate::error::{Error, ErrorCode};
+use crate::error::Error;
 
-/// The architecture diagram type.
 pub(crate) struct Architecture;
 
 impl Diagram for Architecture {
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
-        Err(Error::new(
-            ErrorCode::Unsupported,
-            "Diagram type \"architecture\" is not supported yet.",
-        )
-        .at(&input.source, 0))
+        let ast = parser::parse_architecture(&input.source)?;
+        let model = db::build_architecture(&ast, input.title)?;
+        render::render_architecture(&model, input)
     }
 }

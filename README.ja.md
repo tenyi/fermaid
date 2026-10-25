@@ -29,6 +29,8 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | クアドラントチャート（`quadrantChart`） | 対応済み：`title`、`-->` を持つ `x-axis` と `y-axis`、`quadrant-1` から `quadrant-4`、`radius`、`color`、`stroke-color`、`stroke-width` を持つ点、`classDef` と点のクラス、`accTitle` と `accDescr`。`quadrantChart` の設定キー `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius`、`pointTextPadding` に対応 |
 | Git グラフ（`gitGraph`） | 対応済み：`title`、`accTitle` と `accDescr`、`id`、`msg`、`tag`、`NORMAL`、`REVERSE`、`HIGHLIGHT` を持つ `commit`、`order` を持つ `branch`、`checkout` と `switch`、`merge` と `parent` を持つ `cherry-pick`。`gitGraph` の設定キー `mainBranchName`、`mainBranchOrder`、`showCommitLabel`、`showBranches`、`rotateCommitLabel`、`parallelCommits` に対応 |
 | ブロック図（`block`、`block-beta`） | 対応済み：`columns` でグリッドに並べるブロック、`block:` と `end` による複合ブロック、`space`、Mermaid のすべての形状、方向を持つブロック矢印、ラベルと矢印の終端を持つリンク、`classDef`、`class` と `style`。`block` の設定キー `padding` に対応 |
+| アーキテクチャ図（`architecture`、`architecture-beta`） | 対応済み：グループ化されたサービス、サービスの間のエッジとそのラベル、ジャンクション、アイコンを持つ `service`、`group` と `junction`。`architecture` の設定キー `iconSize`、`padding`、`fontSize` に対応。アイコンのフォントはないため、サービスの名前で図を表す |
+| パケット図（`packet`、`packet-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、ビット範囲を持つフィールドの行、`+bits` のフィールド。`packet` の設定キー `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX`、`paddingY` に対応 |
 | その他 | 予定 |
 
 ## 目標
