@@ -18,6 +18,10 @@ use crate::error::Error;
 pub(crate) struct Usecase;
 
 impl Diagram for Usecase {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let model =
             parser::parse_usecase(&input.source, input.title, input.options.limits.max_depth)?;

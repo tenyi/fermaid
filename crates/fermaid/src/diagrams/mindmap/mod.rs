@@ -13,6 +13,10 @@ use crate::error::Error;
 pub(crate) struct Mindmap;
 
 impl Diagram for Mindmap {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let mut db = db::MindmapDb::default();
         db.title = input.title.map(str::to_string);

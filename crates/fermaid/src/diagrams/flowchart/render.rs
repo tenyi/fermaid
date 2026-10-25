@@ -23,12 +23,12 @@ use crate::svg::shapes::{
     draw_shape, end_side, inset_route, shape_has_label, shape_size, shape_span,
 };
 use crate::svg::{
-    Accessible, ResolvedStyle, class_names, esc, esc_text, label_svg, num, resolve_style, rounded,
-    svg_document, title_label,
+    Accessible, ResolvedStyle, class_names, esc, esc_text, icon_svg, label_svg, num, resolve_style,
+    rounded, svg_document, title_label,
 };
-use crate::text::Style;
 use crate::text::entities::decode_entities;
 use crate::text::label::{Label, layout_label};
+use crate::text::{Style, icon_markup};
 use crate::url::{image_url, link_url, linked, rel_attr, safe_url, sanitize_url};
 use crate::util::round;
 use crate::{DiagramKind, Link};
@@ -439,15 +439,20 @@ fn draw(db: &FlowDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
                 ),
             };
             let glyph = bx * 0.6;
-            format!(
-                "{frame}<g class=\"fermaid-icon\" data-icon=\"{}\" transform=\"translate({},{})\"><rect width=\"{}\" \
-                 height=\"{}\" rx=\"4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-dasharray=\"3 3\"/></g>",
-                esc_text(icon),
-                num(-glyph / 2.0),
-                num(top + (bx - glyph) / 2.0),
-                num(glyph),
-                num(glyph)
-            )
+            let (x, y) = (-glyph / 2.0, top + (bx - glyph) / 2.0);
+            // An icon the host has is drawn; for any other the box holds a dashed frame.
+            match icon_markup(measurer, icon) {
+                Some(markup) => format!("{frame}{}", icon_svg(icon, x, y, glyph, &markup)),
+                None => format!(
+                    "{frame}<g class=\"fermaid-icon\" data-icon=\"{}\" transform=\"translate({},{})\"><rect width=\"{}\" \
+                     height=\"{}\" rx=\"4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-dasharray=\"3 3\"/></g>",
+                    esc_text(icon),
+                    num(x),
+                    num(y),
+                    num(glyph),
+                    num(glyph)
+                ),
+            }
         } else {
             draw_shape(
                 view.shape,

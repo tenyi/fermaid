@@ -18,12 +18,12 @@ use crate::preprocess::{Config, Value};
 use crate::svg::cluster::{Crossings, cluster_title_x, mark_crossings};
 use crate::svg::edges::{edge_label_svg, route_path};
 use crate::svg::{
-    Accessible, ROUNDED, ResolvedStyle, class_names, esc, esc_text, label_svg, num, resolve_style,
-    rounded, shared_style, span_style, svg_document, text_style, title_label,
+    Accessible, ROUNDED, ResolvedStyle, class_names, esc, esc_text, icon_svg, label_svg, num,
+    resolve_style, rounded, shared_style, span_style, svg_document, text_style, title_label,
 };
 use crate::text::Style;
 use crate::text::entities::decode_entities;
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, has_math, label_line, layout_label, line_middle};
 use crate::url::{link_url, rel_attr, sanitize_url};
 use crate::util::{is_space, round};
 use crate::{DiagramKind, Link};
@@ -83,7 +83,8 @@ struct Loop {
     at: f64,
 }
 
-/// Writes a measured label starting at x, with the baseline of its first line at y.
+/// Writes a measured label starting at x, with the baseline of its first line at y. A line that
+/// holds math is written as a label of its own, and an icon is written beside the text.
 fn text_left(label: &Label, x: f64, y: f64, attrs: &str) -> String {
     let lines = &label.lines;
     if lines.is_empty() {
@@ -91,7 +92,7 @@ fn text_left(label: &Label, x: f64, y: f64, attrs: &str) -> String {
     }
     if let [line] = lines.as_slice() {
         if let [only] = line.as_slice() {
-            if only.style.is_empty() {
+            if only.is_plain() && only.style.is_empty() {
                 return format!(
                     "<text{attrs} x=\"{}\" y=\"{}\">{}</text>",
                     num(x),
@@ -105,15 +106,31 @@ fn text_left(label: &Label, x: f64, y: f64, attrs: &str) -> String {
     let shift = label.size * 0.35;
     let top = y - shift - label.line_height / 2.0;
     let mut body = String::new();
+    let mut extra = String::new();
     for (i, line) in lines.iter().enumerate() {
-        let y = top + (i as f64 + 0.5) * label.line_height + shift;
+        let middle = top + line_middle(label, i);
+        if has_math(line) {
+            extra += &label_svg(
+                &label_line(label, i),
+                x + label.widths[i] / 2.0,
+                middle,
+                attrs,
+            );
+            continue;
+        }
+        let y = middle + shift;
+        let has_icon = line.iter().any(|span| span.icon.is_some());
+        let mut at = x;
         let mut placed = false;
         for span in line {
-            if !span.text.is_empty() {
-                let pos = if placed {
-                    String::new()
+            if let Some(icon) = &span.icon {
+                let side = label.size * 1.1;
+                extra += &icon_svg(&icon.name, at, middle - side / 2.0, side, &icon.markup);
+            } else if !span.text.is_empty() {
+                let pos = if has_icon || !placed {
+                    format!(" x=\"{}\" y=\"{}\"", num(at), num(y))
                 } else {
-                    format!(" x=\"{}\" y=\"{}\"", num(x), num(y))
+                    String::new()
                 };
                 let _ = write!(
                     body,
@@ -123,10 +140,11 @@ fn text_left(label: &Label, x: f64, y: f64, attrs: &str) -> String {
                 );
                 placed = true;
             }
+            at += span.width;
         }
     }
     format!(
-        "<text{} xml:space=\"preserve\">{body}</text>",
+        "<text{} xml:space=\"preserve\">{body}</text>{extra}",
         text_style(attrs, shared)
     )
 }

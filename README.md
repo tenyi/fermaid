@@ -69,6 +69,8 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 
 `render` returns the SVG with its size and links, or an `Error` with a code (`Unsupported`, `Syntax`, `Semantic`, `Limit`), a line and column, and a snippet that points at the problem. `detect_type` tells the diagram type without rendering. Set `max_width` to the width the host has, and a diagram that can draw itself narrower does (a pie chart moves its legend below the chart). Links from `click` statements are sanitized and kept only when their scheme is allowed (`link_schemes`, by default `http`, `https`, `mailto` and `tel`); a flowchart that runs across turns to run down when it does not fit `max_width`. Each diagram type is a Cargo feature (`flowchart`, `pie`, …); the default feature `all` includes every type. A gantt chart dates "today" from `now`, in milliseconds since 1970-01-01 UTC; it defaults to 1970-01-01 so that output never depends on the clock.
 
+Icons and math come from the host, as fermaid has neither an icon set nor a typesetter. `RenderOptions::icons` gives the SVG markup of an icon by its name (`fa:fa-car` in a label, the `icon` of a node), and `RenderOptions::math` typesets the TeX between `$$` in the labels of flowcharts, swimlanes, state, class, ER, requirement, block, sequence, use case, kanban and mind map diagrams. Without them an icon is left out and the TeX stays as written. What the host returns is put into the SVG as it is, so it has to come from a source you trust.
+
 ## Command line
 
 ```sh

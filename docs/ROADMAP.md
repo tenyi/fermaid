@@ -567,16 +567,31 @@ Notes:
 
 ### M7b — Icons and math through the host
 
-- [ ] `RenderOptions::icons` and `RenderOptions::math`: optional callbacks, `None` by default,
+- [x] `RenderOptions::icons` and `RenderOptions::math`: optional callbacks, `None` by default,
   so there is still no dependency. Results are cached for one render, so that output stays
   deterministic.
-- [ ] Decide how host markup is treated: trusted as pele does, but still checked by the
-  inertness test (no `script`, no `on*`, no `url()` outside the document).
-- [ ] `label.rs` makes room for an icon and typesets `$$…$$`, as pele's `text/label.ts` does,
+- [x] Decide how host markup is treated: trusted, as pele does, and documented as such. A
+  resolver can only be checked for what the library does around its answer: where it is put,
+  the room it takes, an unusable size, and that the text of the diagram reaches the output
+  only as a name or as TeX handed to the resolver, or escaped.
+- [x] `label.rs` makes room for an icon and typesets `$$…$$`, as pele's `text/label.ts` does,
   instead of leaving them out.
-- [ ] Connect the types: mindmap, kanban, flowchart, gantt, cynefin, usecase, and for math
-  also class, ER, requirement, block, state, sequence and swimlane.
-- [ ] Tests with a fake resolver (snapshots) and hostile resolver results.
+- [x] Connect the types: mindmap, kanban, flowchart, swimlane, usecase and C4 for icons, and
+  for math also class, ER, requirement, block, state and sequence. Gantt and cynefin draw
+  their labels with `label_svg` and needed nothing of their own.
+- [x] Tests with a fake resolver (`tests/host.rs`).
+
+Notes:
+- pele keeps the resolvers in module state for the render in progress. Rust has none to borrow
+  from, so they travel with the text measurer, which every label is laid out with:
+  `TextMeasurer::host` (hidden from the documentation) answers with the resolvers of the
+  render, and `render` wraps the measurer in one that does. Titles use a measurer that has no
+  math. `Span` holds the icon and the typeset math of a span, so a label draws without asking
+  the host again.
+- Which types read `$$` is a method of the internal `Diagram` trait, `math`.
+- An icon the host has not is a dashed frame in a flowchart icon shape, as it was, and an empty
+  square for the icon of a use case actor.
+- Architecture diagrams are M7c.
 
 ### M7c — Built-in icons of architecture diagrams
 

@@ -16,7 +16,7 @@ use crate::svg::{
     Accessible, ResolvedStyle, class_names, esc, esc_text, label_svg, num, resolve_style, rounded,
     shared_style, span_style, svg_document, text_style, title_label,
 };
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, has_math, label_line, layout_label, line_middle};
 use crate::text::{Style, TextMeasurer};
 use crate::util::{is_space, round};
 
@@ -66,7 +66,10 @@ fn restyle(mut label: Label, bits: Style, measurer: &dyn TextMeasurer) -> Label 
         let mut total = 0.0;
         for span in line.iter_mut() {
             span.style |= bits;
-            span.width = measurer.width(&span.text, label.size, span.style);
+            // An icon or math keeps the width it was measured with.
+            if span.is_plain() {
+                span.width = measurer.width(&span.text, label.size, span.style);
+            }
             total += span.width;
         }
         label.widths.push(total);
@@ -80,11 +83,23 @@ fn restyle(mut label: Label, bits: Style, measurer: &dyn TextMeasurer) -> Label 
 fn start_text(label: &Label, x: f64, top: f64, attrs: &str) -> String {
     let shared = shared_style(label);
     let mut body = String::new();
+    let mut math = String::new();
     for (i, line) in label.lines.iter().enumerate() {
-        let y = top + (i as f64 + 0.5) * label.line_height + label.size * 0.35;
+        let middle = top + line_middle(label, i);
+        // A line that holds math is written as a label of its own.
+        if has_math(line) {
+            math += &label_svg(
+                &label_line(label, i),
+                x + label.widths[i] / 2.0,
+                middle,
+                attrs,
+            );
+            continue;
+        }
+        let y = middle + label.size * 0.35;
         let mut first = true;
         for span in line {
-            if span.text.is_empty() {
+            if span.icon.is_some() || span.text.is_empty() {
                 continue;
             }
             let pos = if first {
@@ -102,10 +117,10 @@ fn start_text(label: &Label, x: f64, top: f64, attrs: &str) -> String {
         }
     }
     if body.is_empty() {
-        return body;
+        return math;
     }
     format!(
-        "<text{} text-anchor=\"start\" xml:space=\"preserve\">{body}</text>",
+        "<text{} text-anchor=\"start\" xml:space=\"preserve\">{body}</text>{math}",
         text_style(attrs, shared)
     )
 }

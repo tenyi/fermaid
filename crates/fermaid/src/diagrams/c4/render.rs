@@ -12,7 +12,7 @@ use crate::svg::{
     Accessible, ResolvedStyle, esc, esc_text, label_svg, num, resolve_style, rounded, shared_style,
     span_style, svg_document, text_style,
 };
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, label_line, layout_label};
 use crate::text::{Style, TextMeasurer};
 use crate::url::{linked, sanitize_url};
 use crate::{DiagramKind, Link, RenderOptions};
@@ -79,6 +79,11 @@ fn left_label_svg(label: &Label, x: f64, top: f64, attrs: &str) -> String {
     let mut body = String::new();
     for (i, spans) in label.lines.iter().enumerate() {
         let cy = top + (i as f64 + 0.5) * label.line_height;
+        // A line with an icon is written as a label of its own, which places the icon.
+        if spans.iter().any(|span| span.icon.is_some()) {
+            body += &label_svg(&label_line(label, i), x + label.widths[i] / 2.0, cy, attrs);
+            continue;
+        }
         let mut text = String::new();
         for span in spans {
             let own = span_style(span.style & !shared);

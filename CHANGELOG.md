@@ -5,6 +5,16 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- `RenderOptions::icons` and `RenderOptions::math` give the library the icons and the typeset
+  math of the host (`IconResolver`, `MathResolver` and `MathMarkup` are public). A label makes
+  room for an icon the host has and for typeset math, wraps around them and draws them beside
+  its text, as pele does. Without a resolver an icon is left out and `$$…$$` stays as written,
+  as before. Math is read in flowcharts, swimlanes, state, class, ER, requirement, block,
+  sequence and use case diagrams, kanban boards and mind maps; the title of a diagram stays
+  plain text. Mind map, kanban and use case diagrams also draw the icon of a node, and a
+  flowchart the icon of an icon shape, when the host has it. The markup of the host is put
+  into the SVG as it is.
+
 - Mermaid 12.2.0 is the target. Its grammars are the same as 12.1.0's, so the one change is the
   mind map config key `mindmap.colorBy`: `depth` gives the nodes of one level the same color in
   every branch, and a link takes the color of its node. `branch`, the default, is as before.

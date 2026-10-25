@@ -17,6 +17,10 @@ use crate::error::Error;
 pub(crate) struct Er;
 
 impl Diagram for Er {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let mut db = db::ErDb::new();
         if let Some(title) = input.title.filter(|t| !t.is_empty()) {

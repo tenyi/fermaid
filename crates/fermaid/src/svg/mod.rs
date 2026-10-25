@@ -237,16 +237,7 @@ pub(crate) fn label_svg(label: &Label, cx: f64, cy: f64, attrs: &str) -> String 
                     }
                 } else if let Some(icon) = &span.icon {
                     let side = label.size * 1.1;
-                    let _ = write!(
-                        extra,
-                        "<svg class=\"fermaid-icon\" data-icon=\"{}\" x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">{}</svg>",
-                        esc_text(&icon.name),
-                        num(x),
-                        num(mid - side / 2.0),
-                        num(side),
-                        num(side),
-                        icon.markup
-                    );
+                    extra += &icon_svg(&icon.name, x, mid - side / 2.0, side, &icon.markup);
                 } else if !span.text.is_empty() {
                     let _ = write!(
                         body,
@@ -280,6 +271,19 @@ pub(crate) fn label_svg(label: &Label, cx: f64, cy: f64, attrs: &str) -> String 
         top += h;
     }
     format!("<text{attrs} text-anchor=\"middle\" xml:space=\"preserve\">{body}</text>{extra}")
+}
+
+/// A square for a named icon, with the host's drawing of it. The markup is the host's, and is
+/// trusted.
+pub(crate) fn icon_svg(name: &str, x: f64, y: f64, side: f64, markup: &str) -> String {
+    format!(
+        "<svg class=\"fermaid-icon\" data-icon=\"{}\" x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">{markup}</svg>",
+        esc_text(name),
+        num(x),
+        num(y),
+        num(side),
+        num(side)
+    )
 }
 
 /// What typeset math takes from the text it stands in: its color and opacity only, so that the

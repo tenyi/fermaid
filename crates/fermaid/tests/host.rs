@@ -4,8 +4,6 @@
 //! is, so these tests check what the library does around the answers: where it puts them, how
 //! it makes room for them, and that the text of a diagram cannot reach the output but through
 //! them.
-#![cfg(feature = "flowchart")]
-
 mod support;
 
 use std::cell::RefCell;
@@ -37,6 +35,7 @@ fn svg(src: &str, options: &RenderOptions) -> String {
         .svg
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn without_resolvers_icons_are_left_out_and_math_stays_text() {
     let out = svg(
@@ -50,6 +49,7 @@ fn without_resolvers_icons_are_left_out_and_math_stays_text() {
     assert!(out.contains("$$x^2$$"));
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn draws_an_icon_the_host_has_and_leaves_out_one_it_has_not() {
     let options = RenderOptions {
@@ -72,6 +72,7 @@ fn draws_an_icon_the_host_has_and_leaves_out_one_it_has_not() {
     assert_inert(&out, "icon");
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn an_icon_makes_the_node_wider() {
     let options = RenderOptions {
@@ -89,6 +90,7 @@ fn an_icon_makes_the_node_wider() {
     );
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn typesets_math_and_makes_room_for_it() {
     let options = RenderOptions {
@@ -112,6 +114,7 @@ fn typesets_math_and_makes_room_for_it() {
     );
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn math_that_the_host_does_not_typeset_stays_as_written() {
     let options = RenderOptions {
@@ -129,6 +132,7 @@ fn math_that_the_host_does_not_typeset_stays_as_written() {
     assert!(out.contains("$$other$$"));
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn ignores_math_with_a_size_that_cannot_be_drawn() {
     for (width, height) in [
@@ -147,6 +151,7 @@ fn ignores_math_with_a_size_that_cannot_be_drawn() {
     }
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn asks_the_host_once_for_the_same_math() {
     let asked = Rc::new(RefCell::new(Vec::new()));
@@ -168,6 +173,7 @@ fn asks_the_host_once_for_the_same_math() {
     assert_eq!(asked[1].0, "b");
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn a_title_is_plain_text() {
     let options = RenderOptions {
@@ -180,6 +186,7 @@ fn a_title_is_plain_text() {
     assert!(out.contains("$$a$$"));
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn output_is_deterministic() {
     let options = || RenderOptions {
@@ -191,6 +198,7 @@ fn output_is_deterministic() {
     assert_eq!(svg(src, &options()), svg(src, &options()));
 }
 
+#[cfg(feature = "flowchart")]
 #[test]
 fn the_text_of_a_diagram_reaches_the_output_only_escaped() {
     // The host answers for every name and every expression, with markup of its own. What the
@@ -210,4 +218,150 @@ fn the_text_of_a_diagram_reaches_the_output_only_escaped() {
             assert_inert(&rendered.svg, &src);
         }
     }
+}
+
+#[cfg(feature = "mindmap")]
+#[test]
+fn mindmap_draws_the_icon_of_a_node_the_host_has() {
+    let src =
+        "mindmap\n  root\n    Book\n    ::icon(fa fa-book)\n    Other\n    ::icon(fa fa-other)\n";
+    let book: IconResolver = Box::new(|name| (name == "fa fa-book").then(|| ICON.to_string()));
+    let with = RenderOptions {
+        icons: Some(book),
+        ..Default::default()
+    };
+    let out = fermaid::render(src, &with).unwrap();
+    let plain = fermaid::render(src, &RenderOptions::default()).unwrap();
+    assert_eq!(out.svg.matches("class=\"fermaid-icon\"").count(), 1);
+    assert!(out.svg.contains("data-icon=\"fa fa-book\""));
+    assert!(!plain.svg.contains("fermaid-icon"));
+    // The icon has room in the node, so the map is wider.
+    assert!(out.width > plain.width);
+    assert_inert(&out.svg, src);
+}
+
+#[cfg(feature = "mindmap")]
+#[test]
+fn mindmap_typesets_math() {
+    let src = "mindmap\n  root\n    a[A $$x^2$$ b]\n";
+    let options = RenderOptions {
+        math: Some(math(30.0, 40.0)),
+        ..Default::default()
+    };
+    let out = svg(src, &options);
+    assert!(out.contains("class=\"fermaid-math\""));
+    assert!(!out.contains("$$"));
+}
+
+/// Renders a source with the icon `myicon` and math of 30 by 40, and with neither.
+#[cfg(any(
+    feature = "flowchart",
+    feature = "swimlane",
+    feature = "kanban",
+    feature = "er",
+    feature = "requirement",
+    feature = "class",
+    feature = "block",
+    feature = "usecase"
+))]
+fn both(src: &str) -> (String, String) {
+    let hosted = RenderOptions {
+        icons: Some(Box::new(|name| {
+            (name == "myicon" || name == "fa:fa-car").then(|| ICON.to_string())
+        })),
+        math: Some(math(30.0, 40.0)),
+        ..Default::default()
+    };
+    (svg(src, &hosted), svg(src, &RenderOptions::default()))
+}
+
+#[cfg(feature = "flowchart")]
+#[test]
+fn flowchart_draws_the_icon_of_an_icon_shape() {
+    let src = "flowchart LR\n  A@{ icon: \"myicon\", form: \"square\", label: \"Car\" }\n  B@{ icon: \"other\", form: \"square\" }";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains(ICON));
+    assert_eq!(hosted.matches("<svg class=\"fermaid-icon\"").count(), 1);
+    // An icon the host has not is a dashed frame, as it is without a host.
+    assert!(hosted.contains("stroke-dasharray=\"3 3\""));
+    assert!(!plain.contains(ICON));
+    assert_inert(&hosted, src);
+}
+
+#[cfg(feature = "kanban")]
+#[test]
+fn kanban_draws_icons_and_widens_for_math() {
+    let src = "kanban\n  todo[To do]@{ icon: 'myicon' }\n    t1[Task]@{ icon: 'myicon' }\n    t2[Math $$x$$]\n";
+    let (hosted, plain) = both(src);
+    assert_eq!(hosted.matches("<svg class=\"fermaid-icon\"").count(), 2);
+    assert!(hosted.contains("class=\"fermaid-math\""));
+    assert!(!plain.contains("fermaid-icon"));
+    assert_inert(&hosted, src);
+    // The column is at least as wide as the math and its room.
+    let wide = fermaid::render(
+        src,
+        &RenderOptions {
+            math: Some(math(400.0, 20.0)),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let narrow = fermaid::render(src, &RenderOptions::default()).unwrap();
+    assert!(wide.width > narrow.width + 100.0);
+}
+
+#[cfg(feature = "er")]
+#[test]
+fn er_draws_icons_and_math_in_a_cell() {
+    let src = "erDiagram\n  CUSTOMER {\n    string name \"fa:fa-car $$x$$\"\n  }\n";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains("class=\"fermaid-icon\""), "{hosted}");
+    assert!(hosted.contains("class=\"fermaid-math\""));
+    assert!(!plain.contains("fermaid-icon"));
+    assert_inert(&hosted, src);
+}
+
+#[cfg(feature = "requirement")]
+#[test]
+fn requirement_draws_math() {
+    let src = "requirementDiagram\n  requirement r {\n    id: 1\n    text: \"$$x$$\"\n    risk: high\n    verifymethod: test\n  }\n";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains("class=\"fermaid-math\""), "{hosted}");
+    assert!(plain.contains("$$x$$"));
+    assert_inert(&hosted, src);
+}
+
+#[cfg(feature = "class")]
+#[test]
+fn class_typesets_cardinalities_and_annotations() {
+    let src = "classDiagram\n  class A {\n    <<$$x$$>>\n  }\n  A \"$$y$$\" --> \"1\" B\n";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains("class=\"fermaid-cardinality\""));
+    assert_eq!(
+        hosted.matches("class=\"fermaid-math\"").count(),
+        2,
+        "{hosted}"
+    );
+    assert!(plain.contains("$$y$$"));
+    assert_inert(&hosted, src);
+}
+
+#[cfg(feature = "block")]
+#[test]
+fn block_typesets_math() {
+    let src = "block-beta\n  a[\"$$x$$\"]\n";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains("class=\"fermaid-math\""));
+    assert!(plain.contains("$$x$$"));
+    assert_inert(&hosted, src);
+}
+
+#[cfg(feature = "usecase")]
+#[test]
+fn usecase_draws_the_icon_of_an_actor() {
+    let src = "usecase-beta\nactor C@{ icon: \"myicon\" }\nA\nC --> A\n";
+    let (hosted, plain) = both(src);
+    assert!(hosted.contains(ICON), "{hosted}");
+    assert!(!plain.contains(ICON));
+    assert_inert(&hosted, src);
 }

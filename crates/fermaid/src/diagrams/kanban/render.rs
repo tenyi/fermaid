@@ -1,5 +1,4 @@
-//! Kanban board layout and SVG. Ported from pele's `diagrams/kanban/render.ts`, without math
-//! and icons.
+//! Kanban board layout and SVG. Ported from pele's `diagrams/kanban/render.ts`.
 
 use std::fmt::Write;
 
@@ -10,11 +9,11 @@ use crate::diagrams::common::fit::title_room;
 use crate::options::Link;
 use crate::preprocess::Value;
 use crate::svg::{
-    Accessible, CRITICAL, ROUNDED, class_names, esc, esc_text, label_svg, num, svg_document,
-    text_style, title_label,
+    Accessible, CRITICAL, ROUNDED, class_names, esc, esc_text, icon_svg, label_svg, num,
+    svg_document, text_style, title_label,
 };
 use crate::text::label::{Label, Span, label_line, layout_label, line_middle, with_heights};
-use crate::text::{Style, TextMeasurer};
+use crate::text::{Style, TextMeasurer, icon_markup};
 use crate::url::{link_url, rel_attr, safe_url};
 use crate::util::{js_number, round, trim};
 
@@ -23,6 +22,7 @@ const COLUMN_PAD: f64 = 8.0;
 const CARD_PAD: f64 = 10.0;
 const CARD_GAP: f64 = 8.0;
 const META_GAP: f64 = 4.0;
+const ICON_GAP: f64 = 6.0;
 
 /// Mermaid names five priorities and gives Medium no color. Matching here ignores case. The
 /// high ones are marked in the critical color and the low ones in the muted one, the nearer to
@@ -174,14 +174,61 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
         Some(Value::Number(n)) if *n > 0.0 => n.clamp(80.0, 2000.0),
         _ => 200.0,
     };
-    let own_width = section_width;
+    let glyph = small * 1.25;
+    let sections = &db.sections;
+    // The icon of a node, when the host has it. One it has not takes no room.
+    let icon_of = |name: Option<&str>| name.and_then(|name| icon_markup(measurer, name));
+    // Math can't break across lines, so columns widen to hold the widest expression.
+    let mut math_width = 0.0f64;
+    let mut holds = |raw: &str, font_size: f64, reserved: f64| {
+        if !raw.contains("$$") {
+            return;
+        }
+        let label = layout_label(
+            Some(raw),
+            true,
+            measurer,
+            font_size,
+            f64::INFINITY,
+            Style::NONE,
+        );
+        for span in label.lines.iter().flatten() {
+            if let Some(math) = &span.math {
+                math_width = math_width.max(math.width() + reserved);
+            }
+        }
+    };
+    for section in sections {
+        let count = measurer.width(&section.items.len().to_string(), small, Style::NONE);
+        let icon = if icon_of(section.node.icon.as_deref()).is_some() {
+            glyph + ICON_GAP
+        } else {
+            0.0
+        };
+        holds(
+            &section.node.label,
+            size,
+            2.0 * COLUMN_PAD + 8.0 + count + 12.0 + icon,
+        );
+        for item in &section.items {
+            let reserved = 2.0 * (COLUMN_PAD + CARD_PAD);
+            let icon = if icon_of(item.icon.as_deref()).is_some() {
+                glyph + ICON_GAP
+            } else {
+                0.0
+            };
+            holds(&item.label, small, reserved + icon);
+            holds(item.ticket.as_deref().unwrap_or(""), small, reserved);
+            holds(item.assigned.as_deref().unwrap_or(""), small, reserved);
+        }
+    }
+    let own_width = section_width.max(math_width.ceil());
     // A board wider than the width the host has is folded into rows of columns, which then
     // share the row between them.
     let room = match options.max_width {
         Some(m) if m > 0.0 => m - 2.0 * pad,
         _ => f64::INFINITY,
     };
-    let sections = &db.sections;
     let count = sections.len();
     let fits = count as f64 * (own_width + COLUMN_GAP) - COLUMN_GAP <= room;
     let per_row = if fits {
@@ -197,6 +244,7 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
         own_width
             .min(room)
             .max((((room + COLUMN_GAP) / per_row as f64).floor() - COLUMN_GAP).min(own_width * 2.0))
+            .max(math_width.ceil())
     };
     let base_url = match conf.and_then(|c| c.get("ticketBaseUrl")) {
         Some(Value::String(s)) => s.as_str(),
@@ -212,7 +260,8 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
     let mut body_heights = Vec::new();
     for section in sections {
         let count_width = measurer.width(&section.items.len().to_string(), small, Style::NONE);
-        let reserved = count_width + 12.0;
+        let section_icon = icon_of(section.node.icon.as_deref()).is_some();
+        let reserved = count_width + 12.0 + if section_icon { glyph + ICON_GAP } else { 0.0 };
         let title = fit_label(
             Some(&section.node.label),
             true,
@@ -227,12 +276,17 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
         let mut list = Vec::new();
         let mut height = 0.0;
         for item in &section.items {
-            let fit = |raw: Option<&str>, markdown| {
-                fit_label(raw, markdown, measurer, small, text_width, Style::NONE)
+            let fit = |raw: Option<&str>, markdown, width| {
+                fit_label(raw, markdown, measurer, small, width, Style::NONE)
             };
-            let label = fit(Some(&item.label), true);
-            let ticket = fit(item.ticket.as_deref(), false);
-            let assigned = fit(item.assigned.as_deref(), false);
+            let icon = if icon_of(item.icon.as_deref()).is_some() {
+                glyph + ICON_GAP
+            } else {
+                0.0
+            };
+            let label = fit(Some(&item.label), true, text_width - icon);
+            let ticket = fit(item.ticket.as_deref(), false, text_width);
+            let assigned = fit(item.assigned.as_deref(), false, text_width);
             let meta = if ticket.width + assigned.width + 8.0 > text_width {
                 ticket.height + assigned.height
             } else {
@@ -303,6 +357,19 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
             js_number(small),
             section.items.len()
         );
+        if let (Some(name), Some(markup)) = (
+            section.node.icon.as_deref(),
+            icon_of(section.node.icon.as_deref()),
+        ) {
+            let count_width = measurer.width(&section.items.len().to_string(), small, Style::NONE);
+            body += &icon_svg(
+                name,
+                edge - count_width - ICON_GAP - glyph,
+                COLUMN_PAD + (line - glyph) / 2.0,
+                glyph,
+                &markup,
+            );
+        }
 
         let mut y = head_height;
         for (item, card) in section.items.iter().zip(&cards[index]) {
@@ -327,6 +394,17 @@ pub(crate) fn render_kanban(db: &KanbanDb, input: &Input<'_>) -> Output {
                 " class=\"fermaid-label\"",
                 false,
             );
+            if let (Some(name), Some(markup)) =
+                (item.icon.as_deref(), icon_of(item.icon.as_deref()))
+            {
+                inner += &icon_svg(
+                    name,
+                    card_width - CARD_PAD - glyph,
+                    CARD_PAD + (small_line - glyph) / 2.0,
+                    glyph,
+                    &markup,
+                );
+            }
             let bottom = card.height - CARD_PAD;
             if let Some(ticket) = item.ticket.as_deref() {
                 let top = bottom - card.meta;

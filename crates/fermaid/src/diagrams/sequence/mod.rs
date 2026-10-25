@@ -19,6 +19,10 @@ use crate::preprocess::Value;
 pub(crate) struct Sequence;
 
 impl Diagram for Sequence {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let wrap = match input.config.get("wrap") {
             Some(Value::Bool(b)) => Some(*b),

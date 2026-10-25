@@ -64,6 +64,11 @@ impl Not for Style {
     }
 }
 
+/// The markup of the icon the host has by that name, if it has one.
+pub(crate) fn icon_markup(measurer: &dyn TextMeasurer, name: &str) -> Option<std::rc::Rc<str>> {
+    measurer.host()?.icon(name)
+}
+
 /// Measures how wide text is drawn, in pixels.
 ///
 /// The default, [`MetricsMeasurer`], estimates widths from font tables. A host that knows the

@@ -69,6 +69,8 @@ match fermaid::render("pie\n  \"Rust\": 70\n  \"Other\": 30", &options) {
 
 `render` 會回傳 SVG 及其尺寸與連結，或回傳一個 `Error`，其中包含錯誤代碼（`Unsupported`、`Syntax`、`Semantic`、`Limit`）、行號與欄號，以及指出問題位置的程式碼片段。`detect_type` 不需渲染即可判斷圖表類型。將 `max_width` 設為宿主可用的寬度，能畫得更窄的圖表就會縮窄（圓餅圖會把圖例移到圖的下方）。`click` 陳述式中的連結會經過清理，且只保留允許的 scheme（`link_schemes`，預設為 `http`、`https`、`mailto` 與 `tel`）；橫向的流程圖在放不進 `max_width` 時會改為縱向。每種圖表類型都是一個 Cargo feature（`flowchart`、`pie`、…）；預設的 `all` feature 包含所有類型。甘特圖的「今天」取自 `now`（自 1970-01-01 UTC 起的毫秒數）；預設為 1970-01-01，使輸出永不受時鐘影響。
 
+圖示與數學式由宿主提供，因為 fermaid 本身沒有圖示集，也沒有排版引擎。`RenderOptions::icons` 依名稱提供圖示的 SVG 標記（標籤裡的 `fa:fa-car`，或節點的 `icon`），`RenderOptions::math` 則排版流程圖、泳道圖、狀態圖、類別圖、ER 圖、需求圖、區塊圖、序列圖、使用案例圖、看板與心智圖標籤中 `$$` 之間的 TeX。沒有提供時，圖示會被省略，TeX 維持原文。宿主回傳的內容會原封不動放進 SVG，所以必須來自你信任的來源。
+
 ## 命令列
 
 ```sh

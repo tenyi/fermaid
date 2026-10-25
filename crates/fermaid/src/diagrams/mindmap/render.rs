@@ -10,8 +10,10 @@ use crate::diagrams::common::fit::{title_room, turn_to_fit};
 use crate::preprocess::Value;
 use crate::svg::shapes::{draw_shape, shape_inset, shape_size};
 use crate::svg::{
-    Accessible, class_names, esc_text, label_svg, num, series_color, svg_document, title_label,
+    Accessible, class_names, esc_text, icon_svg, label_svg, num, series_color, svg_document,
+    title_label,
 };
+use crate::text::icon_markup;
 use crate::text::label::{Label, label_line, layout_label, line_middle};
 use crate::util::round;
 
@@ -28,6 +30,8 @@ const BRANCH_GAP_Y: f64 = 28.0;
 const TEXT_PAD: f64 = 6.0;
 const PILL_PAD: f64 = 12.0;
 const TINT: f64 = 0.22;
+/// Between the icon of a node and its text.
+const ICON_GAP: f64 = 6.0;
 /// Running down, each level is set in by this much, and links leave a node this far from its
 /// left edge.
 const INDENT: f64 = 28.0;
@@ -154,8 +158,22 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
         anchor: vec![0.0; n],
     };
 
+    // The icon of each node the host has one for, with its markup. One it has not takes no room.
+    let mut icons: Vec<Option<std::rc::Rc<str>>> = Vec::with_capacity(n);
+    let glyph = size * 1.25;
+
     for (i, node) in nodes.iter().enumerate() {
-        let fit = wrap.min(72f64.max(room - depth[i] as f64 * INDENT - 2.0 * TEXT_PAD));
+        let icon = node
+            .icon
+            .as_deref()
+            .and_then(|name| icon_markup(measurer, name));
+        let reserved = if icon.is_some() {
+            glyph + ICON_GAP
+        } else {
+            0.0
+        };
+        icons.push(icon);
+        let fit = wrap.min(72f64.max(room - depth[i] as f64 * INDENT - 2.0 * TEXT_PAD - reserved));
         let label = layout_label(
             Some(&node.descr),
             true,
@@ -164,7 +182,8 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
             fit,
             crate::text::Style::NONE,
         );
-        let tw = label.width;
+        let gap = if label.width > 0.0 { ICON_GAP } else { 0.0 };
+        let tw = label.width + if icons[i].is_some() { glyph + gap } else { 0.0 };
         let th = label.height.max(round(size * 1.5));
         let mut shape = match SHAPES.get(usize::from(node.kind)) {
             Some(&s) if !s.is_empty() => s,
@@ -425,10 +444,24 @@ fn draw(db: &MindmapDb, input: &Input<'_>, down: bool) -> Output {
         } else {
             "text"
         };
+        // The icon stands before the text, and the two are centered together.
+        let mut inner = inner;
+        let mut shift = 0.0;
+        if let (Some(name), Some(markup)) = (node.icon.as_deref(), &icons[i]) {
+            let gap = if label.width > 0.0 { ICON_GAP } else { 0.0 };
+            shift = (glyph + gap) / 2.0;
+            inner += &icon_svg(
+                name,
+                -shift - label.width / 2.0,
+                dy[i] - glyph / 2.0,
+                glyph,
+                markup,
+            );
+        }
         let text = if down && shape.is_empty() {
-            left_label(label, -label.width / 2.0, dy[i])
+            left_label(label, shift - label.width / 2.0, dy[i])
         } else {
-            label_svg(label, 0.0, dy[i], " class=\"fermaid-label\"")
+            label_svg(label, shift, dy[i], " class=\"fermaid-label\"")
         };
         let group = format!(
             "<g class=\"fermaid-node fermaid-shape-{kind}{}{}\" data-id=\"{}\" transform=\"translate({},{})\">{inner}{text}</g>",

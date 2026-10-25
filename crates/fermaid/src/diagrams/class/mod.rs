@@ -18,6 +18,10 @@ use crate::error::Error;
 pub(crate) struct Class;
 
 impl Diagram for Class {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let mut db = db::ClassDb::new(input.options.limits.max_depth);
         if let Some(title) = input.title.filter(|t| !t.is_empty()) {

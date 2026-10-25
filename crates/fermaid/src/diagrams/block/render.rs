@@ -664,10 +664,10 @@ pub(crate) fn render_block(model: &BlockModel, input: &Input<'_>) -> Result<Outp
                         wrap,
                         text_style,
                     );
-                    let blank = label
-                        .lines
-                        .iter()
-                        .all(|line| line.iter().all(|part| part.text.trim().is_empty()));
+                    let blank = label.lines.iter().all(|line| {
+                        line.iter()
+                            .all(|part| part.icon.is_none() && part.text.trim().is_empty())
+                    });
                     mask = arrow_mask(&b.directions);
                     let s = if blank {
                         arrow_size(mask, 0.0, 0.0)

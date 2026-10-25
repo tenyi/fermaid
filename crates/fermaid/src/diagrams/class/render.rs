@@ -25,7 +25,7 @@ use crate::svg::{
     rounded, svg_document, with_title,
 };
 use crate::text::entities::decode_entities;
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, has_math, layout_label};
 use crate::text::{Style, TextMeasurer};
 use crate::url::linked;
 use crate::util::{round, trim};
@@ -64,7 +64,7 @@ struct View<'a> {
     label: Label,
     w: f64,
     h: f64,
-    annotations: Vec<String>,
+    annotations: Vec<Annotation>,
     attributes: Vec<Line>,
     methods: Vec<Line>,
     title_h: f64,
@@ -85,11 +85,33 @@ struct End {
 
 struct Card {
     text: String,
+    /// The text typeset by the host, when it has math for it.
+    math: Option<Label>,
     x: f64,
     y: f64,
     w: f64,
     h: f64,
     parent: i64,
+}
+
+/// The line of an annotation in the title of a class: text, or math the host typeset.
+enum Annotation {
+    Text(String),
+    Math(Label),
+}
+
+/// Text that holds math the host typeset, or `None`, for text that stays as written. Annotations
+/// and cardinalities are literal text unless there is math in them.
+fn math_text(raw: &str, measurer: &dyn TextMeasurer, size: f64) -> Option<Label> {
+    if !raw.contains("$$") {
+        return None;
+    }
+    let label = layout_label(Some(raw), false, measurer, size, 4000.0, Style::NONE);
+    label
+        .lines
+        .iter()
+        .any(|line| has_math(line))
+        .then_some(label)
 }
 
 fn base(node: &GraphNode, label: Label, w: f64, h: f64, font_size: f64) -> View<'_> {
@@ -212,6 +234,8 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
     let card_width = |raw: &str| {
         if raw.is_empty() {
             0.0
+        } else if let Some(math) = math_text(raw, measurer, tiny) {
+            math.width
         } else {
             measurer.width(&decode_entities(raw), tiny, Style::NONE)
         }
@@ -419,8 +443,22 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
     }
 
     let lettered = (0..drawn.len()).any(|i| start_room[i] > 0.0 || end_room[i] > 0.0);
-    // Pele makes room between the ranks for cardinalities taller than a line, which only math
-    // makes, so there is none to make here.
+    // Cardinalities at both ends of a vertical edge need room for their height between the ranks.
+    let mut tall_cards = 0.0f64;
+    if root_dir.vertical() {
+        let card_height = |raw: &str| {
+            if raw.is_empty() {
+                0.0
+            } else {
+                tiny_height.max(math_text(raw, measurer, tiny).map_or(0.0, |math| math.height))
+            }
+        };
+        for edge in &drawn {
+            tall_cards = tall_cards.max(
+                card_height(&edge.start_label) + card_height(&edge.end_label) - 2.0 * tiny_height,
+            );
+        }
+    }
     let layout = compound_layout(
         &mut cnodes,
         &mut cedges,
@@ -432,7 +470,7 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
                 conf,
                 "rankSpacing",
                 if lettered { RANK_SEP + 16.0 } else { RANK_SEP },
-            ),
+            ) + tall_cards,
             port_sep: 20.0,
             apart: true,
             ..LayeredOptions::default()
@@ -630,7 +668,10 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
         if raw.is_empty() {
             return;
         }
-        let h = tiny_height;
+        let math = math_text(raw, measurer, tiny);
+        let h = math
+            .as_ref()
+            .map_or(tiny_height, |m| tiny_height.max(m.height));
         let (mut cx, mut cy) = (x, y);
         if side & 1 == 1 {
             cx += if side == 3 { -1.0 } else { 1.0 } * (5.0 + width / 2.0);
@@ -645,6 +686,7 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
         max_y = max_y.max(cy + h / 2.0);
         cards.push(Card {
             text: decode_entities(raw),
+            math,
             x: cx,
             y: cy,
             w: width,
@@ -931,6 +973,15 @@ fn draw(db: &ClassDb, input: &Input<'_>, turned: bool, tight: bool) -> Output {
 
     let mut cards_out = String::new();
     for item in &cards {
+        if let Some(math) = &item.math {
+            cards_out += &label_svg(
+                math,
+                item.x + ox,
+                item.y + oy,
+                " class=\"fermaid-cardinality\"",
+            );
+            continue;
+        }
         let _ = write!(
             cards_out,
             "<text class=\"fermaid-cardinality\" x=\"{}\" y=\"{}\" text-anchor=\"middle\">{}</text>",
@@ -1038,10 +1089,14 @@ fn class_view<'a>(
         4000.0,
         base,
     );
-    let annotations: Vec<String> = cls
+    let annotations: Vec<Annotation> = cls
         .annotations
         .iter()
-        .map(|a| format!("«{}»", trim(&decode_entities(a))))
+        .map(|a| {
+            math_text(&format!("«{}»", trim(a)), measurer, tiny)
+                .map(Annotation::Math)
+                .unwrap_or_else(|| Annotation::Text(format!("«{}»", trim(&decode_entities(a)))))
+        })
         .collect();
     let attributes: Vec<Line> = cls
         .members
@@ -1056,8 +1111,16 @@ fn class_view<'a>(
     let mut inner = label.width;
     let mut annotations_h = 0.0;
     for a in &annotations {
-        inner = inner.max(measurer.width(a, tiny, Style::NONE));
-        annotations_h += tiny_height;
+        match a {
+            Annotation::Text(text) => {
+                inner = inner.max(measurer.width(text, tiny, Style::NONE));
+                annotations_h += tiny_height;
+            }
+            Annotation::Math(label) => {
+                inner = inner.max(label.width);
+                annotations_h += tiny_height.max(label.height);
+            }
+        }
     }
     for line in attributes.iter().chain(&methods) {
         inner = inner.max(line.width);
@@ -1137,14 +1200,31 @@ fn class_svg(
     }
     let mut y = top + TITLE_PAD;
     for annotation in &view.annotations {
-        let _ = write!(
-            body,
-            "<text class=\"fermaid-annotation\" x=\"0\" y=\"{}\" text-anchor=\"middle\" font-size=\"{}\" fill=\"var(--_m)\">{}</text>",
-            num(y + tiny_height / 2.0 + tiny * 0.35),
-            num(tiny),
-            esc(annotation)
-        );
-        y += tiny_height;
+        match annotation {
+            Annotation::Text(text) => {
+                let _ = write!(
+                    body,
+                    "<text class=\"fermaid-annotation\" x=\"0\" y=\"{}\" text-anchor=\"middle\" font-size=\"{}\" fill=\"var(--_m)\">{}</text>",
+                    num(y + tiny_height / 2.0 + tiny * 0.35),
+                    num(tiny),
+                    esc(text)
+                );
+                y += tiny_height;
+            }
+            Annotation::Math(label) => {
+                let h = tiny_height.max(label.height);
+                body += &label_svg(
+                    label,
+                    0.0,
+                    y + h / 2.0,
+                    &format!(
+                        " class=\"fermaid-annotation\" font-size=\"{}\" fill=\"var(--_m)\"",
+                        num(tiny)
+                    ),
+                );
+                y += h;
+            }
+        }
     }
     let title_size = if view.font_size == size {
         String::new()

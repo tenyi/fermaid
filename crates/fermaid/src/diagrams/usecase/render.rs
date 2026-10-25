@@ -13,10 +13,10 @@ use crate::layout::layered::LayeredOptions;
 use crate::preprocess::{Config, Value};
 use crate::svg::cluster::{Crossings, mark_crossings};
 use crate::svg::edges::{EdgePath, edge_label_svg, marker, marker_trim, route_path};
-use crate::svg::{Accessible, esc, esc_text, label_svg, num, svg_document, title_label};
+use crate::svg::{Accessible, esc, esc_text, icon_svg, label_svg, num, svg_document, title_label};
 use crate::svg::{ResolvedStyle, class_names, resolve_style, rounded};
 use crate::text::label::{Label, label_line, layout_label, line_middle};
-use crate::text::{Style, TextMeasurer};
+use crate::text::{Style, TextMeasurer, icon_markup};
 
 use super::db::{ActorType, BoundaryType, UsecaseModel};
 use super::graph::{GraphShape, Pattern, UsecaseGraphEdge, UsecaseGraphNode, build_usecase_graph};
@@ -254,7 +254,7 @@ fn mark(kind: &str, x: f64, y: f64, dx: f64, dy: f64, color: &str) -> String {
 }
 
 /// The figure of an actor.
-fn figure(view: &View<'_>) -> String {
+fn figure(view: &View<'_>, measurer: &dyn TextMeasurer) -> String {
     let node = view.node;
     let shape = &view.style.shape;
     let line = format!(" fill=\"none\" stroke=\"var(--_b)\"{}", view.style.line);
@@ -279,13 +279,13 @@ fn figure(view: &View<'_>) -> String {
         Some(ActorType::Icon) => {
             head = -14.0;
             radius = 12.0;
+            // The drawing is the host's; a host with no such icon leaves the frame empty.
+            let name = node.icon.as_deref().unwrap_or("");
+            let markup = icon_markup(measurer, name).unwrap_or_default();
             out = format!(
-                "<rect x=\"-22\" y=\"-26\" width=\"44\" height=\"44\"{}/>\
-                 <svg class=\"fermaid-icon\" data-icon=\"{}\" x=\"-14\" y=\"-18\" width=\"28\" height=\"28\" \
-                 viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" \
-                 stroke-linecap=\"round\" stroke-linejoin=\"round\"></svg>",
+                "<rect x=\"-22\" y=\"-26\" width=\"44\" height=\"44\"{}/>{}",
                 rounded(&format!("{SHAPE_ATTRS}{shape}")),
-                esc_text(node.icon.as_deref().unwrap_or(""))
+                icon_svg(name, -14.0, -18.0, 28.0, &markup)
             );
         }
         _ => {
@@ -722,7 +722,7 @@ fn draw(model: &UsecaseModel, input: &Input<'_>, turned: bool) -> Output {
             let body = format!(
                 "<g class=\"fermaid-actor-figure\" transform=\"translate(0,{})\">{}</g>",
                 num(top + FIGURE_H / 2.0),
-                figure(view)
+                figure(view, measurer)
             ) + &label_svg(
                 &view.stereotype,
                 0.0,

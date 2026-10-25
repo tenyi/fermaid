@@ -1,7 +1,7 @@
 //! Labels that keep every character. Ported from pele's `diagrams/common/literal-label.ts`.
 
 use crate::text::TextMeasurer;
-use crate::text::label::{Label, Span};
+use crate::text::label::{Label, Span, with_heights};
 
 /// Breaks the lines of a label that are wider than `room` between characters, keeping each
 /// run of one style together.
@@ -20,8 +20,21 @@ pub(crate) fn break_label(label: Label, measurer: &dyn TextMeasurer, room: f64) 
         let mut current: Vec<Span> = Vec::new();
         let mut width = 0.0;
         for span in line {
+            // An icon or math is not broken between characters.
+            if !span.is_plain() {
+                if !current.is_empty() && width + span.width > room {
+                    lines.push(std::mem::take(&mut current));
+                    widths.push(width);
+                    width = 0.0;
+                }
+                current.push(span.clone());
+                width += span.width;
+                continue;
+            }
             for ch in span.text.chars() {
-                let joined = current.last().is_some_and(|last| last.style == span.style);
+                let joined = current
+                    .last()
+                    .is_some_and(|last| last.is_plain() && last.style == span.style);
                 let piece = ch.to_string();
                 let next_width = if joined {
                     let last = &current[current.len() - 1];
@@ -60,11 +73,16 @@ pub(crate) fn break_label(label: Label, measurer: &dyn TextMeasurer, room: f64) 
     }
     let width = widths.iter().copied().fold(0.0, f64::max);
     let height = lines.len() as f64 * label.line_height;
-    Label {
+    let broken = Label {
         lines,
         widths,
         width,
         height,
         ..label
+    };
+    if broken.heights.is_some() {
+        with_heights(broken)
+    } else {
+        broken
     }
 }

@@ -20,6 +20,10 @@ use crate::preprocess::Value;
 pub(crate) struct Swimlane;
 
 impl Diagram for Swimlane {
+    fn math(&self) -> bool {
+        true
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
         let inherit_dir = match input.config.get("flowchart") {
             Some(Value::Map(flow)) => matches!(flow.get("inheritDir"), Some(Value::Bool(true))),
