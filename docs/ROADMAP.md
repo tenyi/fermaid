@@ -279,7 +279,7 @@ The version that follows M6, when every diagram type Mermaid 12.1.0 builds is do
    crate's own directory. Every crate therefore carries a copy of them, and a test keeps the
    copies and the ones at the root the same.
 2. [x] Publish the library, then the command line tool, which depends on it.
-3. [ ] Tag the version, push the tag and publish the GitHub release.
+3. [x] Tag the version, push the tag and publish the GitHub release.
 
 Notes:
 - The information diagram draws the version of the library under its title, so its snapshots
