@@ -414,7 +414,7 @@ Notes:
 - [x] C4 diagrams, behind the `c4` feature.
 - [ ] Use case diagrams, behind the `usecase` feature.
 - [x] Info diagrams, behind the `info` feature.
-- [ ] Venn diagrams, behind the `venn` feature.
+- [x] Venn diagrams, behind the `venn` feature.
 - [ ] Tree views, behind the `treeview` feature.
 - [ ] Cynefin diagrams, behind the `cynefin` feature.
 - [ ] Ishikawa diagrams, behind the `ishikawa` feature.
@@ -439,6 +439,13 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,005
   inputs, the 16 Mermaid spec cases pass, and ten minutes of fuzzing (1,254,040 runs) found
   no panic.
+Notes:
+- A Venn diagram is read with Mermaid's jison grammar, through a hand-written lexer that walks
+  UTF-16 code units, as the jison lexer does. A token is read only when the grammar has to
+  look at one to decide: the lexer asks the model whether an indented `text` continues a set.
+- The differential run against Mermaid's own grammar reports no difference over 3,025
+  inputs, the 29 Mermaid spec cases pass (13 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (1,023,835 runs) found no panic.
 
 ## Later milestones (scope only)
 
