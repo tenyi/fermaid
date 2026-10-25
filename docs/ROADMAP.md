@@ -415,7 +415,7 @@ Notes:
 - [ ] Use case diagrams, behind the `usecase` feature.
 - [x] Info diagrams, behind the `info` feature.
 - [x] Venn diagrams, behind the `venn` feature.
-- [ ] Tree views, behind the `treeview` feature.
+- [x] Tree views, behind the `treeview` feature.
 - [ ] Cynefin diagrams, behind the `cynefin` feature.
 - [ ] Ishikawa diagrams, behind the `ishikawa` feature.
 - [ ] Event modeling diagrams, behind the `eventmodeling` feature.
@@ -445,6 +445,13 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,025
   inputs, the 29 Mermaid spec cases pass (13 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,023,835 runs) found no panic.
+- A tree view is read with Mermaid's Langium grammar and its value converter, so that a name,
+  an annotation and an indentation mean what they mean in Mermaid. A tree may also be written
+  with box-drawing characters instead of an indented outline, and Mermaid turns them into an
+  indentation before it reads the tree.
+- The differential run against Mermaid's own grammar reports no difference over 3,011
+  inputs, the 163 Mermaid spec cases pass (1 of them holds no diagram and is listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (884,204 runs) found no panic.
 
 ## Later milestones (scope only)
 
