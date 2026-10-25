@@ -423,6 +423,7 @@ Notes:
 - [ ] Railroad diagrams, behind the `railroad` feature.
 - [ ] Swimlane diagrams, behind the `swimlane` feature.
 - [ ] Agent flows, behind the `agentflow` feature.
+
 Notes:
 - A C4 diagram is read with Mermaid's jison grammar, through a hand-written lexer that walks
   UTF-16 code units, as the jison lexer does. The model holds the shapes with their kinds and
@@ -432,14 +433,12 @@ Notes:
   inputs, the 55 Mermaid spec cases pass (13 of them hold a placeholder rather than a
   diagram and are listed in `SKIPPED.md`), and ten minutes of fuzzing (1,181,796 runs) found
   no panic.
-Notes:
 - An information diagram is read with Mermaid's Langium grammar, which is small: the keyword,
   the optional `showInfo`, and then any number of accessible texts and titles, each of them
   on a line of its own.
 - The differential run against Mermaid's own grammar reports no difference over 3,005
   inputs, the 16 Mermaid spec cases pass, and ten minutes of fuzzing (1,254,040 runs) found
   no panic.
-Notes:
 - A Venn diagram is read with Mermaid's jison grammar, through a hand-written lexer that walks
   UTF-16 code units, as the jison lexer does. A token is read only when the grammar has to
   look at one to decide: the lexer asks the model whether an indented `text` continues a set.
