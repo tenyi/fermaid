@@ -23,6 +23,7 @@ mod error;
     feature = "requirement",
     feature = "block",
     feature = "usecase",
+    feature = "agentflow",
 ))]
 #[allow(
     dead_code,
@@ -38,7 +39,7 @@ mod preprocess;
 )]
 mod svg;
 mod text;
-#[cfg(any(feature = "flowchart", feature = "class",))]
+#[cfg(any(feature = "flowchart", feature = "class", feature = "agentflow",))]
 mod unicode;
 #[cfg(any(
     feature = "flowchart",
@@ -48,6 +49,7 @@ mod unicode;
     feature = "kanban",
     feature = "gantt",
     feature = "usecase",
+    feature = "agentflow",
     feature = "c4",
     feature = "wardley",
 ))]

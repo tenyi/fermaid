@@ -8,7 +8,7 @@
 
 fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â€” no JavaScript runtime, no headless browser, no Node.js. It is a port of [pele](https://github.com/obsidianmd/pele), a small, dependency-free TypeScript renderer, and targets Mermaid 12.1.0 syntax with pele's own layout and visual style.
 
-> **Status:** alpha. Flowcharts, sequence, state, class, ER and requirement diagrams, pie, gantt, sankey, XY and quadrant charts, timelines, user journeys, kanban boards and mind maps are supported; every other diagram type returns an `Unsupported` error for now. See the [roadmap](docs/ROADMAP.md).
+> **Status:** alpha. Every diagram type of Mermaid 12.1.0 is supported; the table below says what each one reads. See the [roadmap](docs/ROADMAP.md).
 
 | Diagram type | Status |
 |---|---|
@@ -44,7 +44,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Wardley map (`wardley-beta`) | Supported: `title`, `accTitle` and `accDescr`, the items with their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid` |
 | Railroad diagram (`railroad-beta`, `railroad-ebnf-beta`, `railroad-abnf-beta`, `railroad-peg-beta`) | Supported: the four notations of Mermaid, with their rules and their terminals; and the `railroad` config keys `padding`, `verticalSeparation`, `horizontalSeparation`, `arcRadius`, `fontSize`, `strokeWidth`, `showMarkers` and `markerRadius` |
 | Swimlane diagram (`swimlane-beta`) | Supported: the flowchart syntax, with the top-level subgraphs drawn as the lanes. The settings come from the `flowchart` section, as Mermaid documents |
-| The rest | Planned |
+| Agent flow diagram (`agentflow-beta`) | Supported: `title`, `accTitle` and `accDescr`, agents, containers and the edges between them, `classDef` and `class`; and the `agentflow` config keys `nodeSpacing`, `rankSpacing`, `wrappingWidth` and `minNodeWidth` |
 
 ## Goals
 

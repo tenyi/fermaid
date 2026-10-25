@@ -72,6 +72,19 @@ before 1.0, a minor version may break the API.
 - Swimlane diagrams, behind the `swimlane` feature: the flowchart syntax, with the top-level
   subgraphs drawn as the lanes. The settings come from the `flowchart` section, as Mermaid
   documents.
+- Agent flow diagrams, behind the `agentflow` feature: `title`, `accTitle` and `accDescr`, agents,
+  containers and the edges between them, `classDef` and `class`; and the `agentflow` config keys
+  `nodeSpacing`, `rankSpacing`, `wrappingWidth` and `minNodeWidth`.
+
+## 0.2.0 - 2026-10-24
+
+The first published release. It covers milestones M0 to M5: the foundation, pie charts,
+flowcharts, sequence diagrams, the Mermaid grammar types, and the M5 chart types. Every
+diagram type is behind its own Cargo feature, and the default feature `all` includes them
+all. The library has no runtime dependencies.
+
+### Diagram types
+
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

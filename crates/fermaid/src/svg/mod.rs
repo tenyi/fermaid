@@ -6,6 +6,7 @@
     feature = "class",
     feature = "er",
     feature = "usecase",
+    feature = "agentflow",
 ))]
 pub(crate) mod cluster;
 mod document;
@@ -17,6 +18,7 @@ mod document;
     feature = "requirement",
     feature = "block",
     feature = "usecase",
+    feature = "agentflow",
 ))]
 pub(crate) mod edges;
 #[cfg(any(
@@ -30,6 +32,7 @@ pub(crate) mod edges;
     feature = "block",
     feature = "ishikawa",
     feature = "usecase",
+    feature = "agentflow",
     feature = "c4",
     feature = "wardley",
 ))]
@@ -43,6 +46,7 @@ pub(crate) mod markers;
     feature = "block",
     feature = "c4",
     feature = "usecase",
+    feature = "agentflow",
 ))]
 #[cfg_attr(
     not(any(

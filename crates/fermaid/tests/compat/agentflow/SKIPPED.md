@@ -1,0 +1,83 @@
+## Skipped tests
+
+- `issue #56: blank line after @{ } block must not fold source positions > a thrown parse error reports the source line, not a folded line`: Mermaid rejects the source
+- `mutual containment between two flow containers > neither container collapsed > does not emit a parent chain that closes a cycle`: Mermaid rejects the source
+- `mutual containment between two flow containers > neither container collapsed > keeps the first containment and drops only the one closing the loop`: Mermaid rejects the source
+- `mutual containment between two flow containers > neither container collapsed > reports the dropped nesting as a containment violation`: Mermaid rejects the source
+- `mutual containment between two flow containers > one container collapsed > does not recurse forever`: Mermaid rejects the source
+- `mutual containment between two flow containers > one container collapsed > still draws the collapsed container it was asked to draw`: Mermaid rejects the source
+- `mutual containment between two flow containers > both containers collapsed > does not recurse forever`: Mermaid rejects the source
+- `mutual containment between two flow containers > both containers collapsed > draws at least one of the two containers rather than blanking`: Mermaid rejects the source
+- `mutual containment between two flow containers > three-container cycle > terminates`: Mermaid rejects the source
+- `agentflow diagnostics lifecycle > reports an unsupported shape after getData(), without rendering`: Mermaid rejects the source
+- `agentflow diagnostics lifecycle > reports a removed shape as an error after getData()`: Mermaid rejects the source
+- `agentflow diagnostics lifecycle > does not accumulate duplicates when getData() is called more than once`: Mermaid rejects the source
+- `agentflow diagnostics lifecycle > reports the position of the offending node when one was captured`: Mermaid rejects the source
+- `agentflow diagnostics > DB surface > exposes emitWarning / emitError / getDiagnostics`: Mermaid rejects the source
+- `agentflow diagnostics > emitWarning > records a structured diagnostic with the given ID and message`: Mermaid rejects the source
+- `agentflow diagnostics > emitWarning > also writes to log.warn so console output is preserved`: Mermaid rejects the source
+- `agentflow diagnostics > emitWarning > leaves position undefined when no nodeId is given`: Mermaid rejects the source
+- `agentflow diagnostics > emitWarning > leaves position undefined when the referenced nodeId has no mapping`: Mermaid rejects the source
+- `agentflow diagnostics > emitWarning > accumulates multiple diagnostics in order`: Mermaid rejects the source
+- `agentflow diagnostics > emitError > records a diagnostic with severity=error and writes to log.error`: Mermaid rejects the source
+- `agentflow diagnostics > SHAPE_UNSUPPORTED migration (transformData) > emits SHAPE_UNSUPPORTED through emitWarning when a DB is passed`: Mermaid rejects the source
+- `agentflow diagnostics > SHAPE_UNSUPPORTED migration (transformData) > falls back to log.warn when no DB is passed`: Mermaid rejects the source
+- `agentflow diagnostics > SHAPE_UNSUPPORTED migration (transformData) > does not emit for supported shapes`: Mermaid rejects the source
+- `agentflow diagnostics > reset > clear() drops diagnostics`: Mermaid rejects the source
+- `issue #62: edge instruction metadata (§5.3) > surfaces instruction on the raw edge (getEdges)`: Mermaid rejects the source
+- `issue #62: edge instruction metadata (§5.3) > carries instruction into the IR (getData) — issue #62`: Mermaid rejects the source
+- `issue #62: edge instruction metadata (§5.3) > carries instruction into the semantic model`: Mermaid rejects the source
+- `agentflow edge semantic > canonical operator → edgeSemantic mapping > `-->` maps to sequence`: Mermaid rejects the source
+- `agentflow edge semantic > canonical operator → edgeSemantic mapping > `-.-` maps to reference`: Mermaid rejects the source
+- `agentflow edge semantic > canonical operator → edgeSemantic mapping > `--x` maps to failure`: Mermaid rejects the source
+- `agentflow edge semantic > length-extended operators preserve semantic > `---->` (longer normal) is still sequence`: Mermaid rejects the source
+- `agentflow edge semantic > regression — type/stroke unchanged by the new field > `-->` keeps {type: arrow_point, stroke: normal}`: Mermaid rejects the source
+- `agentflow edge semantic > regression — type/stroke unchanged by the new field > `-.-` keeps {stroke: dotted}`: Mermaid rejects the source
+- `agentflow edge semantic > regression — type/stroke unchanged by the new field > `--x` keeps {type: arrow_cross, stroke: normal}`: Mermaid rejects the source
+- `issue #83: empty/whitespace @{ } metadata block > a non-string shape value is rejected as an unknown shape, not a TypeError`: Mermaid rejects the source
+- `issue #70: edge from a task to its own containing flow > does not make the flow a member of its own subgraph`: Mermaid rejects the source
+- `issue #70: edge from a task to its own containing flow > emits the flow node without a self parentId`: Mermaid rejects the source
+- `issue #70: edge from a task to its own containing flow > still emits the task inside the flow and the edge to the flow`: Mermaid rejects the source
+- `agentflow / flowchart lexer parity > rejects a caret in shape data exactly like flowchart does`: Mermaid rejects the source
+- `issue #80: global scope block > excludes a global node from the flow membership`: Mermaid rejects the source
+- `issue #80: global scope block > emits the global node without a parentId while flow members keep theirs`: Mermaid rejects the source
+- `issue #80: global scope block > keeps the edges from the flow intact`: Mermaid rejects the source
+- `issue #80: global scope block > emits no container node for the global block itself`: Mermaid rejects the source
+- `linkStyle index bounds > rejects an out-of-range index for interpolate with the bounds message`: Mermaid rejects the source
+- `linkStyle index bounds > rejects an out-of-range index for style with the same message`: Mermaid rejects the source
+- `linkStyle index bounds > still applies interpolate at a valid index`: Mermaid rejects the source
+- `linkStyle index bounds > still applies the default interpolate`: Mermaid rejects the source
+- `agentflow element mappings > DB surface > opts into source-faithful parsing so Diagram.ts keeps comments and offsets`: Mermaid rejects the source
+- `agentflow element mappings > DB surface > starts with an empty element-mappings list`: Mermaid rejects the source
+- `issue #64: parser does not validate metadata (semantics owns it) > removed semantic checks no longer fire > does not resolve/validate connectorRef`: Mermaid rejects the source
+- `issue #64: parser does not validate metadata (semantics owns it) > kept: shape and view > still rejects an invalid shape name (unknown-shape error)`: Mermaid rejects the source
+- `innermost-match ranking > still resolves the innermost element when a label is wider than 1000 columns`: Mermaid rejects the source
+- `issue #56 part 2: YAML @{ } errors report source coordinates > multi-line block: maps the body line into source space and keeps the tab caret`: Mermaid rejects the source
+- `issue #56 part 2: YAML @{ } errors report source coordinates > leaves the message of a non-YAML error alone but still locates it`: Mermaid rejects the source
+- `issue #56 part 2: YAML @{ } errors report source coordinates > applies the frontmatter offset to a shape error too`: Mermaid rejects the source
+- `issue #56 part 2: YAML @{ } errors report source coordinates > a well-formed @{ } block parses without throwing`: Mermaid rejects the source
+- `agentflow colour slots > assignment > tags a node with the kind the db reports`: Mermaid rejects the source
+- `agentflow colour slots > assignment > gives two nodes of one kind the same class, wherever they sit`: Mermaid rejects the source
+- `agentflow colour slots > assignment > keeps any classes the node already carried`: Mermaid rejects the source
+- `agentflow colour slots > assignment > numbers containers from the order it is given, above the kind slots`: Mermaid rejects the source
+- `agentflow colour slots > assignment > never folds a container back onto a kind slot`: the spec builds it from values in the test code
+- `agentflow colour slots > assignment > stamps a slot the stylesheet actually names, on a palette shorter than the kinds`: Mermaid rejects the source
+- `agentflow colour slots > assignment > agrees with the stylesheet at every palette length`: the spec builds it from values in the test code
+- `agentflow colour slots > stylesheet > emits a rule for every kind, at that kind slot colour`: the spec builds it from values in the test code
+- `agentflow colour slots > stylesheet > paints containers from the slots above the kind range`: the spec builds it from values in the test code
+- `agentflow colour slots > stylesheet > names both forms of a container, so a collapsed one is not left grey`: the spec builds it from values in the test code
+- `agentflow colour slots > stylesheet > uses no container slot below the kind range`: the spec builds it from values in the test code
+- `agentflow colour slots > stylesheet > strokes without filling when the theme carries no background palette`: Mermaid rejects the source
+- `agentflow colour slots > stylesheet > emits nothing for a theme that carries no palette`: Mermaid rejects the source
+- `agentflow colour slots > stylesheet > rejects a look that would break out of the selector`: Mermaid rejects the source
+- `agentflow conformance suite > has discovered at least one fixture`: Mermaid rejects the source
+- `agentflow conformance suite > matches its expected outcome and diagnostics`: the spec builds it from values in the test code
+- `agentflow diagnostic vocabulary > partitions every ID into emitted or reserved`: Mermaid rejects the source
+- `agentflow diagnostic vocabulary > has a reproduction for every ID claimed as emitted`: Mermaid rejects the source
+- `matchExpected > fails when semanticAssertions are declared but no semantic model exists`: Mermaid rejects the source
+- `matchExpected > fails on a diagnostic the fixture did not declare`: Mermaid rejects the source
+- `matchExpected > allows extra diagnostics when the fixture opts in`: Mermaid rejects the source
+- `matchExpected > fails when the parse error does not match parseErrorContains`: Mermaid rejects the source
+- `runFixture > reports parse-error and no semantic model when the parser throws`: Mermaid rejects the source
+
+## Spec files

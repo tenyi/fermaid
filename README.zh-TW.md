@@ -8,7 +8,7 @@
 
 fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，不需要 JavaScript 執行環境、無頭瀏覽器或 Node.js。它移植自 [pele](https://github.com/obsidianmd/pele)（一個小巧、無相依套件的 TypeScript 渲染器），支援 Mermaid 12.1.0 語法，並採用 pele 自己的版面配置與視覺風格。
 
-> **狀態：** alpha。已支援流程圖、循序圖、狀態圖、類別圖、ER 圖、需求圖、圓餅圖、甘特圖、桑基圖、XY 圖、象限圖、時間軸、使用者旅程、看板與心智圖；其他圖表類型目前會回傳 `Unsupported` 錯誤。請參閱[開發路線圖](docs/ROADMAP.md)。
+> **狀態：** alpha。已支援 Mermaid 12.1.0 的所有圖表類型，下表列出各類型可讀取的語法。請參閱[開發路線圖](docs/ROADMAP.md)。
 
 | 圖表類型 | 狀態 |
 |---|---|
@@ -44,7 +44,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | Wardley 地圖（`wardley-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、各項目及其座標與演化；以及 `wardley` 的設定鍵 `width`、`height` 與 `showGrid` |
 | 鐵路圖（`railroad-beta`、`railroad-ebnf-beta`、`railroad-abnf-beta`、`railroad-peg-beta`） | 已支援：Mermaid 的四種記法，含其規則與終端；以及 `railroad` 的設定鍵 `padding`、`verticalSeparation`、`horizontalSeparation`、`arcRadius`、`fontSize`、`strokeWidth`、`showMarkers` 與 `markerRadius` |
 | 泳道圖（`swimlane-beta`） | 已支援：流程圖語法，最上層的子圖畫成泳道。設定取自 `flowchart` 一節，與 Mermaid 的說明相同 |
-| 其他 | 規劃中 |
+| 代理流程圖（`agentflow-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、代理、容器與其間的邊、`classDef` 與 `class`；以及 `agentflow` 的設定鍵 `nodeSpacing`、`rankSpacing`、`wrappingWidth` 與 `minNodeWidth` |
 
 ## 目標
 

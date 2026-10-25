@@ -8,7 +8,7 @@
 
 fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な Rust で SVG に変換します。JavaScript ランタイム、ヘッドレスブラウザ、Node.js は不要です。小さく依存関係のない TypeScript 製レンダラー [pele](https://github.com/obsidianmd/pele) の移植で、Mermaid 12.1.0 の構文を対象とし、pele 独自のレイアウトとビジュアルスタイルを採用しています。
 
-> **ステータス:** alpha。フローチャート、シーケンス図、状態遷移図、クラス図、ER 図、要求図、円グラフ、ガントチャート、サンキー図、XY チャート、クアドラントチャート、タイムライン、ユーザージャーニー、カンバン、マインドマップに対応しています。それ以外の種類は現在 `Unsupported` エラーを返します。[ロードマップ](docs/ROADMAP.md)を参照してください。
+> **ステータス:** alpha。Mermaid 12.1.0 のすべてのダイアグラムに対応しています。下の表は、それぞれが読み取る記法をまとめたものです。[ロードマップ](docs/ROADMAP.md)を参照してください。
 
 | ダイアグラムの種類 | 状況 |
 |---|---|
@@ -44,7 +44,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | Wardley マップ（`wardley-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、各項目と座標、進化。`wardley` の設定キー `width`、`height`、`showGrid` に対応 |
 | 鉄道図（`railroad-beta`、`railroad-ebnf-beta`、`railroad-abnf-beta`、`railroad-peg-beta`） | 対応済み：Mermaid の四つの記法と、その規則と終端。`railroad` の設定キー `padding`、`verticalSeparation`、`horizontalSeparation`、`arcRadius`、`fontSize`、`strokeWidth`、`showMarkers`、`markerRadius` に対応 |
 | スイムレーン図（`swimlane-beta`） | 対応済み：フローチャートの記法と、最上位のサブグラフをレーンとして描く。設定は Mermaid の記述どおり `flowchart` の節から読む |
-| その他 | 予定 |
+| エージェントフロー図（`agentflow-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、エージェント、コンテナと間の辺、`classDef` と `class`。`agentflow` の設定キー `nodeSpacing`、`rankSpacing`、`wrappingWidth`、`minNodeWidth` に対応 |
 
 ## 目標
 

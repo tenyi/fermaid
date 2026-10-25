@@ -244,3 +244,10 @@ path = "fuzz_targets/swimlane.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "agentflow"
+path = "fuzz_targets/agentflow.rs"
+test = false
+doc = false
+bench = false

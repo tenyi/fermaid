@@ -64,6 +64,7 @@ pub(crate) mod generics;
         feature = "railroad",
         feature = "c4",
         feature = "wardley",
+        feature = "agentflow",
         feature = "usecase",
     )
 ))]
