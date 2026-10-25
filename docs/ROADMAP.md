@@ -418,7 +418,7 @@ Notes:
 - [x] Tree views, behind the `treeview` feature.
 - [x] Cynefin diagrams, behind the `cynefin` feature.
 - [x] Ishikawa diagrams, behind the `ishikawa` feature.
-- [ ] Event modeling diagrams, behind the `eventmodeling` feature.
+- [x] Event modeling diagrams, behind the `eventmodeling` feature.
 - [ ] Wardley maps, behind the `wardley` feature.
 - [ ] Railroad diagrams, behind the `railroad` feature.
 - [ ] Swimlane diagrams, behind the `swimlane` feature.
@@ -467,6 +467,15 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,004
   inputs, the 3 Mermaid spec cases pass, and ten minutes of fuzzing (649,897 runs) found no
   panic.
+- An event modeling diagram is read with Mermaid's Langium grammar. Its terminals are tried
+  in the order they are written and the keywords come first, so a keyword wins over `EM_ID`
+  unless the name is longer: `cmd` is the keyword, `cmdx` is a name. The terminals for
+  `title`, `accTitle` and `accDescr` are written after `EM_ID`, so `EM_ID` always wins:
+  Mermaid cannot read a title in an event modeling diagram, and fermaid refuses such a line
+  as well.
+- The differential run against Mermaid's own grammar reports no difference over 3,024
+  inputs, the 41 Mermaid spec cases pass (27 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (1,393,960 runs) found no panic.
 
 ## Later milestones (scope only)
 
