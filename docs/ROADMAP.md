@@ -373,7 +373,6 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,063 inputs,
   the 40 Mermaid spec cases pass (13 of them are not diagrams and are listed in `SKIPPED.md`),
   and 490,480 runs of fuzzing over ten minutes found no panic.
-
 - An architecture diagram is read with Mermaid's Langium grammar, over the shared
   tokenizer. The model holds the services, the groups and the junctions with the edges
   between them, and the layout is pele's own: every node takes a cell of a grid, so a group
@@ -382,7 +381,6 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,024
   inputs, the 59 Mermaid spec cases pass (23 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,127,260 runs) found no panic.
-
 - A packet diagram is read with Mermaid's Langium grammar, over a tokenizer of its own. The
   model holds the rows of fields the packet is drawn in: a field names the bit it starts at,
   the bit it ends at, or the number of bits it takes, and what it does not name is filled in
