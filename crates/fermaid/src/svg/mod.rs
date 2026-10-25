@@ -26,6 +26,7 @@ pub(crate) mod edges;
     feature = "requirement",
     feature = "timeline",
     feature = "block",
+    feature = "c4",
 ))]
 pub(crate) mod markers;
 #[cfg(any(
@@ -35,6 +36,7 @@ pub(crate) mod markers;
     feature = "er",
     feature = "mindmap",
     feature = "block",
+    feature = "c4",
 ))]
 #[cfg_attr(
     not(any(

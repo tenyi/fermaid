@@ -33,6 +33,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Packet (`packet`, `packet-beta`) | Supported: `title`, `accTitle` and `accDescr`, rows of fields with their bit ranges, a field of `+bits`; and the `packet` config keys `rowHeight`, `bitWidth`, `bitsPerRow`, `showBits`, `bitOrder`, `paddingX` and `paddingY` |
 | Radar chart (`radar-beta`) | Supported: `title`, `accTitle` and `accDescr`, `axis` and `curve` with their entries, and the options `showLegend`, `ticks`, `min`, `max` and `graticule`; and the `radar` config keys `width`, `height`, `marginTop`, `marginRight`, `marginBottom`, `marginLeft`, `axisScaleFactor`, `axisLabelFactor` and `curveTension` |
 | Treemap (`treemap`) | Supported: a tree of sections and leaves with their values, and `classDef` and `class` |
+| C4 diagram (`C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, `C4Deployment`) | Supported: `title`, `accTitle` and `accDescr`, persons, systems, containers and components with their boundaries and their relationships, and the `UpdateLayoutConfig` statement |
 | The rest | Planned |
 
 ## Goals

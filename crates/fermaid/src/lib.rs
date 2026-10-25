@@ -46,6 +46,7 @@ mod unicode;
     feature = "er",
     feature = "kanban",
     feature = "gantt",
+    feature = "c4",
 ))]
 #[allow(
     dead_code,

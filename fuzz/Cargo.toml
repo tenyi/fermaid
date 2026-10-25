@@ -167,3 +167,10 @@ path = "fuzz_targets/treemap.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "c4"
+path = "fuzz_targets/c4.rs"
+test = false
+doc = false
+bench = false

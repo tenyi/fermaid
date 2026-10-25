@@ -42,6 +42,10 @@ before 1.0, a minor version may break the API.
   `order`, `checkout` and `switch`, `merge` and `cherry-pick` with a `parent`, the `LR`, `TB`
   and `BT` directions, and the `gitGraph` config keys `mainBranchName`, `mainBranchOrder`,
   `showCommitLabel`, `showBranches`, `rotateCommitLabel` and `parallelCommits`.
+- C4 diagrams, behind the `c4` feature: `title`, `accTitle` and `accDescr`, the `C4Context`,
+  `C4Container`, `C4Component`, `C4Dynamic` and `C4Deployment` statements, persons, systems,
+  containers and components with their boundaries and their relationships, and the
+  `UpdateLayoutConfig` statement.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
