@@ -41,6 +41,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | Cynefin 図（`cynefin-beta:`） | 対応済み：`title`、`accTitle` と `accDescr`、四つの領域の項目と領域間の遷移。`cynefin` の設定キー `width`、`height`、`showDomainDescriptions`、`boundaryAmplitude`、`seed` に対応 |
 | 石川図（`ishikawa`） | 対応済み：各段階の原因と背骨 |
 | イベントモデリング図（`eventmodeling`） | 対応済み：レーン、フレーム、関係、注記 |
+| Wardley マップ（`wardley-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、各項目と座標、進化。`wardley` の設定キー `width`、`height`、`showGrid` に対応 |
 | その他 | 予定 |
 
 ## 目標

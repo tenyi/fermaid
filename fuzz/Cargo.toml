@@ -223,3 +223,10 @@ path = "fuzz_targets/eventmodeling.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "wardley"
+path = "fuzz_targets/wardley.rs"
+test = false
+doc = false
+bench = false

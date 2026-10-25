@@ -1,17 +1,22 @@
-//! Wardley maps, which fermaid does not draw yet.
+//! Wardley maps: a grid of axes with the components of a strategy placed on it.
+
+mod db;
+mod parser;
+mod render;
+
+#[cfg(test)]
+mod compat;
 
 use crate::diagram::{Diagram, Input, Output};
-use crate::error::{Error, ErrorCode};
+use crate::error::Error;
 
 /// The wardley diagram type.
 pub(crate) struct Wardley;
 
 impl Diagram for Wardley {
     fn render(&self, input: &Input<'_>) -> Result<Output, Error> {
-        Err(Error::new(
-            ErrorCode::Unsupported,
-            "Diagram type \"wardley\" is not supported yet.",
-        )
-        .at(&input.source, 0))
+        let ast = parser::parse_wardley(&input.source)?;
+        let model = db::build_wardley(&ast, input.title)?;
+        render::render_wardley(&model, input)
     }
 }

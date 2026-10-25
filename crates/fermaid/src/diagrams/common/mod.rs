@@ -27,6 +27,7 @@ pub(crate) mod chars;
     feature = "usecase",
     feature = "xychart",
     feature = "c4",
+    feature = "wardley",
     feature = "agentflow"
 ))]
 pub(crate) mod fit;
@@ -58,6 +59,7 @@ pub(crate) mod generics;
         feature = "architecture",
         feature = "ishikawa",
         feature = "c4",
+        feature = "wardley",
         feature = "usecase",
     )
 ))]

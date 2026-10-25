@@ -41,6 +41,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Cynefin diagram (`cynefin-beta:`) | Supported: `title`, `accTitle` and `accDescr`, the items in the four regions and the transitions between them; and the `cynefin` config keys `width`, `height`, `showDomainDescriptions`, `boundaryAmplitude` and `seed` |
 | Ishikawa diagram (`ishikawa`) | Supported: the causes on the levels and the spine |
 | Event modeling diagram (`eventmodeling`) | Supported: the lanes, the frames, the relations and the notes |
+| Wardley map (`wardley-beta`) | Supported: `title`, `accTitle` and `accDescr`, the items with their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid` |
 | The rest | Planned |
 
 ## Goals

@@ -41,6 +41,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | Cynefin 圖（`cynefin-beta:`） | 已支援：`title`、`accTitle` 與 `accDescr`、四個區域中的項目與其間的轉換；以及 `cynefin` 的設定鍵 `width`、`height`、`showDomainDescriptions`、`boundaryAmplitude` 與 `seed` |
 | 石川圖（`ishikawa`） | 已支援：各層級的原因與主脊 |
 | 事件建模圖（`eventmodeling`） | 已支援：泳道、框架、關聯與註記 |
+| Wardley 地圖（`wardley-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、各項目及其座標與演化；以及 `wardley` 的設定鍵 `width`、`height` 與 `showGrid` |
 | 其他 | 規劃中 |
 
 ## 目標

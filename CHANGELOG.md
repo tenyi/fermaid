@@ -63,6 +63,8 @@ before 1.0, a minor version may break the API.
 - Ishikawa diagrams, behind the `ishikawa` feature: the causes on the levels and the spine.
 - Event modeling diagrams, behind the `eventmodeling` feature: the lanes, the frames, the
   relations and the notes.
+- Wardley maps, behind the `wardley` feature: `title`, `accTitle` and `accDescr`, the items with
+  their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

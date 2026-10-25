@@ -31,6 +31,7 @@ pub(crate) mod edges;
     feature = "ishikawa",
     feature = "usecase",
     feature = "c4",
+    feature = "wardley",
 ))]
 pub(crate) mod markers;
 #[cfg(any(

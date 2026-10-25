@@ -49,6 +49,7 @@ mod unicode;
     feature = "gantt",
     feature = "usecase",
     feature = "c4",
+    feature = "wardley",
 ))]
 #[allow(
     dead_code,
