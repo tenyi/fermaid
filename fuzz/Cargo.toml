@@ -209,3 +209,10 @@ path = "fuzz_targets/cynefin.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "ishikawa"
+path = "fuzz_targets/ishikawa.rs"
+test = false
+doc = false
+bench = false

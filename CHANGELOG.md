@@ -60,6 +60,7 @@ before 1.0, a minor version may break the API.
 - Cynefin diagrams, behind the `cynefin` feature: `title`, `accTitle` and `accDescr`, the items
   in the four regions and the transitions between them; and the `cynefin` config keys `width`,
   `height`, `showDomainDescriptions`, `boundaryAmplitude` and `seed`.
+- Ishikawa diagrams, behind the `ishikawa` feature: the causes on the levels and the spine.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

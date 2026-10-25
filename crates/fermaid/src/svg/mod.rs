@@ -28,6 +28,7 @@ pub(crate) mod edges;
     feature = "requirement",
     feature = "timeline",
     feature = "block",
+    feature = "ishikawa",
     feature = "usecase",
     feature = "c4",
 ))]

@@ -39,6 +39,7 @@ fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，
 | 韦恩图（`venn-beta`） | 已支持：各个圆及其标签；以及 `venn` 的配置键 `width`、`height` 与 `padding` |
 | 树视图（`treeView-beta`） | 已支持：用方框绘制字符画成的树、标签前的图标、`classDef` 与 `class`；以及 `treeView` 的配置键 `rowIndent`、`paddingX`、`paddingY`、`lineThickness`、`showIcons`、`defaultIconPack`、`filenameIcons` 与 `extensionIcons` |
 | Cynefin 图（`cynefin-beta:`） | 已支持：`title`、`accTitle` 与 `accDescr`、四个区域中的条目及其间的转换；以及 `cynefin` 的配置键 `width`、`height`、`showDomainDescriptions`、`boundaryAmplitude` 与 `seed` |
+| 石川图（`ishikawa`） | 已支持：各层级的原因与主脊 |
 | 其他 | 计划中 |
 
 ## 目标

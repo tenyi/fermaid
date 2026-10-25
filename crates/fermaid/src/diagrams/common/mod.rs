@@ -10,6 +10,7 @@ pub(crate) mod chars;
     feature = "flowchart",
     feature = "gantt",
     feature = "git",
+    feature = "ishikawa",
     feature = "journey",
     feature = "kanban",
     feature = "mindmap",
@@ -55,13 +56,14 @@ pub(crate) mod generics;
         feature = "xychart",
         feature = "block",
         feature = "architecture",
+        feature = "ishikawa",
         feature = "c4",
         feature = "usecase",
     )
 ))]
 #[allow(dead_code, reason = "each type uses only part of the golden helpers")]
 pub(crate) mod golden;
-#[cfg(any(feature = "sequence"))]
+#[cfg(any(feature = "sequence", feature = "ishikawa"))]
 pub(crate) mod literal;
 #[cfg(any(
     feature = "state",
