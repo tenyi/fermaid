@@ -470,9 +470,16 @@ const PEG_TOKENS: &[TokenType] = &[
 /// Mermaid's railroad value converters know three escapes; any other escaped character stands
 /// for itself.
 fn unescape(text: &str) -> String {
-    let inner = &text[1..text.len() - 1];
+    let chars: Vec<char> = text.chars().collect();
+    // Mermaid takes the quotes off with a slice, so a text that is too short to hold them
+    // leaves nothing behind.
+    let inner: String = if chars.len() < 2 {
+        String::new()
+    } else {
+        chars[1..chars.len() - 1].iter().collect()
+    };
     if !inner.contains('\\') {
-        return inner.to_string();
+        return inner;
     }
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();

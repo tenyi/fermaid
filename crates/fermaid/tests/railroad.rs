@@ -115,6 +115,14 @@ fn draws_a_title() {
 }
 
 #[test]
+fn takes_the_quotes_off_a_title_that_holds_only_one() {
+    // Mermaid takes the quotes off with a slice, so a title that is a single quote leaves
+    // nothing behind.
+    let out = render("railroad-beta\ntitle '\nr = terminal(\"a\");\n");
+    assert!(!out.svg.contains(">'<"), "{}", out.svg);
+}
+
+#[test]
 fn reads_the_accessibility_statements() {
     let out = render(
         "railroad-beta\naccTitle: The title\naccDescr: The description\nr = terminal(\"a\");\n",
