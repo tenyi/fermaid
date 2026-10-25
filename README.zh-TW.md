@@ -31,6 +31,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | 方塊圖（`block`、`block-beta`） | 已支援：以 `columns` 排成格線的方塊、以 `block:` 與 `end` 組成的複合方塊、`space`、Mermaid 的所有形狀、可指定方向的方塊箭頭、帶標籤與箭頭端點的連線、`classDef`、`class` 與 `style`；以及 `block` 的設定鍵 `padding` |
 | 架構圖（`architecture`、`architecture-beta`） | 已支援：分組中的服務、服務之間的連線與其標籤、連接點、可帶圖示的 `service`、`group` 與 `junction`；以及 `architecture` 的設定鍵 `iconSize`、`padding` 與 `fontSize`。fermaid 沒有圖示字型，因此以方塊承載服務的名稱 |
 | 封包圖（`packet`、`packet-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、以位元範圍表示的欄位列、以 `+bits` 表示的欄位；以及 `packet` 的設定鍵 `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX` 與 `paddingY` |
+| 雷達圖（`radar-beta`） | 已支援：`title`、`accTitle` 與 `accDescr`、可帶項目的 `axis` 與 `curve`，以及選項 `showLegend`、`ticks`、`min`、`max` 與 `graticule`；以及 `radar` 的設定鍵 `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor` 與 `curveTension` |
 | 其他 | 規劃中 |
 
 ## 目標

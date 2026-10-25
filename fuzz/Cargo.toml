@@ -153,3 +153,10 @@ path = "fuzz_targets/packet.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "radar"
+path = "fuzz_targets/radar.rs"
+test = false
+doc = false
+bench = false

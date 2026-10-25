@@ -31,6 +31,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | ブロック図（`block`、`block-beta`） | 対応済み：`columns` でグリッドに並べるブロック、`block:` と `end` による複合ブロック、`space`、Mermaid のすべての形状、方向を持つブロック矢印、ラベルと矢印の終端を持つリンク、`classDef`、`class` と `style`。`block` の設定キー `padding` に対応 |
 | アーキテクチャ図（`architecture`、`architecture-beta`） | 対応済み：グループ化されたサービス、サービスの間のエッジとそのラベル、ジャンクション、アイコンを持つ `service`、`group` と `junction`。`architecture` の設定キー `iconSize`、`padding`、`fontSize` に対応。アイコンのフォントはないため、サービスの名前で図を表す |
 | パケット図（`packet`、`packet-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、ビット範囲を持つフィールドの行、`+bits` のフィールド。`packet` の設定キー `rowHeight`、`bitWidth`、`bitsPerRow`、`showBits`、`bitOrder`、`paddingX`、`paddingY` に対応 |
+| レーダーチャート（`radar-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、項目を持つ `axis` と `curve`、およびオプション `showLegend`、`ticks`、`min`、`max`、`graticule`。`radar` の設定キー `width`、`height`、`marginTop`、`marginRight`、`marginBottom`、`marginLeft`、`axisScaleFactor`、`axisLabelFactor`、`curveTension` に対応 |
 | その他 | 予定 |
 
 ## 目標

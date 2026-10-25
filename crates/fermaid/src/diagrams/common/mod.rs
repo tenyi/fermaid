@@ -16,6 +16,7 @@ pub(crate) mod chars;
     feature = "packet",
     feature = "pie",
     feature = "quadrantchart",
+    feature = "radar",
     feature = "requirement",
     feature = "sankey",
     feature = "sequence",
@@ -41,6 +42,7 @@ pub(crate) mod generics;
         feature = "mindmap",
         feature = "pie",
         feature = "quadrantchart",
+        feature = "radar",
         feature = "requirement",
         feature = "sankey",
         feature = "sequence",
@@ -87,6 +89,7 @@ pub(crate) mod scan;
 #[cfg(any(
     feature = "pie",
     feature = "git",
+    feature = "radar",
     feature = "architecture",
     feature = "wardley"
 ))]
@@ -94,6 +97,7 @@ pub(crate) mod scan;
     not(all(
         feature = "pie",
         feature = "git",
+        feature = "radar",
         feature = "architecture"
     )),
     allow(dead_code, reason = "each type uses only part of the tokenizer")

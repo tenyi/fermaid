@@ -12,6 +12,10 @@ before 1.0, a minor version may break the API.
 - Packet diagrams, behind the `packet` feature: `title`, `accTitle` and `accDescr`, rows of
   fields with their bit ranges, a field of `+bits`, and the `packet` config keys `rowHeight`,
   `bitWidth`, `bitsPerRow`, `showBits`, `bitOrder`, `paddingX` and `paddingY`.
+- Radar charts, behind the `radar` feature: `title`, `accTitle` and `accDescr`, `axis` and
+  `curve` with their entries, and the options `showLegend`, `ticks`, `min`, `max` and
+  `graticule`; and the `radar` config keys `width`, `height`, `marginTop`, `marginRight`,
+  `marginBottom`, `marginLeft`, `axisScaleFactor`, `axisLabelFactor` and `curveTension`.
 - Block diagrams, behind the `block` feature: blocks in a grid with `columns`, composites with
   `block:` and `end`, `space`, every shape of Mermaid, block arrows with their directions, links
   with their labels and their arrow ends, `classDef`, `class` and `style`, and the `block` config
