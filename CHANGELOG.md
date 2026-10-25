@@ -51,6 +51,8 @@ before 1.0, a minor version may break the API.
   `class`; and the `usecase` config keys `nodeSpacing` and `rankSpacing`.
 - Information diagrams, behind the `info` feature: `title`, `accTitle` and `accDescr`, the
   version of the library and the lines of text.
+- Venn diagrams, behind the `venn` feature: the circles with their labels; and the `venn` config
+  keys `width`, `height` and `padding`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

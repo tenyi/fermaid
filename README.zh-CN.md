@@ -36,6 +36,7 @@ fermaid 以纯 Rust 将 [Mermaid](https://mermaid.js.org) 图表转换为 SVG，
 | C4 图（`C4Context`、`C4Container`、`C4Component`、`C4Dynamic`、`C4Deployment`） | 已支持：`title`、`accTitle` 与 `accDescr`、人员、系统、容器与组件及其边界与关系，以及 `UpdateLayoutConfig` 语句 |
 | 用例图（`usecase-beta`） | 已支持：`title`、`accTitle` 与 `accDescr`、参与者与用例及其之间的关系；以及 `usecase` 的配置键 `nodeSpacing` 与 `rankSpacing` |
 | 信息图（`info`） | 已支持：`title`、`accTitle` 与 `accDescr`、版本与若干行文字 |
+| 韦恩图（`venn-beta`） | 已支持：各个圆及其标签；以及 `venn` 的配置键 `width`、`height` 与 `padding` |
 | 其他 | 计划中 |
 
 ## 目标

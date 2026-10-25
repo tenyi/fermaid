@@ -36,6 +36,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | C4 diagram (`C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, `C4Deployment`) | Supported: `title`, `accTitle` and `accDescr`, persons, systems, containers and components with their boundaries and their relationships, and the `UpdateLayoutConfig` statement |
 | Use case diagram (`usecase-beta`) | Supported: `title`, `accTitle` and `accDescr`, actors and use cases with the relations between them; and the `usecase` config keys `nodeSpacing` and `rankSpacing` |
 | Information diagram (`info`) | Supported: `title`, `accTitle` and `accDescr`, the version and the lines of text |
+| Venn diagram (`venn-beta`) | Supported: the circles with their labels; and the `venn` config keys `width`, `height` and `padding` |
 | The rest | Planned |
 
 ## Goals
