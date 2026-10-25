@@ -348,8 +348,27 @@ Notes:
 
 ### M6b — The structural diagrams
 
-- [ ] Block diagrams, behind the `block` feature.
+- [x] Block diagrams, behind the `block` feature.
 - [ ] Architecture diagrams, behind the `architecture` feature.
+
+Notes:
+- A block diagram is read with Mermaid's own `block.jison` grammar, through a hand-written lexer
+  that walks UTF-16 code units, as the jison lexer does. The layout is pele's own, as it is for
+  every type.
+- Mermaid's grammar reads a chain of links from the left and keeps only the last one, so the
+  nodes before it are not part of the diagram and the link that is kept starts at nothing.
+  fermaid follows Mermaid, and a test pins that.
+- A composite whose header was a chain of links has no id of its own, as in Mermaid.
+- Mermaid looks a class up before trimming its id, so `class a, b hot` loses the block `b`, and
+  it throws on a style for an unknown id. pele waits for the block in both cases; fermaid does
+  the same, and says so in the code.
+- The name Mermaid gives a block without an id of its own ends in a counter, not in random
+  digits as Mermaid's own does, so the same text always gives the same names.
+- The configuration lives under `block`, as in Mermaid's schema, and holds `padding`, the room
+  between the blocks.
+- The differential run against Mermaid's own grammar reports no difference over 3,063 inputs,
+  the 40 Mermaid spec cases pass (13 of them are not diagrams and are listed in `SKIPPED.md`),
+  and 490,480 runs of fuzzing over ten minutes found no panic.
 - [ ] Packet diagrams, behind the `packet` feature.
 - [ ] Radar charts, behind the `radar` feature.
 - [ ] Treemaps, behind the `treemap` feature.
