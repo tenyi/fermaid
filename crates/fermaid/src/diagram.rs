@@ -57,6 +57,11 @@ pub(crate) trait Diagram: Sync {
         false
     }
 
+    /// Whether `$$…$$` in the labels of the type is typeset, when the host has a typesetter.
+    fn math(&self) -> bool {
+        false
+    }
+
     fn render(&self, input: &Input<'_>) -> Result<Output, Error>;
 }
 

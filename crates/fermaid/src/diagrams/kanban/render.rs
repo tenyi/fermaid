@@ -13,7 +13,7 @@ use crate::svg::{
     Accessible, CRITICAL, ROUNDED, class_names, esc, esc_text, label_svg, num, svg_document,
     text_style, title_label,
 };
-use crate::text::label::{Label, Span, layout_label};
+use crate::text::label::{Label, Span, label_line, layout_label, line_middle, with_heights};
 use crate::text::{Style, TextMeasurer};
 use crate::url::{link_url, rel_attr, safe_url};
 use crate::util::{js_number, round, trim};
@@ -70,17 +70,26 @@ fn fit_label(
             continue;
         }
         for span in spans {
+            // An icon or math is not broken between characters.
+            if !span.is_plain() {
+                if width > 0.0 && width + span.width > max {
+                    commit(&mut line, &mut width);
+                }
+                line.push(span.clone());
+                width += span.width;
+                continue;
+            }
             let mut text = String::new();
             let mut from = width;
             for ch in span.text.chars() {
                 let w = measurer.width(ch.encode_utf8(&mut [0; 4]), size, span.style);
                 if width > 0.0 && width + w > max {
                     if !text.is_empty() {
-                        line.push(Span {
-                            text: std::mem::take(&mut text),
-                            style: span.style,
-                            width: width - from,
-                        });
+                        line.push(Span::text(
+                            std::mem::take(&mut text),
+                            span.style,
+                            width - from,
+                        ));
                     }
                     commit(&mut line, &mut width);
                     from = 0.0;
@@ -89,22 +98,23 @@ fn fit_label(
                 width += w;
             }
             if !text.is_empty() {
-                line.push(Span {
-                    text,
-                    style: span.style,
-                    width: width - from,
-                });
+                line.push(Span::text(text, span.style, width - from));
             }
         }
         commit(&mut line, &mut width);
     }
     let height = lines.len() as f64 * label.line_height;
-    Label {
+    let fitted = Label {
         lines,
         widths,
         width: widest,
         height,
         ..label
+    };
+    if fitted.heights.is_some() {
+        with_heights(fitted)
+    } else {
+        fitted
     }
 }
 
@@ -113,9 +123,12 @@ fn fit_label(
 fn text_block(label: &Label, x: f64, y: f64, attrs: &str, end: bool) -> String {
     let mut out = String::new();
     for (i, line) in label.lines.iter().enumerate() {
-        let cy = y + (i as f64 + 0.5) * label.line_height;
+        let cy = y + line_middle(label, i);
         match line.as_slice() {
-            [only] if !only.style.has(Style::SUB | Style::SUP | Style::UNDERLINE) => {
+            [only]
+                if only.is_plain()
+                    && !only.style.has(Style::SUB | Style::SUP | Style::UNDERLINE) =>
+            {
                 let _ = write!(
                     out,
                     "<text{} x=\"{}\" y=\"{}\"{}>{}</text>",
@@ -128,15 +141,8 @@ fn text_block(label: &Label, x: f64, y: f64, attrs: &str, end: bool) -> String {
             }
             _ => {
                 let width = label.widths[i];
-                let one = Label {
-                    lines: vec![line.clone()],
-                    widths: vec![width],
-                    width,
-                    height: label.line_height,
-                    ..*label
-                };
                 let cx = x + if end { -width } else { width } / 2.0;
-                out += &label_svg(&one, cx, cy, attrs);
+                out += &label_svg(&label_line(label, i), cx, cy, attrs);
             }
         }
     }

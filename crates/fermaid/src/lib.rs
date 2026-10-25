@@ -63,11 +63,12 @@ mod util;
 pub use detect::DiagramKind;
 pub use error::{Error, ErrorCode};
 pub use options::{Limits, Link, RenderOptions, Rendered};
-pub use text::{MetricsMeasurer, Style, TextMeasurer};
+pub use text::{IconResolver, MathMarkup, MathResolver, MetricsMeasurer, Style, TextMeasurer};
 
 use diagram::Input;
 use preprocess::{Preprocessed, preprocess};
 use text::entities::encode_entities;
+use text::{Host, HostMeasurer};
 
 /// Detects the type of a diagram without parsing it.
 pub fn detect_type(src: &str) -> Option<DiagramKind> {
@@ -113,13 +114,24 @@ pub fn render(src: &str, options: &RenderOptions) -> Result<Rendered, Error> {
     } else {
         &pre.text
     };
+    // The icons and the math of the host travel with the measurer, which every label is laid
+    // out with. Only the types that read `$$` get the math.
+    let math = options.math.as_ref().filter(|_| diagram.math());
+    let measured = options.measurer.as_deref().unwrap_or(&MetricsMeasurer);
+    let hosted;
+    let measurer: &dyn TextMeasurer = if options.icons.is_some() || math.is_some() {
+        hosted = HostMeasurer::new(measured, Host::new(options.icons.as_ref(), math));
+        &hosted
+    } else {
+        measured
+    };
     let input = Input {
         source: encode_entities(source) + "\n",
         config: &pre.config,
         title: pre.title.as_deref(),
         line_offset: pre.line_offset,
         options,
-        measurer: options.measurer.as_deref().unwrap_or(&MetricsMeasurer),
+        measurer,
     };
     let out = diagram.render(&input).map_err(|e| e.with_kind(kind))?;
     if out.svg.chars().count() > limits.output {

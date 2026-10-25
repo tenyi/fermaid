@@ -1,5 +1,5 @@
 use crate::DiagramKind;
-use crate::text::TextMeasurer;
+use crate::text::{IconResolver, MathResolver, TextMeasurer};
 
 /// Caps that protect a host from untrusted diagram text. A diagram's own configuration cannot
 /// raise them.
@@ -69,6 +69,13 @@ pub struct RenderOptions {
     pub link_rel: Option<String>,
     /// Measures text; [`MetricsMeasurer`](crate::MetricsMeasurer) when `None`.
     pub measurer: Option<Box<dyn TextMeasurer>>,
+    /// Gives the icons of the host. An icon reference in a label, such as `fa:fa-car`, is drawn
+    /// when the resolver has an icon of that name, and left out when it has not (or when there
+    /// is no resolver). `None` has no icons.
+    pub icons: Option<IconResolver>,
+    /// Typesets the TeX between `$$` in labels, in the diagram types that read it. Without one,
+    /// the TeX stays in the text as it was written.
+    pub math: Option<MathResolver>,
     /// The current time, in milliseconds since 1970-01-01 UTC, for what a gantt chart dates
     /// from today. `None` is 1970-01-01, so that output never depends on the clock.
     pub now: Option<f64>,
@@ -91,6 +98,8 @@ impl Default for RenderOptions {
             image_schemes: None,
             link_rel: None,
             measurer: None,
+            icons: None,
+            math: None,
             now: None,
         }
     }

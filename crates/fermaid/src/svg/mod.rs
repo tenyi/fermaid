@@ -70,9 +70,9 @@ pub(crate) use title::{title_label, with_title};
 
 use std::fmt::Write;
 
-use crate::text::Style;
 use crate::text::entities::decode_entities;
 use crate::text::label::Label;
+use crate::text::{MathMarkup, Style};
 
 /// Escapes text for XML and drops the control characters XML does not allow.
 pub(crate) fn esc(text: &str) -> String {
@@ -158,7 +158,7 @@ pub(crate) fn shared_style(label: &Label) -> Style {
     let mut shared = Style::BOLD | Style::ITALIC | Style::MONO;
     let mut any = false;
     for span in label.lines.iter().flatten() {
-        if span.text.is_empty() {
+        if span.icon.is_some() || span.text.is_empty() {
             continue;
         }
         shared = shared & span.style;
@@ -182,7 +182,8 @@ pub(crate) fn text_style(attrs: &str, shared: Style) -> String {
     out
 }
 
-/// Writes a measured label as SVG text centered on (cx, cy).
+/// Writes a measured label as SVG text centered on (cx, cy). Icons and math are written beside
+/// the text, each at the place its span has in the line.
 pub(crate) fn label_svg(label: &Label, cx: f64, cy: f64, attrs: &str) -> String {
     let lines = &label.lines;
     if lines.is_empty() {
@@ -194,7 +195,7 @@ pub(crate) fn label_svg(label: &Label, cx: f64, cy: f64, attrs: &str) -> String 
 
     if let [line] = lines.as_slice() {
         if let [only] = line.as_slice() {
-            if only.style.is_empty() {
+            if only.is_plain() && only.style.is_empty() {
                 return format!(
                     "<text{attrs} x=\"{}\" y=\"{}\" text-anchor=\"middle\">{}</text>",
                     num(cx),
@@ -206,29 +207,146 @@ pub(crate) fn label_svg(label: &Label, cx: f64, cy: f64, attrs: &str) -> String 
     }
 
     let shared = shared_style(label);
+    let given = attrs;
     let attrs = text_style(attrs, shared);
+    let mut math_look: Option<MathLook> = None;
     let mut body = String::new();
-    for line in lines {
-        let y = top + lh / 2.0 + shift;
-        for (j, span) in line.iter().enumerate() {
-            let pos = if j == 0 {
-                format!(" x=\"{}\" y=\"{}\"", num(cx), num(y))
-            } else {
-                String::new()
-            };
-            let _ = write!(
-                body,
-                "<tspan{pos}{}>{}</tspan>",
-                span_style(span.style & !shared),
-                esc(&span.text)
-            );
+    let mut extra = String::new();
+    for (i, line) in lines.iter().enumerate() {
+        let h = label.heights.as_ref().map_or(lh, |heights| heights[i]);
+        let mid = top + h / 2.0;
+        let y = mid + shift;
+        if line.iter().any(|span| !span.is_plain()) {
+            // Text beside an icon or math is placed span by span.
+            let mut x = cx - label.widths[i] / 2.0;
+            for span in line {
+                if let Some(math) = &span.math {
+                    let boxed = format!(
+                        "x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\"",
+                        num(x),
+                        num(mid - math.height() / 2.0),
+                        num(math.width()),
+                        num(math.height())
+                    );
+                    let look = math_look.get_or_insert_with(|| MathLook::of(given));
+                    match &look.halo {
+                        None => extra += &math_svg(math, &boxed, label.size, &look.attrs),
+                        Some(halo) => {
+                            let _ = write!(extra, "<rect {boxed} rx=\"2\" fill=\"{halo}\"/>");
+                        }
+                    }
+                } else if let Some(icon) = &span.icon {
+                    let side = label.size * 1.1;
+                    let _ = write!(
+                        extra,
+                        "<svg class=\"fermaid-icon\" data-icon=\"{}\" x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">{}</svg>",
+                        esc_text(&icon.name),
+                        num(x),
+                        num(mid - side / 2.0),
+                        num(side),
+                        num(side),
+                        icon.markup
+                    );
+                } else if !span.text.is_empty() {
+                    let _ = write!(
+                        body,
+                        "<tspan x=\"{}\" y=\"{}\" text-anchor=\"start\"{}>{}</tspan>",
+                        num(x),
+                        num(y),
+                        span_style(span.style & !shared),
+                        esc(&span.text)
+                    );
+                }
+                x += span.width;
+            }
+        } else {
+            for (j, span) in line.iter().enumerate() {
+                let pos = if j == 0 {
+                    format!(" x=\"{}\" y=\"{}\"", num(cx), num(y))
+                } else {
+                    String::new()
+                };
+                let _ = write!(
+                    body,
+                    "<tspan{pos}{}>{}</tspan>",
+                    span_style(span.style & !shared),
+                    esc(&span.text)
+                );
+            }
+            if line.is_empty() {
+                let _ = write!(body, "<tspan x=\"{}\" y=\"{}\"> </tspan>", num(cx), num(y));
+            }
         }
-        if line.is_empty() {
-            let _ = write!(body, "<tspan x=\"{}\" y=\"{}\"> </tspan>", num(cx), num(y));
-        }
-        top += lh;
+        top += h;
     }
-    format!("<text{attrs} text-anchor=\"middle\" xml:space=\"preserve\">{body}</text>")
+    format!("<text{attrs} text-anchor=\"middle\" xml:space=\"preserve\">{body}</text>{extra}")
+}
+
+/// What typeset math takes from the text it stands in: its color and opacity only, so that the
+/// size the host measured stays. A cluster title is drawn with an outline that hides the edges
+/// behind it, and math there gets a solid patch of that color instead.
+struct MathLook {
+    attrs: String,
+    halo: Option<String>,
+}
+
+/// The value of the attribute ` name="…"`, the first one in `attrs`.
+fn attribute<'a>(attrs: &'a str, name: &str) -> Option<&'a str> {
+    let key = format!(" {name}=\"");
+    let at = attrs.find(&key)? + key.len();
+    attrs[at..].split('"').next()
+}
+
+/// The value of a property in a `style` attribute.
+fn property<'a>(style: &'a str, name: &str) -> Option<&'a str> {
+    style.split(';').find_map(|part| {
+        crate::util::trim_start(part)
+            .strip_prefix(name)?
+            .strip_prefix(':')
+    })
+}
+
+impl MathLook {
+    fn of(attrs: &str) -> MathLook {
+        let style = attribute(attrs, "style").unwrap_or("");
+        let fill = crate::util::trim(
+            property(style, "fill")
+                .or_else(|| attribute(attrs, "fill"))
+                .unwrap_or(""),
+        );
+        if fill == "none" {
+            return MathLook {
+                attrs: String::new(),
+                halo: Some(attribute(attrs, "stroke").unwrap_or("none").to_string()),
+            };
+        }
+        let mut out = String::new();
+        if !fill.is_empty() {
+            let _ = write!(out, " color=\"{fill}\"");
+        }
+        if let Some(opacity) = property(style, "opacity").map(crate::util::trim) {
+            if !opacity.is_empty() {
+                let _ = write!(out, " opacity=\"{opacity}\"");
+            }
+        }
+        MathLook {
+            attrs: out,
+            halo: None,
+        }
+    }
+}
+
+/// The markup of typeset math is the host's, and is trusted.
+fn math_svg(math: &MathMarkup, boxed: &str, size: f64, attrs: &str) -> String {
+    match math {
+        MathMarkup::Svg { svg, .. } => {
+            format!("<svg class=\"fermaid-math\" {boxed} overflow=\"visible\"{attrs}>{svg}</svg>")
+        }
+        MathMarkup::Html { html, .. } => format!(
+            "<foreignObject class=\"fermaid-math\" {boxed} overflow=\"visible\"{attrs}><div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:{}px;line-height:normal;white-space:nowrap\">{html}</div></foreignObject>",
+            num(size)
+        ),
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,7 @@
 //! Text measurement and label layout.
 
 pub(crate) mod entities;
+mod host;
 #[allow(
     dead_code,
     reason = "parts are used only by diagram types that are not compiled in or not written yet"
@@ -8,6 +9,9 @@ pub(crate) mod entities;
 pub(crate) mod label;
 
 use std::ops::{BitAnd, BitOr, BitOrAssign, Not};
+
+pub(crate) use host::{Host, HostMeasurer, PlainMeasurer};
+pub use host::{IconResolver, MathMarkup, MathResolver};
 
 /// The emphasis a run of text is drawn with, as a set of flags.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -66,6 +70,14 @@ impl Not for Style {
 /// fonts the SVG will be shown in can measure them instead.
 pub trait TextMeasurer {
     fn width(&self, text: &str, size: f64, style: Style) -> f64;
+
+    /// The icons and the math the host of the render draws. A measurer has none of its own;
+    /// the library wraps it in one that has, when [`RenderOptions`](crate::RenderOptions) gives
+    /// resolvers.
+    #[doc(hidden)]
+    fn host(&self) -> Option<&Host<'_>> {
+        None
+    }
 }
 
 /// Approximate divisor for CSS `font-size="smaller"`.

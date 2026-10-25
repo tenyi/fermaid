@@ -1,6 +1,6 @@
 use super::{label_svg, num};
 use crate::text::label::{Label, layout_label};
-use crate::text::{Style, TextMeasurer};
+use crate::text::{PlainMeasurer, Style, TextMeasurer};
 
 /// Lays out a diagram title. Mermaid draws titles as plain text, whatever they hold.
 pub(crate) fn title_label(
@@ -9,7 +9,9 @@ pub(crate) fn title_label(
     size: f64,
     max_width: f64,
 ) -> Label {
-    layout_label(title, false, measurer, size, max_width, Style::BOLD)
+    // Math stays out of a title: it is plain text, as in Mermaid.
+    let plain = PlainMeasurer::new(measurer);
+    layout_label(title, false, &plain, size, max_width, Style::BOLD)
 }
 
 pub(crate) struct Titled {

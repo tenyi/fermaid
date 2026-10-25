@@ -12,7 +12,7 @@ use crate::svg::shapes::{draw_shape, shape_inset, shape_size};
 use crate::svg::{
     Accessible, class_names, esc_text, label_svg, num, series_color, svg_document, title_label,
 };
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, label_line, layout_label, line_middle};
 use crate::util::round;
 
 /// Indexed by Mermaid's node type. A node without delimiters is text on a line, except the root.
@@ -48,19 +48,11 @@ fn left_label(label: &Label, left: f64, cy: f64) -> String {
     }
     let top = cy - label.height / 2.0;
     let mut out = String::new();
-    for (k, line) in label.lines.iter().enumerate() {
-        let width = label.widths[k];
-        let one = Label {
-            lines: vec![line.clone()],
-            widths: vec![width],
-            width,
-            height: label.line_height,
-            ..*label
-        };
+    for k in 0..label.lines.len() {
         out += &label_svg(
-            &one,
-            left + width / 2.0,
-            top + (k as f64 + 0.5) * label.line_height,
+            &label_line(label, k),
+            left + label.widths[k] / 2.0,
+            top + line_middle(label, k),
             " class=\"fermaid-label\"",
         );
     }

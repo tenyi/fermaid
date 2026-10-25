@@ -400,14 +400,7 @@ fn layout(
             let icon_text = format!("{icon} ");
             let width = measurer.width(&icon_text, size, Style::NONE);
             if let Some(first) = label.lines.first_mut() {
-                first.insert(
-                    0,
-                    Span {
-                        text: icon_text,
-                        style: Style::NONE,
-                        width,
-                    },
-                );
+                first.insert(0, Span::text(icon_text, Style::NONE, width));
                 label.widths[0] += width;
                 label.width += width;
             }
@@ -595,13 +588,7 @@ fn literal_label(
     let spans: Vec<Vec<Span>> = lines
         .into_iter()
         .zip(widths.iter())
-        .map(|(line, &width)| {
-            vec![Span {
-                text: line,
-                style,
-                width,
-            }]
-        })
+        .map(|(line, &width)| vec![Span::text(line, style, width)])
         .collect();
     let height = spans.len() as f64 * line_height;
     Label {
@@ -611,5 +598,6 @@ fn literal_label(
         height,
         size,
         line_height,
+        heights: None,
     }
 }

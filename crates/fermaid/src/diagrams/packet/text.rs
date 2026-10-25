@@ -89,19 +89,14 @@ pub(crate) fn literal_label(
         lines: widths
             .iter()
             .zip(&lines)
-            .map(|(width, line)| {
-                vec![Span {
-                    text: line.clone(),
-                    style: Style::NONE,
-                    width: *width,
-                }]
-            })
+            .map(|(width, line)| vec![Span::text(line.clone(), Style::NONE, *width)])
             .collect(),
         widths,
         width,
         height: lines.len() as f64 * line_height,
         size,
         line_height,
+        heights: None,
     }
 }
 

@@ -48,11 +48,7 @@ pub(crate) fn break_label(label: Label, measurer: &dyn TextMeasurer, room: f64) 
                     last.text.push(ch);
                     last.width += added;
                 } else {
-                    current.push(Span {
-                        text: piece,
-                        style: span.style,
-                        width: added,
-                    });
+                    current.push(Span::text(piece, span.style, added));
                 }
                 width += added;
             }

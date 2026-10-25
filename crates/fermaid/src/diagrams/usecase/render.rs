@@ -15,7 +15,7 @@ use crate::svg::cluster::{Crossings, mark_crossings};
 use crate::svg::edges::{EdgePath, edge_label_svg, marker, marker_trim, route_path};
 use crate::svg::{Accessible, esc, esc_text, label_svg, num, svg_document, title_label};
 use crate::svg::{ResolvedStyle, class_names, resolve_style, rounded};
-use crate::text::label::{Label, layout_label};
+use crate::text::label::{Label, label_line, layout_label, line_middle};
 use crate::text::{Style, TextMeasurer};
 
 use super::db::{ActorType, BoundaryType, UsecaseModel};
@@ -306,23 +306,6 @@ fn figure(view: &View<'_>) -> String {
         ));
     }
     out
-}
-
-/// One line of a label, as it is drawn on its own.
-fn label_line(label: &Label, i: usize) -> Label {
-    Label {
-        lines: vec![label.lines[i].clone()],
-        widths: vec![label.widths[i]],
-        width: label.widths[i],
-        height: label.line_height,
-        size: label.size,
-        line_height: label.line_height,
-    }
-}
-
-/// The middle of one line of a label.
-fn line_middle(label: &Label, i: usize) -> f64 {
-    (i as f64 + 0.5) * label.line_height
 }
 
 /// A label whose lines are drawn one by one, each in the middle of its own width.

@@ -78,6 +78,8 @@ const ATTRIBUTES: &[&str] = &[
     "x2",
     "offset",
     "stop-color",
+    "overflow",
+    "color",
 ];
 const STYLE_PROPERTIES: &[&str] = &[
     "fill",

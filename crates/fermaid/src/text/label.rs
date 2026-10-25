@@ -1,15 +1,45 @@
 //! Splits label text into styled, measured lines and wraps them to a width. Ported from pele's
-//! `text/label.ts`, without math and icons, which fermaid does not support yet.
+//! `text/label.ts`. Icons and math are the host's: a label holds them only when the host of the
+//! render has them (see [`Host`]).
+
+use std::rc::Rc;
 
 use super::entities::decode_entities;
-use super::{Style, TextMeasurer};
+use super::{Host, MathMarkup, Style, TextMeasurer};
 use crate::util::{chars, is_space, is_word, round, trim, trim_end, trim_start};
 
+/// An icon the host has, in the place of an icon reference such as `fa:fa-car`.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Icon {
+    pub name: String,
+    pub markup: Rc<str>,
+}
+
+/// A run of text, or an icon, or typeset math. An icon and math have no text.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Span {
     pub text: String,
     pub style: Style,
     pub width: f64,
+    pub icon: Option<Icon>,
+    pub math: Option<Rc<MathMarkup>>,
+}
+
+impl Span {
+    pub(crate) fn text(text: String, style: Style, width: f64) -> Span {
+        Span {
+            text,
+            style,
+            width,
+            icon: None,
+            math: None,
+        }
+    }
+
+    /// Whether the span is text, which can take more text of the same style.
+    pub(crate) fn is_plain(&self) -> bool {
+        self.icon.is_none() && self.math.is_none()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -20,6 +50,33 @@ pub(crate) struct Label {
     pub height: f64,
     pub size: f64,
     pub line_height: f64,
+    /// The height of each line, present only when math needs more than `line_height` for some.
+    pub heights: Option<Vec<f64>>,
+}
+
+/// An icon is drawn this much wider than the font size is.
+const ICON_ADVANCE: f64 = 1.25;
+
+/// Math is put in the text as one private-use character each, which keeps the TeX from being
+/// read as markup. At most this many expressions of a label are typeset.
+const MARK: u32 = 0xe000;
+const MAX_MARKS: usize = 0x1900;
+
+fn is_mark(c: char) -> bool {
+    ('\u{e000}'..='\u{f8ff}').contains(&c)
+}
+
+/// The math of a label: the TeX of each expression, and its typeset form where the host has one.
+struct Marks {
+    tex: Vec<String>,
+    math: Vec<Option<Rc<MathMarkup>>>,
+}
+
+/// What the layout of a label is given besides the text.
+#[derive(Clone, Copy)]
+struct Env<'a> {
+    host: Option<&'a Host<'a>>,
+    marks: Option<&'a Marks>,
 }
 
 pub(crate) const LINE_HEIGHT: f64 = 1.5;
@@ -213,37 +270,76 @@ fn has_markup(raw: &str) -> bool {
     find_icon(&s, 0).is_some()
 }
 
-fn push_text(line: &mut Vec<Span>, text: &str, style: Style) {
-    if text.is_empty() {
-        return;
-    }
+fn push_plain(line: &mut Vec<Span>, text: &str, style: Style) {
     let decoded = decode_entities(text);
     match line.last_mut() {
-        Some(last) if last.style == style => last.text.push_str(&decoded),
-        _ => line.push(Span {
-            text: decoded,
-            style,
-            width: 0.0,
-        }),
+        Some(last) if last.is_plain() && last.style == style => last.text.push_str(&decoded),
+        _ => line.push(Span::text(decoded, style, 0.0)),
     }
 }
 
-/// Pushes text, leaving out icon references: without a host to draw them, an icon leaves no
-/// gap, nor the space that set it off from the text.
-fn push_icons(line: &mut Vec<Span>, text: &[char], style: Style) {
+/// Pushes text, with the math of the label put back where its marks are.
+fn push_text(line: &mut Vec<Span>, text: &str, style: Style, env: Env<'_>) {
+    if text.is_empty() {
+        return;
+    }
+    let Some(found) = env.marks.filter(|_| text.chars().any(is_mark)) else {
+        push_plain(line, text, style);
+        return;
+    };
+    let mut plain = String::new();
+    for c in text.chars() {
+        if !is_mark(c) {
+            plain.push(c);
+            continue;
+        }
+        if !plain.is_empty() {
+            push_plain(line, &plain, style);
+            plain.clear();
+        }
+        let at = (c as u32 - MARK) as usize;
+        match found.math.get(at).and_then(Option::as_ref) {
+            Some(math) => line.push(Span {
+                text: String::new(),
+                style,
+                width: math.width(),
+                icon: None,
+                math: Some(math.clone()),
+            }),
+            // Math the host does not typeset stays as it was written.
+            None => push_plain(line, &format!("$${}$$", found.tex[at]), style),
+        }
+    }
+    if !plain.is_empty() {
+        push_plain(line, &plain, style);
+    }
+}
+
+/// Pushes text with its icon references: an icon the host has, and for one it has not, nothing,
+/// not even the gap, nor the space that set the reference off from the text.
+fn push_icons(line: &mut Vec<Span>, text: &[char], style: Style, env: Env<'_>) {
     let mut last = 0;
     while let Some((start, end)) = find_icon(text, last) {
-        push_text(line, &chars::string(&text[last..start]), style);
+        push_text(line, &chars::string(&text[last..start]), style, env);
         last = end;
-        if text.get(last) == Some(&' ') {
+        let name = chars::string(&text[start..end]);
+        if let Some(markup) = env.host.and_then(|host| host.icon(&name)) {
+            line.push(Span {
+                text: String::new(),
+                style,
+                width: 0.0,
+                icon: Some(Icon { name, markup }),
+                math: None,
+            });
+        } else if text.get(last) == Some(&' ') {
             last += 1;
         } else if last == text.len() {
-            if let Some(before) = line.last_mut() {
+            if let Some(before) = line.last_mut().filter(|before| before.is_plain()) {
                 before.text = trim_end(&before.text).to_string();
             }
         }
     }
-    push_text(line, &chars::string(&text[last..]), style);
+    push_text(line, &chars::string(&text[last..]), style, env);
 }
 
 struct Open {
@@ -290,7 +386,14 @@ fn tag_style(tag: &str) -> Style {
 }
 
 /// Splits inline HTML and, for markdown labels, emphasis markers into styled spans.
-fn inline(line: &mut Vec<Span>, source: &[char], markdown: bool, base: Style, open: &mut Open) {
+fn inline(
+    line: &mut Vec<Span>,
+    source: &[char],
+    markdown: bool,
+    base: Style,
+    open: &mut Open,
+    env: Env<'_>,
+) {
     let shift = Style::SUB | Style::SUP;
     let mut style = open.style;
     let mut marked = Style::NONE;
@@ -299,7 +402,7 @@ fn inline(line: &mut Vec<Span>, source: &[char], markdown: bool, base: Style, op
     let mut i = 0;
     let flush = |line: &mut Vec<Span>, text: &mut Vec<char>, style: Style, open: &Open| {
         let shifted = style | open.shifts.last().copied().unwrap_or(Style::NONE);
-        push_icons(line, text, shifted);
+        push_icons(line, text, shifted, env);
         text.clear();
     };
     while i < n {
@@ -370,7 +473,13 @@ fn inline(line: &mut Vec<Span>, source: &[char], markdown: bool, base: Style, op
 fn measure_spans(line: &mut [Span], measurer: &dyn TextMeasurer, size: f64) -> f64 {
     let mut total = 0.0;
     for span in line {
-        span.width = measurer.width(&span.text, size, span.style);
+        span.width = if span.icon.is_some() {
+            size * ICON_ADVANCE
+        } else if let Some(math) = &span.math {
+            math.width()
+        } else {
+            measurer.width(&span.text, size, span.style)
+        };
         total += span.width;
     }
     total
@@ -440,7 +549,7 @@ impl Wrapper<'_> {
     }
 
     fn commit(&mut self, hyphen: bool) {
-        if let Some(last) = self.current.last() {
+        if let Some(last) = self.current.last().filter(|last| last.is_plain()) {
             let mut trimmed = trim_end(&last.text).to_string();
             if hyphen && last.text.ends_with(SOFT_HYPHEN) {
                 trimmed.pop();
@@ -477,6 +586,22 @@ fn wrap(
         widths,
     };
     for (index, span) in line.iter().enumerate() {
+        if !span.is_plain() {
+            // An icon or math is not broken, and starts a line if it does not fit the one it is on.
+            let advance = span
+                .math
+                .as_ref()
+                .map_or(size * ICON_ADVANCE, |math| math.width());
+            if w.width > 0.0 && w.width + advance > max {
+                w.commit(false);
+            }
+            w.current.push(Span {
+                width: advance,
+                ..span.clone()
+            });
+            w.width += advance;
+            continue;
+        }
         let pieces = pieces(&span.text);
         // A piece ending in a soft hyphen fits if its '-' does, or if the rest of the word
         // does, which hides the hyphen. The line only grows along a word, so no later hyphen in
@@ -527,7 +652,7 @@ fn wrap(
                 part = trim_start(part);
             }
             match w.current.last() {
-                Some(last) if last.style == span.style => {
+                Some(last) if last.is_plain() && last.style == span.style => {
                     let mut text = last.text.clone();
                     text.push_str(part);
                     // Remeasuring for each zero-width piece would take quadratic time.
@@ -545,11 +670,8 @@ fn wrap(
                 }
                 _ => {
                     let width = w.measure(part, span.style);
-                    w.current.push(Span {
-                        text: part.to_string(),
-                        style: span.style,
-                        width,
-                    });
+                    w.current
+                        .push(Span::text(part.to_string(), span.style, width));
                     w.width += width;
                 }
             }
@@ -574,6 +696,7 @@ fn finish(lines: Vec<Vec<Span>>, widths: Vec<f64>, size: f64, line_height: f64) 
         width,
         size,
         line_height: snug,
+        heights: None,
     }
 }
 
@@ -591,16 +714,26 @@ pub(crate) fn layout_label(
         return Label::default();
     };
     let line_height = round(size * LINE_HEIGHT);
+    let host = measurer.host();
+
+    if let Some(host) = host.filter(|host| host.math_active()) {
+        if raw.contains("$$") && !raw.chars().any(is_mark) {
+            if let Some((marked, found)) = find_math(raw, host, size) {
+                let env = Env {
+                    host: Some(host),
+                    marks: Some(&found),
+                };
+                let label = layout_lines(&marked, markdown, measurer, size, max_width, base, env);
+                return with_heights(label);
+            }
+        }
+    }
 
     if !has_markup(raw) && !raw.contains('&') && !raw.contains('ﬂ') {
         let text = trim(raw);
         let width = measurer.width(text, size, base);
         let breakable = text.contains(' ') || text.contains(is_cjk) || text.contains(is_hint);
-        let span = Span {
-            text: text.to_string(),
-            style: base,
-            width,
-        };
+        let span = Span::text(text.to_string(), base, width);
         if width <= max_width || !breakable {
             return Label {
                 lines: vec![vec![span]],
@@ -609,13 +742,121 @@ pub(crate) fn layout_label(
                 height: line_height,
                 size,
                 line_height,
+                heights: None,
             };
         }
         let (mut lines, mut widths) = (Vec::new(), Vec::new());
         wrap(&[span], measurer, size, max_width, &mut lines, &mut widths);
         return finish(lines, widths, size, line_height);
     }
-    layout_lines(raw, markdown, measurer, size, max_width, base, line_height)
+    let env = Env { host, marks: None };
+    layout_lines(raw, markdown, measurer, size, max_width, base, env)
+}
+
+/// Finds the `$$…$$` of a label, as the pattern `\$\$(.+?)\$\$` does, and types them with the
+/// host. Returns the text with each expression replaced by a mark.
+fn find_math(raw: &str, host: &Host<'_>, size: f64) -> Option<(String, Marks)> {
+    let s: Vec<char> = raw.chars().collect();
+    let is_break = |c: char| matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}');
+    let dollars = |i: usize| s.get(i) == Some(&'$') && s.get(i + 1) == Some(&'$');
+    let mut out = String::new();
+    let mut found = Marks {
+        tex: Vec::new(),
+        math: Vec::new(),
+    };
+    let mut i = 0;
+    let mut copied = 0;
+    while i < s.len() {
+        if !dollars(i) {
+            i += 1;
+            continue;
+        }
+        // The shortest run of one or more characters on the line, up to the next `$$`.
+        let mut k = i + 3;
+        while k <= s.len() && !dollars(k) && !is_break(s[k - 1]) {
+            k += 1;
+        }
+        if k > s.len() || is_break(s[k - 1]) || !dollars(k) {
+            i += 1;
+            continue;
+        }
+        let end = k + 2;
+        if found.tex.len() < MAX_MARKS {
+            out.push_str(&chars::string(&s[copied..i]));
+            out.push(
+                char::from_u32(MARK + found.tex.len() as u32).expect("in the private use area"),
+            );
+            found.tex.push(chars::string(&s[i + 2..k]));
+            copied = end;
+        }
+        i = end;
+    }
+    if found.tex.is_empty() {
+        return None;
+    }
+    out.push_str(&chars::string(&s[copied..]));
+    for tex in &found.tex {
+        found.math.push(host.typeset(&decode_entities(tex), size));
+    }
+    Some((out, found))
+}
+
+/// Gives the lines that hold math the height the math needs.
+pub(crate) fn with_heights(label: Label) -> Label {
+    let mut heights: Option<Vec<f64>> = None;
+    for (i, line) in label.lines.iter().enumerate() {
+        let mut h = label.line_height;
+        for span in line {
+            if let Some(math) = &span.math {
+                h = h.max((math.height() + label.size / 4.0).ceil());
+            }
+        }
+        if h != label.line_height && heights.is_none() {
+            heights = Some(vec![label.line_height; label.lines.len()]);
+        }
+        if let Some(heights) = heights.as_mut() {
+            heights[i] = h;
+        }
+    }
+    match heights {
+        None => Label {
+            height: label.lines.len() as f64 * label.line_height,
+            heights: None,
+            ..label
+        },
+        Some(heights) => Label {
+            height: heights.iter().sum(),
+            heights: Some(heights),
+            ..label
+        },
+    }
+}
+
+pub(crate) fn has_math(line: &[Span]) -> bool {
+    line.iter().any(|span| span.math.is_some())
+}
+
+/// The distance from the top of a label to the middle of its line `i`.
+pub(crate) fn line_middle(label: &Label, i: usize) -> f64 {
+    match &label.heights {
+        None => (i as f64 + 0.5) * label.line_height,
+        Some(heights) => heights[..i].iter().sum::<f64>() + heights[i] / 2.0,
+    }
+}
+
+/// Line `i` of a label, as a label of its own.
+pub(crate) fn label_line(label: &Label, i: usize) -> Label {
+    let width = label.widths[i];
+    let height = label.heights.as_ref().map_or(label.line_height, |h| h[i]);
+    Label {
+        lines: vec![label.lines[i].clone()],
+        widths: vec![width],
+        width,
+        height,
+        size: label.size,
+        line_height: label.line_height,
+        heights: (height != label.line_height).then(|| vec![height]),
+    }
 }
 
 /// Removes the indentation all non-blank lines share.
@@ -687,8 +928,9 @@ fn layout_lines(
     size: f64,
     max_width: f64,
     base: Style,
-    line_height: f64,
+    env: Env<'_>,
 ) -> Label {
+    let line_height = round(size * LINE_HEIGHT);
     let normalized;
     let source = if markdown {
         normalized = dedent(&raw.replace("\r\n", "\n").replace('\r', "\n"));
@@ -706,7 +948,7 @@ fn layout_lines(
     for part in split_breaks(source) {
         let part: Vec<char> = trim(part).chars().collect();
         let mut line = Vec::new();
-        inline(&mut line, &part, markdown, base, &mut open);
+        inline(&mut line, &part, markdown, base, &mut open, env);
         let w = measure_spans(&mut line, measurer, size);
         if w > max_width {
             wrap(&line, measurer, size, max_width, &mut lines, &mut widths);
@@ -740,6 +982,30 @@ mod tests {
             max,
             Style::NONE,
         )
+    }
+
+    /// What `find_math` finds in a text: the marked text, and the TeX of each expression.
+    fn math_of(raw: &str) -> Option<(String, Vec<String>)> {
+        let resolver: crate::text::MathResolver = Box::new(|_, _| None);
+        let host = Host::new(None, Some(&resolver));
+        find_math(raw, &host, 16.0).map(|(text, found)| (text, found.tex))
+    }
+
+    #[test]
+    fn finds_math_as_the_pattern_does() {
+        let mark = |n: u32| char::from_u32(MARK + n).unwrap();
+        let (text, tex) = math_of("a $$x^2$$ b $$y$$ c").unwrap();
+        assert_eq!(text, format!("a {} b {} c", mark(0), mark(1)));
+        assert_eq!(tex, ["x^2", "y"]);
+        // The shortest match, of at least one character.
+        let (_, tex) = math_of("$$$$$").unwrap();
+        assert_eq!(tex, ["$"]);
+        assert!(math_of("$$$$").is_none());
+        // A match stays on its line.
+        assert!(math_of("$$a\nb$$").is_none());
+        assert!(math_of("$$ open").is_none());
+        let (_, tex) = math_of("$$ a\n$$b$$").unwrap();
+        assert_eq!(tex, ["b"]);
     }
 
     #[test]
