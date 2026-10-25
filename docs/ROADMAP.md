@@ -417,7 +417,7 @@ Notes:
 - [x] Venn diagrams, behind the `venn` feature.
 - [x] Tree views, behind the `treeview` feature.
 - [x] Cynefin diagrams, behind the `cynefin` feature.
-- [ ] Ishikawa diagrams, behind the `ishikawa` feature.
+- [x] Ishikawa diagrams, behind the `ishikawa` feature.
 - [ ] Event modeling diagrams, behind the `eventmodeling` feature.
 - [ ] Wardley maps, behind the `wardley` feature.
 - [ ] Railroad diagrams, behind the `railroad` feature.
@@ -459,6 +459,14 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,019
   inputs, the 42 Mermaid spec cases pass (27 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (462,372 runs) found no panic.
+- An Ishikawa diagram is read with Mermaid's `ishikawa.jison` grammar, the way its LALR
+  automaton reads it. The grammar is odd in two ways, and Mermaid reads it as it is: a blank
+  line right after the keyword is a statement of its own, and a statement must be ended by a
+  blank line, a line break or the end of the text, so a blank line between the keyword and
+  the effect is refused.
+- The differential run against Mermaid's own grammar reports no difference over 3,004
+  inputs, the 3 Mermaid spec cases pass, and ten minutes of fuzzing (649,897 runs) found no
+  panic.
 
 ## Later milestones (scope only)
 
