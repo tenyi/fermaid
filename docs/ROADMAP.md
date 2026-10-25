@@ -606,7 +606,7 @@ Notes:
 
 ### Release — 0.4.0
 
-- [ ] Publish the library, then the command line tool; tag the version and publish the release.
+- [x] Publish the library, then the command line tool; tag the version and publish the release.
 
 ### Decided against
 
