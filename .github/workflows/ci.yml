@@ -2,7 +2,20 @@ name: CI
 
 on:
   push:
+    # A change of prose alone cannot break the build, and the fuzz smoke run below
+    # takes half an hour, so a commit that only touches the documentation waits
+    # for nothing.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE*"
+      - "NOTICE"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE*"
+      - "NOTICE"
   workflow_dispatch:
 
 env:
