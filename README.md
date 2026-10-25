@@ -42,6 +42,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Ishikawa diagram (`ishikawa`) | Supported: the causes on the levels and the spine |
 | Event modeling diagram (`eventmodeling`) | Supported: the lanes, the frames, the relations and the notes |
 | Wardley map (`wardley-beta`) | Supported: `title`, `accTitle` and `accDescr`, the items with their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid` |
+| Railroad diagram (`railroad-beta`, `railroad-ebnf-beta`, `railroad-abnf-beta`, `railroad-peg-beta`) | Supported: the four notations of Mermaid, with their rules and their terminals; and the `railroad` config keys `padding`, `verticalSeparation`, `horizontalSeparation`, `arcRadius`, `fontSize`, `strokeWidth`, `showMarkers` and `markerRadius` |
 | The rest | Planned |
 
 ## Goals

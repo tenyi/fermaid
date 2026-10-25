@@ -59,6 +59,7 @@ jobs:
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features cynefin -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features eventmodeling -- -D warnings
       - run: cargo clippy -p fermaid --all-targets --no-default-features --features wardley -- -D warnings
+      - run: cargo clippy -p fermaid --all-targets --no-default-features --features railroad -- -D warnings
       - run: cargo test
       - run: cargo test -p fermaid --no-default-features
 

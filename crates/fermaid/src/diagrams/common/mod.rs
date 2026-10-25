@@ -26,6 +26,7 @@ pub(crate) mod chars;
     feature = "treemap",
     feature = "usecase",
     feature = "xychart",
+    feature = "railroad",
     feature = "c4",
     feature = "wardley",
     feature = "agentflow"
@@ -58,6 +59,7 @@ pub(crate) mod generics;
         feature = "block",
         feature = "architecture",
         feature = "ishikawa",
+        feature = "railroad",
         feature = "c4",
         feature = "wardley",
         feature = "usecase",
@@ -103,6 +105,7 @@ pub(crate) mod scan;
     feature = "radar",
     feature = "treemap",
     feature = "architecture",
+    feature = "railroad",
     feature = "wardley"
 ))]
 #[cfg_attr(

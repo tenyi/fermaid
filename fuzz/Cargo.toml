@@ -230,3 +230,10 @@ path = "fuzz_targets/wardley.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "railroad"
+path = "fuzz_targets/railroad.rs"
+test = false
+doc = false
+bench = false

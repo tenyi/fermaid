@@ -65,6 +65,10 @@ before 1.0, a minor version may break the API.
   relations and the notes.
 - Wardley maps, behind the `wardley` feature: `title`, `accTitle` and `accDescr`, the items with
   their axes and their evolution; and the `wardley` config keys `width`, `height` and `showGrid`.
+- Railroad diagrams, behind the `railroad` feature: the four notations of Mermaid — its own, EBNF,
+  ABNF and PEG — with their rules and their terminals; and the `railroad` config keys `padding`,
+  `verticalSeparation`, `horizontalSeparation`, `arcRadius`, `fontSize`, `strokeWidth`,
+  `showMarkers` and `markerRadius`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
