@@ -353,7 +353,7 @@ Notes:
 - [x] Architecture diagrams, behind the `architecture` feature.
 - [x] Packet diagrams, behind the `packet` feature.
 - [x] Radar charts, behind the `radar` feature.
-- [ ] Treemaps, behind the `treemap` feature.
+- [x] Treemaps, behind the `treemap` feature.
 
 Notes:
 - A block diagram is read with Mermaid's own `block.jison` grammar, through a hand-written lexer
@@ -400,6 +400,14 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,014
   inputs, the 62 Mermaid spec cases pass (43 of them hold no diagram and are listed in
   `SKIPPED.md`), and ten minutes of fuzzing (1,065,746 runs) found no panic.
+- A treemap is read with Mermaid's Langium grammar, over the shared tokenizer. The model holds
+  the tree of the diagram: the sections that hold other items and the leaves that hold a
+  value. The layout is the squarified treemap, ported from pele.
+- The grammar of Mermaid has no rule for `class`, so a treemap that assigns a class to an
+  item is refused by Mermaid's own parser, and so it is refused here.
+- The differential run against Mermaid's own grammar reports no difference over 3,008
+  inputs, the 21 Mermaid spec cases pass (6 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (1,221,447 runs) found no panic.
 
 ### M6c — The rest
 
