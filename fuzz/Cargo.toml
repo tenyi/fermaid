@@ -202,3 +202,10 @@ path = "fuzz_targets/treeview.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "cynefin"
+path = "fuzz_targets/cynefin.rs"
+test = false
+doc = false
+bench = false

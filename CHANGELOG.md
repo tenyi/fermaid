@@ -57,6 +57,9 @@ before 1.0, a minor version may break the API.
   characters, the icons in front of a label, `classDef` and `class`; and the `treeView` config
   keys `rowIndent`, `paddingX`, `paddingY`, `lineThickness`, `showIcons`, `defaultIconPack`,
   `filenameIcons` and `extensionIcons`.
+- Cynefin diagrams, behind the `cynefin` feature: `title`, `accTitle` and `accDescr`, the items
+  in the four regions and the transitions between them; and the `cynefin` config keys `width`,
+  `height`, `showDomainDescriptions`, `boundaryAmplitude` and `seed`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`
