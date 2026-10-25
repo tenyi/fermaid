@@ -412,7 +412,7 @@ Notes:
 ### M6c — The rest
 
 - [x] C4 diagrams, behind the `c4` feature.
-- [ ] Use case diagrams, behind the `usecase` feature.
+- [x] Use case diagrams, behind the `usecase` feature.
 - [x] Info diagrams, behind the `info` feature.
 - [x] Venn diagrams, behind the `venn` feature.
 - [x] Tree views, behind the `treeview` feature.
@@ -503,6 +503,13 @@ Notes:
   inputs, the 239 Mermaid spec cases pass (79 are listed in `SKIPPED.md`: 72 are sources
   Mermaid itself refuses and 7 hold no diagram listed in `SKIPPED.md`), and ten minutes of
   fuzzing (676,742 runs) found no panic.
+- A use case diagram has no grammar file in Mermaid: its parser is written with Chevrotain,
+  in a lexer, a parser and a visitor. The lexer and the parser here make the same decisions
+  from the same lookahead, so they accept the same text and name the same token in their
+  errors.
+- The differential run against Mermaid's own grammar reports no difference over 3,105
+  inputs, the 82 Mermaid spec cases pass, and ten minutes of fuzzing (672,820 runs) found no
+  panic.
 
 ## Later milestones (scope only)
 

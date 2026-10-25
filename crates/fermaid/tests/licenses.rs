@@ -36,14 +36,15 @@ fn other_crate_dir() -> PathBuf {
 fn every_crate_carries_the_licence_files_of_the_root() {
     for name in FILES {
         let root = root_dir().join(name);
-        let text = std::fs::read_to_string(&root)
-            .unwrap_or_else(|e| panic!("{}: {e}", root.display()));
+        let text =
+            std::fs::read_to_string(&root).unwrap_or_else(|e| panic!("{}: {e}", root.display()));
         for dir in [crate_dir(), other_crate_dir()] {
             let copy = dir.join(name);
             let copied = std::fs::read_to_string(&copy)
                 .unwrap_or_else(|e| panic!("{}: {e}", copy.display()));
             assert_eq!(
-                copied, text,
+                copied,
+                text,
                 "{} is not the same as {}",
                 copy.display(),
                 root.display()
