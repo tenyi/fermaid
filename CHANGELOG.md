@@ -5,6 +5,10 @@ before 1.0, a minor version may break the API.
 
 ## Unreleased
 
+- Block diagrams, behind the `block` feature: blocks in a grid with `columns`, composites with
+  `block:` and `end`, `space`, every shape of Mermaid, block arrows with their directions, links
+  with their labels and their arrow ends, `classDef`, `class` and `style`, and the `block` config
+  key `padding`.
 - Sankey charts, behind the `sankey` feature: the CSV form of Mermaid, a `source,target,value`
   record per line, with the fields quoted as RFC 4180 says; and the `sankey` config keys
   `width`, `height`, `nodeWidth`, `nodePadding`, `nodeAlignment`, `nodeColors`, `linkColor`,

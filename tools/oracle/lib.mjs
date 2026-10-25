@@ -64,6 +64,42 @@ export function gitSummary(model) {
   out.push(`warnings:${model.warnings.length}`);
   return out.join('\n');
 }
+// Jison copies only the own properties of `yy`, so a model's methods are bound onto a plain
+// object.
+export function asYy(db, extra) {
+  const yy = { ...extra };
+  // A model may hold a method as a field of its own, so those are bound as well.
+  for (const name of Object.getOwnPropertyNames(db)) {
+    if (name !== 'constructor' && typeof db[name] === 'function' && !(name in yy)) yy[name] = db[name].bind(db);
+  }
+  for (let proto = Object.getPrototypeOf(db); proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
+    for (const name of Object.getOwnPropertyNames(proto)) {
+      if (name !== 'constructor' && typeof db[name] === 'function' && !(name in yy)) yy[name] = db[name].bind(db);
+    }
+  }
+  return yy;
+}
+
+export function blockSummary(model) {
+  const out = [];
+  const walk = (block, depth) => {
+    out.push(
+      `block:${depth}|${q(block.id)}|${q(block.type ?? 'na')}|${q(block.label ?? '')}|w=${block.widthInColumns ?? '-'}|c=${block.columns ?? '-'}|cls=${list(block.classes ?? [])}|s=${list(block.styles ?? [])}`
+    );
+    for (const child of block.children ?? []) walk(child, depth + 1);
+  };
+  walk(model.root, 0);
+  for (const edge of model.edges) {
+    out.push(
+      `edge:${q(edge.id)}|${q(edge.start ?? '')}|${q(edge.end ?? '')}|${q(edge.label ?? '')}|${q(edge.arrowTypeStart ?? '')}|${q(edge.arrowTypeEnd ?? '')}|${q(edge.thickness ?? '')}|${q(edge.pattern ?? '')}`
+    );
+  }
+  for (const [name, def] of model.classes) {
+    out.push(`class:${q(name)}|s=${list(def.styles)}|t=${list(def.textStyles)}`);
+  }
+  return out.join('\n');
+}
+
 export function flowSummary(db) {
   const out = [`dir:${q(db.direction)}`];
   for (const n of db.nodes.values()) {

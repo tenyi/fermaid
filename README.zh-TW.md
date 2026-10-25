@@ -28,6 +28,7 @@ fermaid 以純 Rust 將 [Mermaid](https://mermaid.js.org) 圖表轉換為 SVG，
 | XY 圖（`xychart`、`xychart-beta`） | 已支援：`title`、以類別或範圍表示的 `x-axis`、以範圍表示的 `y-axis`、可帶點標籤的 `line` 與 `bar` 系列、`accTitle` 與 `accDescr`、`horizontal` 與 `vertical` 方向；以及 `xyChart` 的設定鍵 `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`，以及 `yAxis` 底下同樣的四個 |
 | 象限圖（`quadrantChart`） | 已支援：`title`、以 `-->` 連接的 `x-axis` 與 `y-axis`、`quadrant-1` 到 `quadrant-4`、可帶 `radius`、`color`、`stroke-color` 與 `stroke-width` 的點、`classDef` 與點的類別、`accTitle` 與 `accDescr`；以及 `quadrantChart` 的設定鍵 `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius` 與 `pointTextPadding` |
 | Git 圖（`gitGraph`） | 已支援：`title`、`accTitle` 與 `accDescr`、可帶 `id`、`msg`、`tag` 與 `NORMAL`、`REVERSE` 或 `HIGHLIGHT` 類型的 `commit`、可帶 `order` 的 `branch`、`checkout` 與 `switch`、`merge` 與可帶 `parent` 的 `cherry-pick`；以及 `gitGraph` 的設定鍵 `mainBranchName`、`mainBranchOrder`、`showCommitLabel`、`showBranches`、`rotateCommitLabel` 與 `parallelCommits` |
+| 方塊圖（`block`、`block-beta`） | 已支援：以 `columns` 排成格線的方塊、以 `block:` 與 `end` 組成的複合方塊、`space`、Mermaid 的所有形狀、可指定方向的方塊箭頭、帶標籤與箭頭端點的連線、`classDef`、`class` 與 `style`；以及 `block` 的設定鍵 `padding` |
 | 其他 | 規劃中 |
 
 ## 目標

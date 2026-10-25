@@ -1,11 +1,33 @@
 //! Parts shared by several diagram types.
 
-#[cfg(any(feature = "xychart", feature = "quadrantchart"))]
+#[cfg(any(feature = "xychart", feature = "quadrantchart", feature = "block"))]
 pub(crate) mod chars;
 pub(crate) mod fit;
 #[cfg(any(feature = "class", feature = "er"))]
 pub(crate) mod generics;
-#[cfg(test)]
+// The helpers of the golden tests are only used by the types that have a compat module.
+#[cfg(all(
+    test,
+    any(
+        feature = "class",
+        feature = "er",
+        feature = "flowchart",
+        feature = "gantt",
+        feature = "git",
+        feature = "journey",
+        feature = "kanban",
+        feature = "mindmap",
+        feature = "pie",
+        feature = "quadrantchart",
+        feature = "requirement",
+        feature = "sankey",
+        feature = "sequence",
+        feature = "state",
+        feature = "timeline",
+        feature = "xychart",
+        feature = "block"
+    )
+))]
 pub(crate) mod golden;
 #[cfg(feature = "sequence")]
 pub(crate) mod literal;
@@ -16,7 +38,8 @@ pub(crate) mod literal;
     feature = "requirement",
     feature = "sankey",
     feature = "quadrantchart",
-    feature = "git"
+    feature = "git",
+    feature = "block"
 ))]
 pub(crate) mod ordered;
 #[cfg(any(feature = "kanban", feature = "mindmap"))]

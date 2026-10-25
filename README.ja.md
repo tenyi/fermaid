@@ -28,6 +28,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | XY チャート（`xychart`、`xychart-beta`） | 対応済み：`title`、カテゴリまたは範囲を持つ `x-axis`、範囲を持つ `y-axis`、点ラベルを持つ `line` と `bar` の系列、`accTitle` と `accDescr`、`horizontal` と `vertical` の向き。`xyChart` の設定キー `width`、`height`、`chartOrientation`、`showTitle`、`showLegend`、`showDataLabel`、`xAxis.showTitle`、`xAxis.showTick`、`xAxis.showLabel`、`xAxis.showAxisLine`、および `yAxis` 側の同じ 4 つのキーに対応 |
 | クアドラントチャート（`quadrantChart`） | 対応済み：`title`、`-->` を持つ `x-axis` と `y-axis`、`quadrant-1` から `quadrant-4`、`radius`、`color`、`stroke-color`、`stroke-width` を持つ点、`classDef` と点のクラス、`accTitle` と `accDescr`。`quadrantChart` の設定キー `chartWidth`、`chartHeight`、`titlePadding`、`xAxisLabelPadding`、`yAxisLabelPadding`、`xAxisPosition`、`yAxisPosition`、`quadrantPadding`、`quadrantTextTopPadding`、`pointRadius`、`pointTextPadding` に対応 |
 | Git グラフ（`gitGraph`） | 対応済み：`title`、`accTitle` と `accDescr`、`id`、`msg`、`tag`、`NORMAL`、`REVERSE`、`HIGHLIGHT` を持つ `commit`、`order` を持つ `branch`、`checkout` と `switch`、`merge` と `parent` を持つ `cherry-pick`。`gitGraph` の設定キー `mainBranchName`、`mainBranchOrder`、`showCommitLabel`、`showBranches`、`rotateCommitLabel`、`parallelCommits` に対応 |
+| ブロック図（`block`、`block-beta`） | 対応済み：`columns` でグリッドに並べるブロック、`block:` と `end` による複合ブロック、`space`、Mermaid のすべての形状、方向を持つブロック矢印、ラベルと矢印の終端を持つリンク、`classDef`、`class` と `style`。`block` の設定キー `padding` に対応 |
 | その他 | 予定 |
 
 ## 目標

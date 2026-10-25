@@ -95,6 +95,8 @@ pub(crate) fn lookup(kind: DiagramKind) -> Option<&'static dyn Diagram> {
         DiagramKind::QuadrantChart => Some(&crate::diagrams::quadrantchart::QuadrantChart),
         #[cfg(feature = "git")]
         DiagramKind::GitGraph => Some(&crate::diagrams::git::GitGraph),
+        #[cfg(feature = "block")]
+        DiagramKind::Block => Some(&crate::diagrams::block::Block),
         #[cfg(feature = "agentflow")]
         DiagramKind::Agentflow => Some(&crate::diagrams::agentflow::Agentflow),
         #[cfg(feature = "swimlane")]

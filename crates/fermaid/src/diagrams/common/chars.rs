@@ -40,6 +40,7 @@ pub(crate) fn is_line_end(c: u16) -> bool {
 
 /// Whether `word`, written in lower case, is at `at`. Only ASCII letters match in either case,
 /// as with the `i` flag on a regular expression without the `u` flag.
+#[allow(dead_code, reason = "only the git graph needs it")]
 pub(crate) fn word_at(units: &[u16], at: usize, word: &str) -> bool {
     for (k, w) in word.bytes().enumerate() {
         let Some(&c) = units.get(at + k) else {

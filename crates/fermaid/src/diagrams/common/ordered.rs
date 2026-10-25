@@ -23,7 +23,7 @@ impl<V> Ordered<V> {
     }
 
     #[cfg_attr(
-        not(any(feature = "class", feature = "er")),
+        not(any(feature = "class", feature = "er", feature = "block")),
         allow(dead_code, reason = "used by the types that change a value in place")
     )]
     pub(crate) fn get_mut(&mut self, key: &str) -> Option<&mut V> {

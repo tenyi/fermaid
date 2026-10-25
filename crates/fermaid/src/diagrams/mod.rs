@@ -4,6 +4,8 @@
 pub(crate) mod agentflow;
 #[cfg(feature = "architecture")]
 pub(crate) mod architecture;
+#[cfg(feature = "block")]
+pub(crate) mod block;
 #[cfg(feature = "c4")]
 pub(crate) mod c4;
 #[cfg(feature = "class")]
@@ -25,6 +27,7 @@ pub(crate) mod class;
     feature = "xychart",
     feature = "quadrantchart",
     feature = "git",
+    feature = "block",
     feature = "architecture",
     feature = "packet",
     feature = "radar",

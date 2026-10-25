@@ -20,7 +20,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classSummary, erSummary, flowSummary, ganttSummary, gitSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
+import { asYy, blockSummary, classSummary, erSummary, flowSummary, ganttSummary, gitSummary, loadPele, pieSummary, requirementSummary, timelineSummary, journeySummary, kanbanSummary, mindmapSummary, sankeySummary, seqSummary, stateSummary, xychartSummary, quadrantSummary } from './lib.mjs';
 
 // Gantt dates are local time in pele and UTC in fermaid, so the run pins the zone to UTC,
 // as tools/oracle/golden.mjs does.
@@ -37,7 +37,7 @@ const option = (name, fallback) => {
 const count = option('--count', 3000);
 const seed = option('--seed', 7);
 const [peleDir, ...rest] = args;
-const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'git', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'url'];
+const ALL = ['pie', 'flowchart', 'sequence', 'state', 'class', 'er', 'requirement', 'gantt', 'git', 'timeline', 'journey', 'kanban', 'mindmap', 'sankey', 'xychart', 'quadrantchart', 'block', 'url'];
 const types = rest.length ? rest : ALL;
 if (!peleDir || types.some((t) => !ALL.includes(t)) || !Number.isFinite(count) || !Number.isFinite(seed)) {
   console.error('usage: node tools/oracle/diff.mjs <pele checkout> [--count N] [--seed S] [pie] [flowchart] [sequence] [state] [class] [er] [requirement] [gantt] [timeline] [journey] [kanban] [mindmap] [sankey] [xychart] [quadrantchart] [url]');
@@ -69,6 +69,7 @@ const m = await loadPele(pele, {
   'src/diagrams/git/db.ts': ['buildGit'],
   'src/diagrams/xychart/db.ts': ['XyChartDb'],
   'src/diagrams/quadrant/db.ts': ['QuadrantDb'],
+  'src/diagrams/block/db.ts': ['BlockDb'],
   'src/diagrams/common/outline.ts': ['NODE_TYPE'],
   'src/preprocess.ts': ['encodeEntities'],
   '@mermaid-js/parser': ['parse as langiumParse'],
@@ -101,17 +102,6 @@ function plainWithType(node) {
   return out;
 }
 
-// Jison copies only the own properties of `yy`, so a model's methods are bound onto a plain object.
-function asYy(db, extra) {
-  const yy = { ...extra };
-  for (let proto = Object.getPrototypeOf(db); proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
-    for (const name of Object.getOwnPropertyNames(proto)) {
-      if (name !== 'constructor' && typeof db[name] === 'function' && !(name in yy)) yy[name] = db[name].bind(db);
-    }
-  }
-  return yy;
-}
-
 const flowParser = m.buildParser(join(pele, 'tests/compat/flowchart/upstream/flow.jison'));
 const seqParser = m.buildParser(join(pele, 'tests/compat/sequence/upstream/sequenceDiagram.jison'));
 const stateParser = m.buildParser(join(pele, 'tests/compat/state/upstream/stateDiagram.jison'));
@@ -126,6 +116,7 @@ const requirementParser = m.buildParser(join(pele, 'tests/compat/requirement/ups
 const sankeyParser = m.buildParser(join(pele, 'tests/compat/sankey/upstream/sankey.jison'));
 const xychartParser = m.buildParser(join(pele, 'tests/compat/xychart/upstream/xychart.jison'));
 const quadrantParser = m.buildParser(join(pele, 'tests/compat/quadrant/upstream/quadrant.jison'));
+const blockParser = m.buildParser(join(pele, 'tests/compat/block/upstream/block.jison'));
 
 const TYPES = {
   pie: {
@@ -295,6 +286,17 @@ const TYPES = {
       mindmapParser.yy = asYy(db, { getType: db.getType, nodeType: m.NODE_TYPE, getLogger: () => quiet });
       mindmapParser.parse(src);
       return mindmapSummary(db);
+    },
+  },
+  block: {
+    keyword: /(^|\n)\s*block(-beta)?\b/,
+    fragments: ['block', 'block-beta', 'block:', 'columns 3', 'columns auto', 'space', 'space:3', 'end', '-->', '---', '-.->', '==>', '--o', '--x', '<-->', '~~~', '[', ']', '(', ')', '{', '}', '((', '))', '{{', '}}', '>', '|', '"', '`', '\\[', '/]', ']', '<[', ']>', '(right)', ',left', ',up', ',down', ',x', ',y', 'classDef c fill:red', 'class A c', 'style A fill:red', ':2', '\n', ' ', '%%', 'A', 'é'],
+    async reference(src) {
+      const db = new m.BlockDb();
+      blockParser.yy = asYy(db, { getLogger: () => quiet });
+      // Mermaid's Diagram.fromText encodes entities and adds a line break.
+      blockParser.parse(m.encodeEntities(src) + '\n');
+      return blockSummary(db);
     },
   },
   url: {

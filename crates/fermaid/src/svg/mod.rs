@@ -9,7 +9,8 @@ mod document;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "requirement"
+    feature = "requirement",
+    feature = "block"
 ))]
 pub(crate) mod edges;
 #[cfg(any(
@@ -19,7 +20,8 @@ pub(crate) mod edges;
     feature = "class",
     feature = "er",
     feature = "requirement",
-    feature = "timeline"
+    feature = "timeline",
+    feature = "block"
 ))]
 pub(crate) mod markers;
 #[cfg(any(
@@ -27,7 +29,8 @@ pub(crate) mod markers;
     feature = "state",
     feature = "class",
     feature = "er",
-    feature = "mindmap"
+    feature = "mindmap",
+    feature = "block"
 ))]
 #[cfg_attr(
     not(any(
