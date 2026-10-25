@@ -195,3 +195,10 @@ path = "fuzz_targets/venn.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "treeview"
+path = "fuzz_targets/treeview.rs"
+test = false
+doc = false
+bench = false

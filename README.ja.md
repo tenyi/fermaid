@@ -37,6 +37,7 @@ fermaid は [Mermaid](https://mermaid.js.org) のダイアグラムを純粋な 
 | ユースケース図（`usecase-beta`） | 対応済み：`title`、`accTitle` と `accDescr`、アクターとユースケース、その関係。`usecase` の設定キー `nodeSpacing` と `rankSpacing` に対応 |
 | インフォメーション図（`info`） | 対応済み：`title`、`accTitle` と `accDescr`、バージョンと本文の行 |
 | ベン図（`venn-beta`） | 対応済み：各円とラベル。`venn` の設定キー `width`、`height`、`padding` に対応 |
+| ツリービュー図（`treeView-beta`） | 対応済み：罫線文字で描かれる木、ラベルの前のアイコン、`classDef` と `class`。`treeView` の設定キー `rowIndent`、`paddingX`、`paddingY`、`lineThickness`、`showIcons`、`defaultIconPack`、`filenameIcons`、`extensionIcons` に対応 |
 | その他 | 予定 |
 
 ## 目標

@@ -53,6 +53,10 @@ before 1.0, a minor version may break the API.
   version of the library and the lines of text.
 - Venn diagrams, behind the `venn` feature: the circles with their labels; and the `venn` config
   keys `width`, `height` and `padding`.
+- Tree view diagrams, behind the `treeview` feature: the tree drawn with box-drawing
+  characters, the icons in front of a label, `classDef` and `class`; and the `treeView` config
+  keys `rowIndent`, `paddingX`, `paddingY`, `lineThickness`, `showIcons`, `defaultIconPack`,
+  `filenameIcons` and `extensionIcons`.
 - Pie charts, behind the `pie` feature: `showData`, `title`, `accTitle`, `accDescr`, and the
   `pie` config keys `textPosition`, `donutHole` and `legendPosition`.
 - Flowcharts, behind the `flowchart` feature: every node shape, including `@{ shape: … }`

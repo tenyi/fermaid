@@ -37,6 +37,7 @@ fermaid renders [Mermaid](https://mermaid.js.org) diagrams to SVG in pure Rust â
 | Use case diagram (`usecase-beta`) | Supported: `title`, `accTitle` and `accDescr`, actors and use cases with the relations between them; and the `usecase` config keys `nodeSpacing` and `rankSpacing` |
 | Information diagram (`info`) | Supported: `title`, `accTitle` and `accDescr`, the version and the lines of text |
 | Venn diagram (`venn-beta`) | Supported: the circles with their labels; and the `venn` config keys `width`, `height` and `padding` |
+| Tree view diagram (`treeView-beta`) | Supported: the tree drawn with box-drawing characters, the icons in front of a label, `classDef` and `class`; and the `treeView` config keys `rowIndent`, `paddingX`, `paddingY`, `lineThickness`, `showIcons`, `defaultIconPack`, `filenameIcons` and `extensionIcons` |
 | The rest | Planned |
 
 ## Goals
