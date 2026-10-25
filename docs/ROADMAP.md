@@ -5,8 +5,8 @@ algorithms, text metrics and limits are ported from
 [obsidianmd/pele](https://github.com/obsidianmd/pele), pinned at
 **v1.9.0 (`e7f092a4de147cc32210913c20e36eaa5fcd0ef1`)**. Mermaid syntax target: 12.1.0.
 
-Milestones M0–M5 are planned to task level and done. M6 is planned to milestone level and in
-progress.
+Milestones M0–M5 are planned to task level and done. M6 is planned to milestone level and
+done: every diagram type Mermaid 12.1.0 builds is supported.
 
 ## Decisions
 
@@ -281,7 +281,7 @@ The next version comes after M6, when every diagram type Mermaid 12.1.0 builds i
 2. [ ] Publish the library, then the command line tool, which depends on it.
 3. [ ] Tag the version, push the tag and publish the GitHub release.
 
-## M6 — The remaining types ✅ (in progress)
+## M6 — The remaining types ✅
 
 Mermaid 12.1.0 builds 33 diagram types. M0–M5 cover twelve of them; M6 covers the rest, in
 three batches, ordered by how much the types are used. The niche types come last, as the
@@ -420,7 +420,7 @@ Notes:
 - [x] Ishikawa diagrams, behind the `ishikawa` feature.
 - [x] Event modeling diagrams, behind the `eventmodeling` feature.
 - [x] Wardley maps, behind the `wardley` feature.
-- [ ] Railroad diagrams, behind the `railroad` feature.
+- [x] Railroad diagrams, behind the `railroad` feature.
 - [x] Swimlane diagrams, behind the `swimlane` feature.
 - [x] Agent flows, behind the `agentflow` feature.
 
@@ -510,6 +510,13 @@ Notes:
 - The differential run against Mermaid's own grammar reports no difference over 3,105
   inputs, the 82 Mermaid spec cases pass, and ten minutes of fuzzing (672,820 runs) found no
   panic.
+- A railroad diagram has four grammars in Mermaid — its own notation, EBNF, ABNF and PEG — and
+  each of them turns its tree into the same model: a rule is a name and a tree of nodes. The
+  token types are in the order Mermaid's lexer has them, and the first token type that
+  matches wins, except that a keyword that a longer terminal also matches is the terminal.
+- The differential run against Mermaid's own grammar reports no difference over 3,090
+  inputs, the 117 Mermaid spec cases pass (2 of them hold no diagram and are listed in
+  `SKIPPED.md`), and ten minutes of fuzzing (676,308 runs) found no panic.
 
 ## Later milestones (scope only)
 
