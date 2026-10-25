@@ -3,7 +3,7 @@
 All notable changes are recorded here. fermaid follows [Semantic Versioning](https://semver.org);
 before 1.0, a minor version may break the API.
 
-## Unreleased
+## 0.4.0 - 2026-10-25
 
 - `RenderOptions::config` takes configuration in the form of `%%{init}%%` as a JSON object (what
   the diagram sets itself wins, and no key can raise a limit), and `RenderOptions::links` and
