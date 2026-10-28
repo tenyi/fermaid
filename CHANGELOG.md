@@ -3,6 +3,10 @@
 All notable changes are recorded here. fermaid follows [Semantic Versioning](https://semver.org);
 before 1.0, a minor version may break the API.
 
+## 0.5.1 - 2026-10-29
+
+- Fix builds with default features disabled.
+
 ## 0.5.0 - 2026-10-26
 
 - `RenderOptions::palette` takes a `Palette` (`Palette::light()`, `Palette::dark()`, or your own
