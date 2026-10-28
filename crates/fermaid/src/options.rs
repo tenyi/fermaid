@@ -42,12 +42,16 @@ impl Default for Limits {
 /// [`Palette::light`], so that a color can never carry markup into the SVG.
 ///
 /// ```
+/// // The pie chart is only there when its feature is on.
+/// # #[cfg(feature = "pie")]
+/// # {
 /// let options = fermaid::RenderOptions {
 ///     palette: Some(fermaid::Palette::dark()),
 ///     ..Default::default()
 /// };
 /// let svg = fermaid::render("pie\n\"a\": 1\n\"b\": 2", &options).unwrap().svg;
 /// assert!(!svg.contains("var("));
+/// # }
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Palette {

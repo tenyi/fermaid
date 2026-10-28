@@ -4,17 +4,37 @@
 //! is, so these tests check what the library does around the answers: where it puts them, how
 //! it makes room for them, and that the text of a diagram cannot reach the output but through
 //! them.
+// Every test needs one of these types, so with none of them the helpers below would not be used.
+#![cfg(any(
+    feature = "flowchart",
+    feature = "swimlane",
+    feature = "mindmap",
+    feature = "kanban",
+    feature = "er",
+    feature = "requirement",
+    feature = "class",
+    feature = "block",
+    feature = "usecase"
+))]
+
 mod support;
 
+#[cfg(feature = "flowchart")]
 use std::cell::RefCell;
+#[cfg(feature = "flowchart")]
 use std::rc::Rc;
 
-use fermaid::{IconResolver, MathMarkup, MathResolver, RenderOptions};
-use support::{PAYLOADS, assert_inert};
+#[cfg(any(feature = "flowchart", feature = "mindmap"))]
+use fermaid::IconResolver;
+use fermaid::{MathMarkup, MathResolver, RenderOptions};
+#[cfg(feature = "flowchart")]
+use support::PAYLOADS;
+use support::assert_inert;
 
 const ICON: &str = "<path d=\"M2 2h20v20H2z\"/>";
 const MATH: &str = "<path d=\"M0 0h30v40H0z\"/>";
 
+#[cfg(feature = "flowchart")]
 fn icons() -> IconResolver {
     Box::new(|name| (name == "fa:fa-car").then(|| ICON.to_string()))
 }

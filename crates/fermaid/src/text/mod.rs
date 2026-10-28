@@ -65,6 +65,15 @@ impl Not for Style {
 }
 
 /// The markup of the icon the host has by that name, if it has one.
+///
+/// Only the types that draw icons call it, so a build without them would not use it.
+#[cfg(any(
+    feature = "flowchart",
+    feature = "usecase",
+    feature = "mindmap",
+    feature = "architecture",
+    feature = "kanban",
+))]
 pub(crate) fn icon_markup(measurer: &dyn TextMeasurer, name: &str) -> Option<std::rc::Rc<str>> {
     measurer.host()?.icon(name)
 }
